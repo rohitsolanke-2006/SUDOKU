@@ -1,0 +1,321 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width,initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+<!-- STITCH_THREEJS_START:ANIMATION_22 class="fixed inset-0 w-full h-full bg-transparent" -->
+<div class="fixed inset-0 w-full h-full bg-transparent" style="display:block;">
+<script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+<div id="threejs-container-ANIMATION_22" style="width:100%;height:100%"></div>
+<script>
+(function() {
+  const container = document.getElementById('threejs-container-ANIMATION_22');
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  (function() {
+  const container = document.getElementById('threejs-container-cabinet-hero');
+  if (!container) return;
+
+  const width = container.clientWidth || window.innerWidth;
+  const height = container.clientHeight || window.innerHeight;
+
+  const scene = new THREE.Scene();
+  scene.background = null; // Transparent background for hero integration
+
+  const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
+  camera.position.set(3.0, 1.2, 3.8);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  container.appendChild(renderer.domElement);
+
+  // Clean studio CAD lighting
+  const ambientLight = new THREE.AmbientLight(0xdce5e2, 0.9);
+  scene.add(ambientLight);
+
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  keyLight.position.set(4, 7, 5);
+  keyLight.castShadow = true;
+  keyLight.shadow.mapSize.width = 1024;
+  keyLight.shadow.mapSize.height = 1024;
+  keyLight.shadow.bias = -0.0005;
+  scene.add(keyLight);
+
+  const fillLight = new THREE.DirectionalLight(0xa5bcbe, 0.6);
+  fillLight.position.set(-5, 3, -2);
+  scene.add(fillLight);
+
+  const tealRim = new THREE.DirectionalLight(0x247c70, 0.25);
+  tealRim.position.set(0, -4, -3);
+  scene.add(tealRim);
+
+  // Materials (Refined Industrial CAD palette)
+  const matCabinetSteel = new THREE.MeshStandardMaterial({
+    color: 0x939b97,
+    roughness: 0.45,
+    metalness: 0.35
+  });
+  const matCabinetInside = new THREE.MeshStandardMaterial({
+    color: 0xe0e5e2,
+    roughness: 0.55,
+    metalness: 0.2
+  });
+  const matOrangeGasket = new THREE.MeshLambertMaterial({ color: 0xd95a2b });
+  const matGalvanizedRail = new THREE.MeshStandardMaterial({
+    color: 0xb5beba,
+    roughness: 0.35,
+    metalness: 0.8
+  });
+  const matTrunkingGrey = new THREE.MeshLambertMaterial({ color: 0x424a48 });
+  const matCiocBlack = new THREE.MeshLambertMaterial({ color: 0x1f2423 });
+  const matBaseplateDark = new THREE.MeshLambertMaterial({ color: 0x2b3230 });
+  const matCharmGreen = new THREE.MeshLambertMaterial({ color: 0x39815a }); // Validated assignment
+  const matCharmTeal = new THREE.MeshLambertMaterial({ color: 0x247c70 });   // Selected slot
+  const matCharmAmber = new THREE.MeshLambertMaterial({ color: 0xc58a2b });  // Warning / Incompatible
+  const matCharmGrey = new THREE.MeshLambertMaterial({ color: 0x6e7874 });   // Spare / Available
+
+  // Cabinet Enclosure
+  const cabWidth = 1.8;
+  const cabHeight = 3.1;
+  const cabDepth = 0.85;
+  const cabWall = 0.05;
+
+  const cabinetGroup = new THREE.Group();
+  scene.add(cabinetGroup);
+
+  // Backplate
+  const backplateMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWidth - cabWall*2, cabHeight - cabWall*2, 0.02), matCabinetInside);
+  backplateMesh.position.set(0, 0, -cabDepth/2 + 0.03);
+  backplateMesh.receiveShadow = true;
+  cabinetGroup.add(backplateMesh);
+
+  // Outer Enclosure Walls
+  const topMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, cabWall, cabDepth), matCabinetSteel);
+  topMesh.position.set(0, cabHeight/2 - cabWall/2, 0);
+  cabinetGroup.add(topMesh);
+
+  const btmMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, cabWall, cabDepth), matCabinetSteel);
+  btmMesh.position.set(0, -cabHeight/2 + cabWall/2, 0);
+  cabinetGroup.add(btmMesh);
+
+  const leftMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWall, cabHeight, cabDepth), matCabinetSteel);
+  leftMesh.position.set(-cabWidth/2 + cabWall/2, 0, 0);
+  cabinetGroup.add(leftMesh);
+
+  const rightMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWall, cabHeight, cabDepth), matCabinetSteel);
+  rightMesh.position.set(cabWidth/2 - cabWall/2, 0, 0);
+  cabinetGroup.add(rightMesh);
+
+  // Plinth
+  const plinth = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, 0.22, cabDepth), new THREE.MeshLambertMaterial({ color: 0x252b29 }));
+  plinth.position.set(0, -cabHeight/2 - 0.11, 0);
+  cabinetGroup.add(plinth);
+
+  // Open Door (Swung open at ~108 degrees)
+  const doorGroup = new THREE.Group();
+  doorGroup.position.set(-cabWidth/2, 0, cabDepth/2);
+  doorGroup.rotation.y = -Math.PI * 0.62;
+
+  const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, cabHeight, 0.04), matCabinetSteel);
+  doorLeaf.position.set(cabWidth/2, 0, 0);
+  doorGroup.add(doorLeaf);
+
+  const pocket = new THREE.Mesh(new THREE.BoxGeometry(cabWidth*0.7, cabHeight*0.24, 0.03), new THREE.MeshLambertMaterial({ color: 0x737d79 }));
+  pocket.position.set(cabWidth/2, -cabHeight*0.2, 0.035);
+  doorGroup.add(pocket);
+
+  const gasket = new THREE.Mesh(new THREE.BoxGeometry(cabWidth*0.96, cabHeight*0.96, 0.01), matOrangeGasket);
+  gasket.position.set(cabWidth/2, 0, 0.022);
+  doorGroup.add(gasket);
+
+  cabinetGroup.add(doorGroup);
+
+  // DIN Rails and Wire Trunking
+  const railPositionsY = [0.82, 0.1, -0.62];
+  const railZ = -cabDepth/2 + 0.08;
+
+  // Vertical ducts
+  const ductW = 0.075;
+  const ductGeoV = new THREE.BoxGeometry(ductW, cabHeight - 0.4, ductW);
+  const leftDuct = new THREE.Mesh(ductGeoV, matTrunkingGrey);
+  leftDuct.position.set(-cabWidth/2 + 0.16, 0, railZ + 0.04);
+  cabinetGroup.add(leftDuct);
+
+  const rightDuct = new THREE.Mesh(ductGeoV, matTrunkingGrey);
+  rightDuct.position.set(cabWidth/2 - 0.16, 0, railZ + 0.04);
+  cabinetGroup.add(rightDuct);
+
+  // Horizontal ducts
+  [-0.26, 0.46, 1.2].forEach(y => {
+    const duct = new THREE.Mesh(new THREE.BoxGeometry(cabWidth - 0.25, ductW, ductW), matTrunkingGrey);
+    duct.position.set(0, y, railZ + 0.04);
+    cabinetGroup.add(duct);
+  });
+
+  // Rails & Mounted Modules
+  railPositionsY.forEach((yPos, railIdx) => {
+    const dinRail = new THREE.Mesh(new THREE.BoxGeometry(cabWidth - 0.4, 0.038, 0.015), matGalvanizedRail);
+    dinRail.position.set(0, yPos, railZ);
+    dinRail.castShadow = true;
+    cabinetGroup.add(dinRail);
+
+    if (railIdx === 0) {
+      // Top Rail: Power Supplies, Primary & Standby CIOC
+      const psMesh = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.22, 0.16), new THREE.MeshLambertMaterial({ color: 0x3d4644 }));
+      psMesh.position.set(-0.45, yPos + 0.02, railZ + 0.09);
+      cabinetGroup.add(psMesh);
+
+      [-0.1, 0.18].forEach((xPos, cIdx) => {
+        const cioc = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.25, 0.18), matCiocBlack);
+        cioc.position.set(xPos, yPos + 0.03, railZ + 0.1);
+        cabinetGroup.add(cioc);
+
+        const led = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.018, 0.01), new THREE.MeshBasicMaterial({ color: 0x39815a }));
+        led.position.set(xPos - 0.06, yPos + 0.11, railZ + 0.195);
+        cabinetGroup.add(led);
+      });
+
+      const termBlock = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.15, 0.12), new THREE.MeshLambertMaterial({ color: 0x8a928e }));
+      termBlock.position.set(0.44, yPos, railZ + 0.07);
+      cabinetGroup.add(termBlock);
+    }
+
+    if (railIdx === 1 || railIdx === 2) {
+      // Rails 1 & 2: Baseplates (BP-01, BP-02, BP-03, BP-04)
+      [-0.32, 0.32].forEach((bpX, bpSubIdx) => {
+        const baseplate = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.26, 0.07), matBaseplateDark);
+        baseplate.position.set(bpX, yPos, railZ + 0.04);
+        cabinetGroup.add(baseplate);
+
+        // 16 CHARM slots (2 rows of 8)
+        const slotPitchX = 0.06;
+        const slotPitchY = 0.09;
+        const startX = bpX - (7 * slotPitchX)/2;
+
+        for (let r = 0; r < 2; r++) {
+          for (let c = 0; c < 8; c++) {
+            const slotNum = r * 8 + c + 1;
+            const charmX = startX + c * slotPitchX;
+            const charmY = yPos + (r === 0 ? slotPitchY/2 : -slotPitchY/2);
+
+            let charmMat = matCharmGreen; // Subdued green for validated assignment
+            if (bpSubIdx === 1 && railIdx === 1 && slotNum === 5) {
+              charmMat = matCharmTeal; // Selected position (Teal)
+            } else if (bpSubIdx === 1 && railIdx === 1 && slotNum === 9) {
+              charmMat = matCharmAmber; // Restrained amber warning
+            } else if (slotNum > 12) {
+              charmMat = matCharmGrey; // Available / Spare
+            }
+
+            const charm = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.07, 0.06), charmMat);
+            charm.position.set(charmX, charmY, railZ + 0.09);
+            charm.castShadow = true;
+            cabinetGroup.add(charm);
+
+            const terminal = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.014, 0.02), new THREE.MeshLambertMaterial({ color: 0xedf1ee }));
+            terminal.position.set(charmX, charmY - 0.038, railZ + 0.08);
+            cabinetGroup.add(terminal);
+          }
+        }
+      });
+    }
+  });
+
+  // Cable bundles entering bottom gland plate
+  const cableColors = [0x2f3533, 0x1d2c29, 0x3d352b, 0x223647];
+  for (let i = 0; i < 6; i++) {
+    const curve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.35 + i*0.14, -cabHeight/2 + 0.08, 0.1),
+      new THREE.Vector3(-0.48 + (i%2)*0.1, -cabHeight/2 + 0.55, railZ + 0.05),
+      new THREE.Vector3(-cabWidth/2 + 0.16, -0.55 + i*0.2, railZ + 0.06)
+    ]);
+    const tubeGeo = new THREE.TubeGeometry(curve, 14, 0.013, 6, false);
+    const cableMesh = new THREE.Mesh(tubeGeo, new THREE.MeshLambertMaterial({ color: cableColors[i % 4] }));
+    cabinetGroup.add(cableMesh);
+  }
+
+  // Interactive subtle orbit & rotation
+  let isDragging = false;
+  let prevMouse = { x: 0, y: 0 };
+  let spherical = { radius: 4.6, theta: 0.52, phi: 1.28 };
+  let targetSpherical = { radius: 4.6, theta: 0.52, phi: 1.28 };
+  let targetLookAt = new THREE.Vector3(0, 0, 0);
+
+  function updateCamera() {
+    camera.position.x = targetLookAt.x + spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
+    camera.position.y = targetLookAt.y + spherical.radius * Math.cos(spherical.phi);
+    camera.position.z = targetLookAt.z + spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
+    camera.lookAt(targetLookAt);
+  }
+  updateCamera();
+
+  renderer.domElement.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    prevMouse = { x: e.clientX, y: e.clientY };
+  });
+
+  window.addEventListener('mouseup', () => { isDragging = false; });
+
+  renderer.domElement.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const deltaX = e.clientX - prevMouse.x;
+    const deltaY = e.clientY - prevMouse.y;
+    targetSpherical.theta -= deltaX * 0.007;
+    targetSpherical.phi = Math.max(0.3, Math.min(Math.PI - 0.3, targetSpherical.phi - deltaY * 0.007));
+    prevMouse = { x: e.clientX, y: e.clientY };
+  });
+
+  renderer.domElement.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    targetSpherical.radius = Math.max(1.8, Math.min(7.5, targetSpherical.radius + e.deltaY * 0.003));
+  }, { passive: false });
+
+  // Camera presets exposed globally
+  window.cadHeroReset = function() { targetSpherical = { radius: 4.6, theta: 0.52, phi: 1.28 }; };
+  window.cadHeroZoomIn = function() { targetSpherical.radius = Math.max(1.8, targetSpherical.radius * 0.8); };
+  window.cadHeroZoomOut = function() { targetSpherical.radius = Math.min(7.5, targetSpherical.radius * 1.25); };
+
+  // Subtle ambient idle float when idle
+  let idleTime = 0;
+  let animId;
+  function animate() {
+    animId = requestAnimationFrame(animate);
+    if (!isDragging) {
+      idleTime += 0.005;
+      targetSpherical.theta += Math.sin(idleTime) * 0.0004;
+    }
+    spherical.radius += (targetSpherical.radius - spherical.radius) * 0.08;
+    spherical.theta += (targetSpherical.theta - spherical.theta) * 0.08;
+    spherical.phi += (targetSpherical.phi - spherical.phi) * 0.08;
+    updateCamera();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    const w = container.clientWidth || window.innerWidth;
+    const h = container.clientHeight || window.innerHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+})();
+})();
+</script>
+</div>
+<!-- STITCH_THREEJS_END:ANIMATION_22 -->
+
+
+</body></html>

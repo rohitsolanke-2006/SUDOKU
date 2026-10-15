@@ -1,0 +1,1315 @@
+<!DOCTYPE html><html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>IO SIGNAL SUDOKU — Industrial I/O Engineering Workbench &amp; 3D Cabinet Simulator</title>
+<!-- Tailwind CSS CDN with plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Three.js CDN for interactive 3D cabinet simulation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- Google Fonts: Inter & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+          },
+          colors: {
+            brand: {
+              teal: '#247C70',
+              'teal-hover': '#1b6157',
+              surface: '#F5F6F3',
+              body: '#E9EBE8',
+              graphite: '#252B29',
+              dark: '#1E2424',
+              border: '#C9CECA',
+              green: '#39815A',
+              amber: '#C58A2B',
+              dim: '#6E7874'
+            }
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="base-styling">
+    body {
+      background-color: #E9EBE8;
+      color: #252B29;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection {
+      background-color: #247C70;
+      color: #ffffff;
+    }
+    /* Technical Grid Substrate */
+    .cad-grid-pattern {
+      background-size: 24px 24px;
+      background-image: 
+        linear-gradient(to right, rgba(201, 206, 202, 0.4) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(201, 206, 202, 0.4) 1px, transparent 1px);
+    }
+    .dark-cad-grid {
+      background-size: 24px 24px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="font-sans antialiased text-brand-graphite selection:bg-brand-teal selection:text-white min-h-screen flex flex-col justify-between">
+<!-- BEGIN: Navigation -->
+<header class="h-16 bg-[#F5F6F3] border-b border-brand-border sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between" data-purpose="primary-navigation">
+<div class="flex items-center space-x-6">
+<a class="flex items-center space-x-3 text-brand-graphite hover:opacity-90 transition-opacity" href="#">
+<!-- Technical Matrix Logo Mark -->
+<svg class="w-6 h-6 text-brand-teal" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<rect fill="#247C70" fill-opacity="0.2" height="7" rx="1" width="7" x="3" y="3"></rect>
+<rect height="7" rx="1" width="7" x="14" y="3"></rect>
+<rect height="7" rx="1" width="7" x="3" y="14"></rect>
+<rect fill="#39815A" fill-opacity="0.3" height="7" rx="1" width="7" x="14" y="14"></rect>
+<path d="M7 10v4M10 7h4M17 10v4M10 17h4" stroke="#252B29" stroke-dasharray="1 1" stroke-width="1.5"></path>
+</svg>
+<div class="flex items-center space-x-2">
+<span class="font-mono font-semibold tracking-tight text-sm uppercase text-brand-graphite">IO Signal Sudoku</span>
+<span class="font-mono text-[10px] bg-brand-border/60 text-brand-graphite px-1.5 py-0.5 rounded font-medium">v3.4</span>
+</div>
+</a>
+<!-- Primary Nav Links -->
+<nav aria-label="Main Navigation" class="hidden md:flex items-center space-x-6 text-xs font-mono font-medium tracking-tight text-brand-graphite/80">
+<a class="hover:text-brand-teal transition-colors" href="#how-it-works">How It Works</a>
+<a class="hover:text-brand-teal transition-colors" href="#simulator-preview">3D Simulator</a>
+<a class="hover:text-brand-teal transition-colors" href="#capabilities">Capabilities</a>
+<a class="hover:text-brand-teal transition-colors" href="#technology">Technology</a>
+</nav>
+</div>
+<!-- Right Utility Group -->
+<div class="flex items-center space-x-5">
+<a class="hidden sm:inline-block text-xs font-mono text-brand-graphite/70 hover:text-brand-graphite" href="#documentation">Documentation</a>
+<a class="inline-flex items-center justify-center bg-brand-teal text-white hover:bg-brand-teal-hover px-4 py-2 rounded-sm text-xs font-mono font-medium tracking-tight transition-all shadow-sm" href="#simulator">
+<svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+        Open Simulator
+      </a>
+</div>
+</header>
+<!-- END: Navigation -->
+<main class="flex-grow">
+<!-- BEGIN: Hero Section -->
+<section class="border-b border-brand-border bg-[#E9EBE8] relative overflow-hidden" data-purpose="hero-section">
+<div class="max-w-[1600px] mx-auto px-4 lg:px-8 py-8 lg:py-12">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+<!-- Left Column (40% width in 12-col grid) -->
+<div class="lg:col-span-5 flex flex-col justify-center space-y-6">
+<div class="inline-flex items-center space-x-2 text-[11px] font-mono uppercase tracking-wider text-brand-teal bg-white/70 border border-brand-border px-2.5 py-1 rounded w-fit">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-teal animate-pulse"></span>
+<span>Industrial I/O Engineering Workbench</span>
+</div>
+<div class="space-y-4">
+<h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-brand-graphite leading-[1.12]">
+                Allocate smarter.<br>Inspect every connection.
+              </h1>
+<p class="text-sm sm:text-base text-brand-graphite/80 leading-relaxed max-w-xl">
+                IO SIGNAL SUDOKU combines constraint-based I/O allocation, engineering-rule validation, and interactive 3D hardware visualization in one synchronized engineering workflow.
+              </p>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-wrap items-center gap-3 pt-2">
+<a class="inline-flex items-center justify-center bg-brand-teal text-white hover:bg-brand-teal-hover px-5 py-2.5 rounded-sm text-xs font-mono font-medium tracking-tight shadow-sm transition-all" href="#simulator">
+<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+                Launch Simulator
+              </a>
+<a class="inline-flex items-center justify-center bg-[#F5F6F3] border border-brand-border text-brand-graphite hover:bg-white px-5 py-2.5 rounded-sm text-xs font-mono font-medium tracking-tight transition-all" href="#how-it-works">
+                Explore How It Works
+              </a>
+</div>
+<!-- Technical Metadata Tags -->
+<div class="pt-4 border-t border-brand-border/60">
+<div class="text-[11px] font-mono text-brand-dim flex flex-wrap items-center gap-y-2 gap-x-4">
+<span class="flex items-center"><span class="w-1.5 h-1.5 bg-brand-green mr-1.5 rounded-none"></span>Constraint Optimization</span>
+<span class="text-brand-border">|</span>
+<span class="flex items-center"><span class="w-1.5 h-1.5 bg-brand-teal mr-1.5 rounded-none"></span>Rule Validation</span>
+<span class="text-brand-border">|</span>
+<span class="flex items-center"><span class="w-1.5 h-1.5 bg-brand-amber mr-1.5 rounded-none"></span>3D Cabinet Inspection</span>
+</div>
+</div>
+</div>
+<!-- Right Column: 3D CAD Simulator Viewport (60% width) -->
+<div class="lg:col-span-7">
+<!-- Viewport Container with Technical Framing -->
+<div class="relative bg-brand-dark rounded-sm border border-brand-border shadow-md overflow-hidden dark-cad-grid" data-purpose="cad-3d-viewport">
+<!-- Technical Top Bar with Coordinates & Status -->
+<div class="flex items-center justify-between px-3 py-2 bg-[#171C1C] border-b border-white/10 text-[11px] font-mono text-white/80">
+<div class="flex items-center space-x-2">
+<span class="w-2 h-2 rounded-full bg-brand-green"></span>
+<span class="text-white font-medium">CAB-01 // Rittal TS8 // 800×2000×600mm</span>
+<span class="text-white/40 hidden sm:inline">|</span>
+<span class="text-white/60 hidden sm:inline">IP54 Field Marshaling</span>
+</div>
+<div class="text-[10px] text-white/50 hidden md:block">
+                  ORBIT: LMB-Drag | PAN: RMB-Drag | ZOOM: Wheel
+                </div>
+</div>
+<!-- Embedded 3D Scene Viewport -->
+<div class="relative w-full h-[500px] lg:h-[540px]" id="cad-interactive-hero-wrapper">
+<!-- 3D Scene Hook Container -->
+<!-- STITCH_THREEJS_START:ANIMATION_22 class="w-full h-full bg-transparent block cursor-grab active:cursor-grabbing" -->
+<div class="w-full h-full bg-transparent block cursor-grab active:cursor-grabbing" style="display:block;">
+<script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+<div id="threejs-container-ANIMATION_22" style="width:100%;height:100%"></div>
+<script>
+(function() {
+  const container = document.getElementById('threejs-container-ANIMATION_22');
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  (function() {
+  const container = document.getElementById('threejs-container-cabinet-hero');
+  if (!container) return;
+
+  const width = container.clientWidth || window.innerWidth;
+  const height = container.clientHeight || window.innerHeight;
+
+  const scene = new THREE.Scene();
+  scene.background = null; // Transparent background for hero integration
+
+  const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
+  camera.position.set(3.0, 1.2, 3.8);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  container.appendChild(renderer.domElement);
+
+  // Clean studio CAD lighting
+  const ambientLight = new THREE.AmbientLight(0xdce5e2, 0.9);
+  scene.add(ambientLight);
+
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  keyLight.position.set(4, 7, 5);
+  keyLight.castShadow = true;
+  keyLight.shadow.mapSize.width = 1024;
+  keyLight.shadow.mapSize.height = 1024;
+  keyLight.shadow.bias = -0.0005;
+  scene.add(keyLight);
+
+  const fillLight = new THREE.DirectionalLight(0xa5bcbe, 0.6);
+  fillLight.position.set(-5, 3, -2);
+  scene.add(fillLight);
+
+  const tealRim = new THREE.DirectionalLight(0x247c70, 0.25);
+  tealRim.position.set(0, -4, -3);
+  scene.add(tealRim);
+
+  // Materials (Refined Industrial CAD palette)
+  const matCabinetSteel = new THREE.MeshStandardMaterial({
+    color: 0x939b97,
+    roughness: 0.45,
+    metalness: 0.35
+  });
+  const matCabinetInside = new THREE.MeshStandardMaterial({
+    color: 0xe0e5e2,
+    roughness: 0.55,
+    metalness: 0.2
+  });
+  const matOrangeGasket = new THREE.MeshLambertMaterial({ color: 0xd95a2b });
+  const matGalvanizedRail = new THREE.MeshStandardMaterial({
+    color: 0xb5beba,
+    roughness: 0.35,
+    metalness: 0.8
+  });
+  const matTrunkingGrey = new THREE.MeshLambertMaterial({ color: 0x424a48 });
+  const matCiocBlack = new THREE.MeshLambertMaterial({ color: 0x1f2423 });
+  const matBaseplateDark = new THREE.MeshLambertMaterial({ color: 0x2b3230 });
+  const matCharmGreen = new THREE.MeshLambertMaterial({ color: 0x39815a }); // Validated assignment
+  const matCharmTeal = new THREE.MeshLambertMaterial({ color: 0x247c70 });   // Selected slot
+  const matCharmAmber = new THREE.MeshLambertMaterial({ color: 0xc58a2b });  // Warning / Incompatible
+  const matCharmGrey = new THREE.MeshLambertMaterial({ color: 0x6e7874 });   // Spare / Available
+
+  // Cabinet Enclosure
+  const cabWidth = 1.8;
+  const cabHeight = 3.1;
+  const cabDepth = 0.85;
+  const cabWall = 0.05;
+
+  const cabinetGroup = new THREE.Group();
+  scene.add(cabinetGroup);
+
+  // Backplate
+  const backplateMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWidth - cabWall*2, cabHeight - cabWall*2, 0.02), matCabinetInside);
+  backplateMesh.position.set(0, 0, -cabDepth/2 + 0.03);
+  backplateMesh.receiveShadow = true;
+  cabinetGroup.add(backplateMesh);
+
+  // Outer Enclosure Walls
+  const topMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, cabWall, cabDepth), matCabinetSteel);
+  topMesh.position.set(0, cabHeight/2 - cabWall/2, 0);
+  cabinetGroup.add(topMesh);
+
+  const btmMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, cabWall, cabDepth), matCabinetSteel);
+  btmMesh.position.set(0, -cabHeight/2 + cabWall/2, 0);
+  cabinetGroup.add(btmMesh);
+
+  const leftMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWall, cabHeight, cabDepth), matCabinetSteel);
+  leftMesh.position.set(-cabWidth/2 + cabWall/2, 0, 0);
+  cabinetGroup.add(leftMesh);
+
+  const rightMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWall, cabHeight, cabDepth), matCabinetSteel);
+  rightMesh.position.set(cabWidth/2 - cabWall/2, 0, 0);
+  cabinetGroup.add(rightMesh);
+
+  // Plinth
+  const plinth = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, 0.22, cabDepth), new THREE.MeshLambertMaterial({ color: 0x252b29 }));
+  plinth.position.set(0, -cabHeight/2 - 0.11, 0);
+  cabinetGroup.add(plinth);
+
+  // Open Door (Swung open at ~108 degrees)
+  const doorGroup = new THREE.Group();
+  doorGroup.position.set(-cabWidth/2, 0, cabDepth/2);
+  doorGroup.rotation.y = -Math.PI * 0.62;
+
+  const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, cabHeight, 0.04), matCabinetSteel);
+  doorLeaf.position.set(cabWidth/2, 0, 0);
+  doorGroup.add(doorLeaf);
+
+  const pocket = new THREE.Mesh(new THREE.BoxGeometry(cabWidth*0.7, cabHeight*0.24, 0.03), new THREE.MeshLambertMaterial({ color: 0x737d79 }));
+  pocket.position.set(cabWidth/2, -cabHeight*0.2, 0.035);
+  doorGroup.add(pocket);
+
+  const gasket = new THREE.Mesh(new THREE.BoxGeometry(cabWidth*0.96, cabHeight*0.96, 0.01), matOrangeGasket);
+  gasket.position.set(cabWidth/2, 0, 0.022);
+  doorGroup.add(gasket);
+
+  cabinetGroup.add(doorGroup);
+
+  // DIN Rails and Wire Trunking
+  const railPositionsY = [0.82, 0.1, -0.62];
+  const railZ = -cabDepth/2 + 0.08;
+
+  // Vertical ducts
+  const ductW = 0.075;
+  const ductGeoV = new THREE.BoxGeometry(ductW, cabHeight - 0.4, ductW);
+  const leftDuct = new THREE.Mesh(ductGeoV, matTrunkingGrey);
+  leftDuct.position.set(-cabWidth/2 + 0.16, 0, railZ + 0.04);
+  cabinetGroup.add(leftDuct);
+
+  const rightDuct = new THREE.Mesh(ductGeoV, matTrunkingGrey);
+  rightDuct.position.set(cabWidth/2 - 0.16, 0, railZ + 0.04);
+  cabinetGroup.add(rightDuct);
+
+  // Horizontal ducts
+  [-0.26, 0.46, 1.2].forEach(y => {
+    const duct = new THREE.Mesh(new THREE.BoxGeometry(cabWidth - 0.25, ductW, ductW), matTrunkingGrey);
+    duct.position.set(0, y, railZ + 0.04);
+    cabinetGroup.add(duct);
+  });
+
+  // Rails & Mounted Modules
+  railPositionsY.forEach((yPos, railIdx) => {
+    const dinRail = new THREE.Mesh(new THREE.BoxGeometry(cabWidth - 0.4, 0.038, 0.015), matGalvanizedRail);
+    dinRail.position.set(0, yPos, railZ);
+    dinRail.castShadow = true;
+    cabinetGroup.add(dinRail);
+
+    if (railIdx === 0) {
+      // Top Rail: Power Supplies, Primary & Standby CIOC
+      const psMesh = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.22, 0.16), new THREE.MeshLambertMaterial({ color: 0x3d4644 }));
+      psMesh.position.set(-0.45, yPos + 0.02, railZ + 0.09);
+      cabinetGroup.add(psMesh);
+
+      [-0.1, 0.18].forEach((xPos, cIdx) => {
+        const cioc = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.25, 0.18), matCiocBlack);
+        cioc.position.set(xPos, yPos + 0.03, railZ + 0.1);
+        cabinetGroup.add(cioc);
+
+        const led = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.018, 0.01), new THREE.MeshBasicMaterial({ color: 0x39815a }));
+        led.position.set(xPos - 0.06, yPos + 0.11, railZ + 0.195);
+        cabinetGroup.add(led);
+      });
+
+      const termBlock = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.15, 0.12), new THREE.MeshLambertMaterial({ color: 0x8a928e }));
+      termBlock.position.set(0.44, yPos, railZ + 0.07);
+      cabinetGroup.add(termBlock);
+    }
+
+    if (railIdx === 1 || railIdx === 2) {
+      // Rails 1 & 2: Baseplates (BP-01, BP-02, BP-03, BP-04)
+      [-0.32, 0.32].forEach((bpX, bpSubIdx) => {
+        const baseplate = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.26, 0.07), matBaseplateDark);
+        baseplate.position.set(bpX, yPos, railZ + 0.04);
+        cabinetGroup.add(baseplate);
+
+        // 16 CHARM slots (2 rows of 8)
+        const slotPitchX = 0.06;
+        const slotPitchY = 0.09;
+        const startX = bpX - (7 * slotPitchX)/2;
+
+        for (let r = 0; r < 2; r++) {
+          for (let c = 0; c < 8; c++) {
+            const slotNum = r * 8 + c + 1;
+            const charmX = startX + c * slotPitchX;
+            const charmY = yPos + (r === 0 ? slotPitchY/2 : -slotPitchY/2);
+
+            let charmMat = matCharmGreen; // Subdued green for validated assignment
+            if (bpSubIdx === 1 && railIdx === 1 && slotNum === 5) {
+              charmMat = matCharmTeal; // Selected position (Teal)
+            } else if (bpSubIdx === 1 && railIdx === 1 && slotNum === 9) {
+              charmMat = matCharmAmber; // Restrained amber warning
+            } else if (slotNum > 12) {
+              charmMat = matCharmGrey; // Available / Spare
+            }
+
+            const charm = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.07, 0.06), charmMat);
+            charm.position.set(charmX, charmY, railZ + 0.09);
+            charm.castShadow = true;
+            cabinetGroup.add(charm);
+
+            const terminal = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.014, 0.02), new THREE.MeshLambertMaterial({ color: 0xedf1ee }));
+            terminal.position.set(charmX, charmY - 0.038, railZ + 0.08);
+            cabinetGroup.add(terminal);
+          }
+        }
+      });
+    }
+  });
+
+  // Cable bundles entering bottom gland plate
+  const cableColors = [0x2f3533, 0x1d2c29, 0x3d352b, 0x223647];
+  for (let i = 0; i < 6; i++) {
+    const curve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.35 + i*0.14, -cabHeight/2 + 0.08, 0.1),
+      new THREE.Vector3(-0.48 + (i%2)*0.1, -cabHeight/2 + 0.55, railZ + 0.05),
+      new THREE.Vector3(-cabWidth/2 + 0.16, -0.55 + i*0.2, railZ + 0.06)
+    ]);
+    const tubeGeo = new THREE.TubeGeometry(curve, 14, 0.013, 6, false);
+    const cableMesh = new THREE.Mesh(tubeGeo, new THREE.MeshLambertMaterial({ color: cableColors[i % 4] }));
+    cabinetGroup.add(cableMesh);
+  }
+
+  // Interactive subtle orbit & rotation
+  let isDragging = false;
+  let prevMouse = { x: 0, y: 0 };
+  let spherical = { radius: 4.6, theta: 0.52, phi: 1.28 };
+  let targetSpherical = { radius: 4.6, theta: 0.52, phi: 1.28 };
+  let targetLookAt = new THREE.Vector3(0, 0, 0);
+
+  function updateCamera() {
+    camera.position.x = targetLookAt.x + spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
+    camera.position.y = targetLookAt.y + spherical.radius * Math.cos(spherical.phi);
+    camera.position.z = targetLookAt.z + spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
+    camera.lookAt(targetLookAt);
+  }
+  updateCamera();
+
+  renderer.domElement.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    prevMouse = { x: e.clientX, y: e.clientY };
+  });
+
+  window.addEventListener('mouseup', () => { isDragging = false; });
+
+  renderer.domElement.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const deltaX = e.clientX - prevMouse.x;
+    const deltaY = e.clientY - prevMouse.y;
+    targetSpherical.theta -= deltaX * 0.007;
+    targetSpherical.phi = Math.max(0.3, Math.min(Math.PI - 0.3, targetSpherical.phi - deltaY * 0.007));
+    prevMouse = { x: e.clientX, y: e.clientY };
+  });
+
+  renderer.domElement.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    targetSpherical.radius = Math.max(1.8, Math.min(7.5, targetSpherical.radius + e.deltaY * 0.003));
+  }, { passive: false });
+
+  // Camera presets exposed globally
+  window.cadHeroReset = function() { targetSpherical = { radius: 4.6, theta: 0.52, phi: 1.28 }; };
+  window.cadHeroZoomIn = function() { targetSpherical.radius = Math.max(1.8, targetSpherical.radius * 0.8); };
+  window.cadHeroZoomOut = function() { targetSpherical.radius = Math.min(7.5, targetSpherical.radius * 1.25); };
+
+  // Subtle ambient idle float when idle
+  let idleTime = 0;
+  let animId;
+  function animate() {
+    animId = requestAnimationFrame(animate);
+    if (!isDragging) {
+      idleTime += 0.005;
+      targetSpherical.theta += Math.sin(idleTime) * 0.0004;
+    }
+    spherical.radius += (targetSpherical.radius - spherical.radius) * 0.08;
+    spherical.theta += (targetSpherical.theta - spherical.theta) * 0.08;
+    spherical.phi += (targetSpherical.phi - spherical.phi) * 0.08;
+    updateCamera();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    const w = container.clientWidth || window.innerWidth;
+    const h = container.clientHeight || window.innerHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+})();
+})();
+</script>
+</div>
+<!-- STITCH_THREEJS_END:ANIMATION_22 -->
+<!-- Technical CAD Annotation Overlays with Leader Lines -->
+<div class="absolute top-6 left-6 pointer-events-none hidden sm:block">
+<div class="flex items-start space-x-2">
+<div class="border border-white/20 bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded text-[11px] font-mono text-white/90 shadow-sm">
+<span class="text-white/50 mr-1.5">CABINET</span>CAB-01 [800×2000×600mm]
+                    </div>
+</div>
+</div>
+<div class="absolute top-24 left-1/3 pointer-events-none hidden md:block">
+<div class="flex items-center space-x-2">
+<span class="w-2 h-2 rounded-full bg-white/70"></span>
+<span class="w-8 h-[1px] bg-white/30"></span>
+<div class="border border-white/20 bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-mono text-white/90">
+                      CIOC-01 Primary Controller
+                    </div>
+</div>
+</div>
+<div class="absolute top-1/2 left-1/4 pointer-events-none hidden sm:block">
+<div class="flex items-center space-x-2">
+<span class="w-2 h-2 rounded-full bg-brand-green"></span>
+<span class="w-6 h-[1px] bg-brand-green/60"></span>
+<div class="border border-brand-green/40 bg-[#162921]/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-mono text-white">
+                      CH-05 [PT-101] Validated Slot
+                    </div>
+</div>
+</div>
+<div class="absolute bottom-28 right-16 pointer-events-none hidden sm:block">
+<div class="flex items-center space-x-2">
+<div class="border border-brand-amber/40 bg-[#292212]/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-mono text-brand-amber">
+                      CH-09 [FT-104B] Segregation Warning
+                    </div>
+<span class="w-6 h-[1px] bg-brand-amber/60"></span>
+<span class="w-2 h-2 rounded-full bg-brand-amber"></span>
+</div>
+</div>
+<!-- CAD Camera Control Overlay Toolbar -->
+<div class="absolute bottom-3 left-3 flex items-center space-x-1 bg-black/75 backdrop-blur-sm border border-white/10 rounded p-1 text-[11px] font-mono text-white/80" data-purpose="cad-camera-controls">
+<button class="px-2 py-1 hover:bg-white/10 rounded transition text-white" onclick="window.cadHeroReset &amp;&amp; window.cadHeroReset()" title="Reset View">ISO</button>
+<button class="px-2 py-1 hover:bg-white/10 rounded transition text-white/60">FRONT</button>
+<button class="px-2 py-1 hover:bg-white/10 rounded transition text-white/60">TOP</button>
+<span class="w-[1px] h-3 bg-white/20 mx-0.5"></span>
+<button class="p-1 hover:bg-white/10 rounded transition" onclick="window.cadHeroZoomIn &amp;&amp; window.cadHeroZoomIn()" title="Zoom In">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+<button class="p-1 hover:bg-white/10 rounded transition" onclick="window.cadHeroZoomOut &amp;&amp; window.cadHeroZoomOut()" title="Zoom Out">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 12H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+</div>
+<!-- 3D Orientation Gizmo Corner Indicator -->
+<div class="absolute top-3 right-3 bg-black/60 border border-white/10 rounded p-2 text-center pointer-events-none font-mono text-[9px] text-white/70">
+<div class="w-6 h-6 border border-brand-teal/80 flex items-center justify-center text-[10px] text-brand-teal font-bold mb-1">
+                    TOP
+                  </div>
+<span>Y-UP // TS35</span>
+</div>
+</div>
+<!-- Status Footer Bar -->
+<div class="px-3 py-1.5 bg-[#141818] border-t border-white/10 flex items-center justify-between text-[10px] font-mono text-white/60">
+<div class="flex items-center space-x-3">
+<span class="text-brand-green">● Solved: 57 / 81 Channels</span>
+<span>Rev: B [Approved Baseline]</span>
+</div>
+<div class="text-white/40">
+                  WebGL 2.0 · 60 FPS
+                </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Hero Section -->
+<!-- BEGIN: Engineering Credibility Strip -->
+<section class="bg-[#F5F6F3] border-b border-brand-border py-6 px-4 lg:px-8" data-purpose="credibility-strip">
+<div class="max-w-[1600px] mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-brand-border">
+<!-- Strip Item 1 -->
+<div class="py-4 md:py-0 md:px-6 first:pl-0 flex items-start space-x-3.5">
+<div class="p-1.5 bg-brand-body border border-brand-border rounded text-brand-teal mt-0.5">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<div>
+<h3 class="text-xs font-mono font-semibold uppercase tracking-tight text-brand-graphite">Constraint-Based Allocation</h3>
+<p class="text-xs text-brand-graphite/70 mt-1 leading-normal">
+                Assign eligible signals while respecting configured engineering rules using integer constraint solvers (OR-Tools CP-SAT).
+              </p>
+</div>
+</div>
+<!-- Strip Item 2 -->
+<div class="py-4 md:py-0 md:px-6 flex items-start space-x-3.5">
+<div class="p-1.5 bg-brand-body border border-brand-border rounded text-brand-green mt-0.5">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<div>
+<h3 class="text-xs font-mono font-semibold uppercase tracking-tight text-brand-graphite">Explainable Validation</h3>
+<p class="text-xs text-brand-graphite/70 mt-1 leading-normal">
+                Identify invalid assignments, unresolved signals, and segregation conflicts with deterministic, traceable proof trees.
+              </p>
+</div>
+</div>
+<!-- Strip Item 3 -->
+<div class="py-4 md:py-0 md:px-6 last:pr-0 flex items-start space-x-3.5">
+<div class="p-1.5 bg-brand-body border border-brand-border rounded text-brand-amber mt-0.5">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<div>
+<h3 class="text-xs font-mono font-semibold uppercase tracking-tight text-brand-graphite">Revision-Aware Optimization</h3>
+<p class="text-xs text-brand-graphite/70 mt-1 leading-normal">
+                Preserve valid assignments between project revisions while satisfying updated requirements, minimizing physical rewiring drift.
+              </p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Engineering Credibility Strip -->
+<!-- BEGIN: How It Works Section -->
+<section class="py-16 lg:py-24 border-b border-brand-border bg-[#E9EBE8]" data-purpose="how-it-works-workflow" id="how-it-works">
+<div class="max-w-[1600px] mx-auto px-4 lg:px-8">
+<!-- Section Header -->
+<div class="max-w-2xl mb-12">
+<div class="text-[11px] font-mono text-brand-teal uppercase tracking-wider mb-2">Deterministic Engineering Workflow</div>
+<h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-brand-graphite">
+            From raw signals to validated allocation.
+          </h2>
+<p class="text-xs sm:text-sm text-brand-graphite/75 mt-2">
+            Eliminate error-prone spreadsheet marshaling with an end-to-end mathematical solver and real-time physical inspection engine.
+          </p>
+</div>
+<!-- 4-Stage Process Flow Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Stage 01 -->
+<div class="bg-[#F5F6F3] border border-brand-border p-6 rounded-sm flex flex-col justify-between hover:border-brand-teal transition-colors">
+<div>
+<div class="flex items-center justify-between border-b border-brand-border/60 pb-3 mb-4">
+<span class="font-mono text-lg font-bold text-brand-teal">01</span>
+<span class="text-[11px] font-mono bg-brand-body text-brand-dim px-2 py-0.5 rounded">INGESTION</span>
+</div>
+<h3 class="text-sm font-semibold text-brand-graphite mb-2">Import &amp; Normalize</h3>
+<p class="text-xs text-brand-graphite/70 leading-relaxed">
+                Load signal schedules directly from Excel, Access MDB, or instrument databases. Automatic schema normalization flags duplicate tags and missing ranges.
+              </p>
+</div>
+<div class="mt-6 pt-4 border-t border-brand-border/40 font-mono text-[10px] text-brand-dim">
+              PARSER: XLSX / CSV / XML / CA01
+            </div>
+</div>
+<!-- Stage 02 -->
+<div class="bg-[#F5F6F3] border border-brand-border p-6 rounded-sm flex flex-col justify-between hover:border-brand-teal transition-colors">
+<div>
+<div class="flex items-center justify-between border-b border-brand-border/60 pb-3 mb-4">
+<span class="font-mono text-lg font-bold text-brand-teal">02</span>
+<span class="text-[11px] font-mono bg-brand-body text-brand-dim px-2 py-0.5 rounded">SOLVER</span>
+</div>
+<h3 class="text-sm font-semibold text-brand-graphite mb-2">Optimize Constraints</h3>
+<p class="text-xs text-brand-graphite/70 leading-relaxed">
+                CP-SAT solver matches signals against module types (AI, AO, DI, DO, RTD, HART), capacity restrictions, and segregation rules in seconds.
+              </p>
+</div>
+<div class="mt-6 pt-4 border-t border-brand-border/40 font-mono text-[10px] text-brand-dim">
+              ENGINE: OR-TOOLS CP-SAT SOLVER
+            </div>
+</div>
+<!-- Stage 03 -->
+<div class="bg-[#F5F6F3] border border-brand-border p-6 rounded-sm flex flex-col justify-between hover:border-brand-teal transition-colors">
+<div>
+<div class="flex items-center justify-between border-b border-brand-border/60 pb-3 mb-4">
+<span class="font-mono text-lg font-bold text-brand-teal">03</span>
+<span class="text-[11px] font-mono bg-brand-body text-brand-dim px-2 py-0.5 rounded">SIMULATOR</span>
+</div>
+<h3 class="text-sm font-semibold text-brand-graphite mb-2">3D Cabinet Inspection</h3>
+<p class="text-xs text-brand-graphite/70 leading-relaxed">
+                Interact with the true physical model. Inspect terminal blocks, baseplates, cable trays, and DIN-rail thermal clearances in high-fidelity 3D.
+              </p>
+</div>
+<div class="mt-6 pt-4 border-t border-brand-border/40 font-mono text-[10px] text-brand-dim">
+              RENDERER: WEBGL / THREE.JS CAD
+            </div>
+</div>
+<!-- Stage 04 -->
+<div class="bg-[#F5F6F3] border border-brand-border p-6 rounded-sm flex flex-col justify-between hover:border-brand-teal transition-colors">
+<div>
+<div class="flex items-center justify-between border-b border-brand-border/60 pb-3 mb-4">
+<span class="font-mono text-lg font-bold text-brand-teal">04</span>
+<span class="text-[11px] font-mono bg-brand-body text-brand-dim px-2 py-0.5 rounded">AUDIT</span>
+</div>
+<h3 class="text-sm font-semibold text-brand-graphite mb-2">Validate &amp; Export</h3>
+<p class="text-xs text-brand-graphite/70 leading-relaxed">
+                Verify against IEC 61131-2 and intrinsic safety rules. Export complete marshaling drawings, cable termination lists, and verifiable query reports.
+              </p>
+</div>
+<div class="mt-6 pt-4 border-t border-brand-border/40 font-mono text-[10px] text-brand-dim">
+              OUTPUT: BOM, PDF, DWG, CSV
+            </div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: How It Works Section -->
+<!-- BEGIN: Simulator Preview & Inspector Section -->
+<section class="py-16 lg:py-24 border-b border-brand-border bg-[#F5F6F3]" data-purpose="simulator-detailed-preview" id="simulator-preview">
+<div class="max-w-[1600px] mx-auto px-4 lg:px-8">
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+<div>
+<div class="text-[11px] font-mono text-brand-teal uppercase tracking-wider mb-2">Real-Time Mechanical &amp; Electrical Synthesis</div>
+<h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-brand-graphite">
+              Engineering decisions, grounded in the physical model.
+            </h2>
+</div>
+<div class="font-mono text-xs text-brand-dim">
+            LIVE INSPECTOR VIEWPORT // REV B.1
+          </div>
+</div>
+<!-- Technical CAD Workstation Split Card -->
+<div class="border border-brand-border bg-white rounded-sm shadow-sm overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+<!-- Left: Detailed Graphic Schematic View (7 Cols) -->
+<div class="lg:col-span-7 bg-[#1A1F1F] p-6 text-white flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-brand-border relative">
+<div class="flex items-center justify-between text-xs font-mono border-b border-white/10 pb-3">
+<span class="text-white/80">CAB-01 &gt; CIOC-01 &gt; BP-02 (CHARM 16-CH BASEPLATE)</span>
+<span class="text-brand-green font-semibold">STATUS: SYNCHRONIZED</span>
+</div>
+<!-- Virtual Baseplate Terminal Grid Graphic -->
+<div class="my-8 py-4 px-2 bg-[#121515] border border-white/10 rounded">
+<div class="text-[10px] font-mono text-white/50 mb-3 px-2 flex justify-between">
+<span>ROW 01 (CH 01 - 08)</span>
+<span>VOLTAGE CLASS: 24V DC IS</span>
+</div>
+<div class="grid grid-cols-8 gap-2 px-2 mb-4">
+<!-- Slot 1 to 8 -->
+<div class="bg-brand-green/20 border border-brand-green/60 p-2 rounded text-center">
+<div class="text-[9px] font-mono text-brand-green font-bold">01</div>
+<div class="text-[8px] font-mono text-white/70 mt-1">AI</div>
+</div>
+<div class="bg-brand-green/20 border border-brand-green/60 p-2 rounded text-center">
+<div class="text-[9px] font-mono text-brand-green font-bold">02</div>
+<div class="text-[8px] font-mono text-white/70 mt-1">AI</div>
+</div>
+<div class="bg-brand-green/20 border border-brand-green/60 p-2 rounded text-center">
+<div class="text-[9px] font-mono text-brand-green font-bold">03</div>
+<div class="text-[8px] font-mono text-white/70 mt-1">RTD</div>
+</div>
+<div class="bg-brand-green/20 border border-brand-green/60 p-2 rounded text-center">
+<div class="text-[9px] font-mono text-brand-green font-bold">04</div>
+<div class="text-[8px] font-mono text-white/70 mt-1">RTD</div>
+</div>
+<!-- ACTIVE SELECTED CH-05 -->
+<div class="bg-brand-teal border-2 border-white p-2 rounded text-center ring-2 ring-brand-teal/50 shadow-lg scale-105">
+<div class="text-[9px] font-mono text-white font-bold">05</div>
+<div class="text-[8px] font-mono text-white mt-1">HART</div>
+</div>
+<div class="bg-brand-green/20 border border-brand-green/60 p-2 rounded text-center">
+<div class="text-[9px] font-mono text-brand-green font-bold">06</div>
+<div class="text-[8px] font-mono text-white/70 mt-1">AI</div>
+</div>
+<div class="bg-brand-green/20 border border-brand-green/60 p-2 rounded text-center">
+<div class="text-[9px] font-mono text-brand-green font-bold">07</div>
+<div class="text-[8px] font-mono text-white/70 mt-1">DO</div>
+</div>
+<div class="bg-brand-green/20 border border-brand-green/60 p-2 rounded text-center">
+<div class="text-[9px] font-mono text-brand-green font-bold">08</div>
+<div class="text-[8px] font-mono text-white/70 mt-1">DO</div>
+</div>
+</div>
+<div class="text-[10px] font-mono text-white/50 mb-3 px-2 flex justify-between">
+<span>ROW 02 (CH 09 - 16)</span>
+<span>CH-09 SEGREGATION WARNING</span>
+</div>
+<div class="grid grid-cols-8 gap-2 px-2">
+<!-- Warning Slot 09 -->
+<div class="bg-brand-amber/30 border border-brand-amber p-2 rounded text-center animate-pulse">
+<div class="text-[9px] font-mono text-brand-amber font-bold">09</div>
+<div class="text-[8px] font-mono text-brand-amber mt-1">! FT</div>
+</div>
+<div class="bg-brand-green/20 border border-brand-green/60 p-2 rounded text-center">
+<div class="text-[9px] font-mono text-brand-green font-bold">10</div>
+<div class="text-[8px] font-mono text-white/70 mt-1">DI</div>
+</div>
+<div class="bg-brand-green/20 border border-brand-green/60 p-2 rounded text-center">
+<div class="text-[9px] font-mono text-brand-green font-bold">11</div>
+<div class="text-[8px] font-mono text-white/70 mt-1">DI</div>
+</div>
+<div class="bg-brand-green/20 border border-brand-green/60 p-2 rounded text-center">
+<div class="text-[9px] font-mono text-brand-green font-bold">12</div>
+<div class="text-[8px] font-mono text-white/70 mt-1">DI</div>
+</div>
+<!-- Spare slots 13-16 -->
+<div class="bg-white/5 border border-white/10 p-2 rounded text-center">
+<div class="text-[9px] font-mono text-white/30">13</div>
+<div class="text-[8px] font-mono text-white/30 mt-1">SPARE</div>
+</div>
+<div class="bg-white/5 border border-white/10 p-2 rounded text-center">
+<div class="text-[9px] font-mono text-white/30">14</div>
+<div class="text-[8px] font-mono text-white/30 mt-1">SPARE</div>
+</div>
+<div class="bg-white/5 border border-white/10 p-2 rounded text-center">
+<div class="text-[9px] font-mono text-white/30">15</div>
+<div class="text-[8px] font-mono text-white/30 mt-1">SPARE</div>
+</div>
+<div class="bg-white/5 border border-white/10 p-2 rounded text-center">
+<div class="text-[9px] font-mono text-white/30">16</div>
+<div class="text-[8px] font-mono text-white/30 mt-1">SPARE</div>
+</div>
+</div>
+</div>
+<!-- Terminal Footnote -->
+<div class="flex items-center justify-between text-[11px] font-mono text-white/60">
+<span class="flex items-center">
+<span class="w-2.5 h-2.5 bg-brand-teal rounded-sm mr-2"></span>Selected: CH-05 (AI 4-20mA HART)
+              </span>
+<span>Thermal Budget: 14.2W / 28.0W</span>
+</div>
+</div>
+<!-- Right: Docked Property Inspector Sheet (5 Cols) -->
+<div class="lg:col-span-5 bg-[#F5F6F3] p-6 flex flex-col justify-between" data-purpose="cad-inspector-sheet">
+<div class="space-y-5">
+<div class="flex items-center justify-between border-b border-brand-border pb-3">
+<div class="flex items-center space-x-2">
+<svg class="w-4 h-4 text-brand-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span class="font-mono text-xs font-semibold text-brand-graphite uppercase">Object Inspector</span>
+</div>
+<span class="font-mono text-[10px] bg-brand-green/15 text-brand-green font-semibold px-2 py-0.5 rounded border border-brand-green/30">VALID &amp; PINNED</span>
+</div>
+<!-- Terminal Address -->
+<div>
+<div class="text-[10px] font-mono uppercase text-brand-dim">Terminal Slot Position</div>
+<div class="text-sm font-mono font-bold text-brand-graphite mt-0.5">CHARM Position [CH-05]</div>
+<div class="text-[11px] font-mono text-brand-graphite/70">CAB-01 &gt; CIOC-01 &gt; BP-02 &gt; CH-05</div>
+</div>
+<!-- Hardware Specs Table -->
+<div class="border border-brand-border bg-white rounded p-3 space-y-2 text-xs">
+<div class="flex justify-between items-center border-b border-brand-border/40 pb-1.5">
+<span class="text-brand-dim font-mono text-[11px]">Signal Tag</span>
+<span class="font-mono font-semibold text-brand-graphite">PT-101</span>
+</div>
+<div class="flex justify-between items-center border-b border-brand-border/40 pb-1.5">
+<span class="text-brand-dim font-mono text-[11px]">Description</span>
+<span class="text-brand-graphite text-[11px] truncate max-w-[180px]">Deethanizer Reboiler Pressure</span>
+</div>
+<div class="flex justify-between items-center border-b border-brand-border/40 pb-1.5">
+<span class="text-brand-dim font-mono text-[11px]">Module Type</span>
+<span class="font-mono text-brand-graphite">AI 4-20mA HART</span>
+</div>
+<div class="flex justify-between items-center border-b border-brand-border/40 pb-1.5">
+<span class="text-brand-dim font-mono text-[11px]">Terminal Pin</span>
+<span class="font-mono text-brand-graphite">Pair 09 / 10</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-brand-dim font-mono text-[11px]">Hazard Rating</span>
+<span class="font-mono text-brand-teal font-medium">Ex-ia (Zone 1)</span>
+</div>
+</div>
+<!-- Solver Rationale Proof Tree -->
+<div class="bg-white border border-brand-border rounded p-3">
+<div class="text-[10px] font-mono uppercase text-brand-dim mb-2 flex items-center">
+<svg class="w-3 h-3 text-brand-green mr-1" fill="currentColor" viewBox="0 0 20 20"><path clip-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" fill-rule="evenodd"></path></svg>
+                  Solver Rationale Proof Tree
+                </div>
+<ul class="text-[11px] space-y-1.5 text-brand-graphite/85">
+<li class="flex items-start">
+<span class="text-brand-green mr-1.5">✔</span>
+<span>Passes IS barrier rule HARD-04 (Galvanic isolation &gt; 2500V)</span>
+</li>
+<li class="flex items-start">
+<span class="text-brand-green mr-1.5">✔</span>
+<span>Zero rewiring drift (0m labor delta preserved from REV-A baseline)</span>
+</li>
+<li class="flex items-start">
+<span class="text-brand-green mr-1.5">✔</span>
+<span>Adjacent to PT-102 inside multicore CBL-101A (Pair 2)</span>
+</li>
+</ul>
+</div>
+</div>
+<!-- Action Button -->
+<div class="pt-6">
+<a class="w-full inline-flex items-center justify-center bg-brand-graphite text-white hover:bg-black px-4 py-2.5 rounded-sm text-xs font-mono font-medium tracking-tight transition-colors" href="#simulator">
+                Explore the Simulator
+                <svg class="w-3.5 h-3.5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</a>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Simulator Preview & Inspector Section -->
+<!-- BEGIN: Capabilities Matrix Section -->
+<section class="py-16 lg:py-24 border-b border-brand-border bg-[#E9EBE8]" data-purpose="core-capabilities" id="capabilities">
+<div class="max-w-[1600px] mx-auto px-4 lg:px-8">
+<div class="max-w-2xl mb-12">
+<div class="text-[11px] font-mono text-brand-teal uppercase tracking-wider mb-2">Core Technical Matrix</div>
+<h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-brand-graphite">
+            Industrial integrity at system scale.
+          </h2>
+<p class="text-xs sm:text-sm text-brand-graphite/75 mt-2">
+            Built strictly for instrument and automation engineers handling thousands of signals across greenfield and brownfield rev cycles.
+          </p>
+</div>
+<!-- 4-Column Engineering Capabilities -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Cap 1 -->
+<div class="bg-[#F5F6F3] border border-brand-border p-6 rounded-sm">
+<div class="w-8 h-8 rounded bg-brand-body border border-brand-border flex items-center justify-center text-brand-teal mb-4">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-sm font-bold text-brand-graphite font-mono mb-2">Constraint Optimization</h3>
+<p class="text-xs text-brand-graphite/70 leading-relaxed">
+              Google OR-Tools CP-SAT formulation solves multi-dimensional I/O bin packing with configurable cost weights for spare targets, card boundaries, and field cable grouping.
+            </p>
+<div class="mt-4 font-mono text-[10px] text-brand-dim pt-3 border-t border-brand-border/50">
+              OR-TOOLS / INTEGER PROG
+            </div>
+</div>
+<!-- Cap 2 -->
+<div class="bg-[#F5F6F3] border border-brand-border p-6 rounded-sm">
+<div class="w-8 h-8 rounded bg-brand-body border border-brand-border flex items-center justify-center text-brand-green mb-4">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-sm font-bold text-brand-graphite font-mono mb-2">Rule Validator</h3>
+<p class="text-xs text-brand-graphite/70 leading-relaxed">
+              Independent audit pass ensures strict compliance with IEC 61131-2, intrinsic safety separation, hazardous area classification, and maximum continuous current loads.
+            </p>
+<div class="mt-4 font-mono text-[10px] text-brand-dim pt-3 border-t border-brand-border/50">
+              IEC 61131-2 / ATEX ZONE 0-2
+            </div>
+</div>
+<!-- Cap 3 -->
+<div class="bg-[#F5F6F3] border border-brand-border p-6 rounded-sm">
+<div class="w-8 h-8 rounded bg-brand-body border border-brand-border flex items-center justify-center text-brand-amber mb-4">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-sm font-bold text-brand-graphite font-mono mb-2">Revision Comparison</h3>
+<p class="text-xs text-brand-graphite/70 leading-relaxed">
+              Delta schedule diffing calculates wiring churn penalties. Freeze approved cabinets and let the engine assign only newly added signals to verified available spare slots.
+            </p>
+<div class="mt-4 font-mono text-[10px] text-brand-dim pt-3 border-t border-brand-border/50">
+              MIN-CHURN / BASELINE LOCK
+            </div>
+</div>
+<!-- Cap 4 -->
+<div class="bg-[#F5F6F3] border border-brand-border p-6 rounded-sm">
+<div class="w-8 h-8 rounded bg-brand-body border border-brand-border flex items-center justify-center text-brand-teal mb-4">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-sm font-bold text-brand-graphite font-mono mb-2">Traceability &amp; Audit</h3>
+<p class="text-xs text-brand-graphite/70 leading-relaxed">
+              Every slot assignment is accompanied by cryptographic hash verification, rule evaluation records, and raw source spreadsheet row lineage for EPC handover sign-off.
+            </p>
+<div class="mt-4 font-mono text-[10px] text-brand-dim pt-3 border-t border-brand-border/50">
+              SHA-256 AUDIT TRAIL
+            </div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Capabilities Matrix Section -->
+<!-- BEGIN: Call to Action Section -->
+<section class="bg-brand-dark text-white py-16 lg:py-20 border-b border-white/10 dark-cad-grid relative" data-purpose="call-to-action" id="simulator">
+<div class="max-w-[1600px] mx-auto px-4 lg:px-8 text-center max-w-3xl">
+<div class="inline-flex items-center space-x-2 text-[11px] font-mono uppercase tracking-wider text-brand-teal bg-white/5 border border-white/10 px-2.5 py-1 rounded mb-4">
+<span>Enterprise Ready CAD &amp; Solver Engine</span>
+</div>
+<h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-4">
+          Make every allocation explainable.
+        </h2>
+<p class="text-sm sm:text-base text-white/70 leading-relaxed mb-8 max-w-xl mx-auto">
+          Explore how constraint optimization and 3D hardware inspection can improve the clarity, speed, and safety of industrial I/O engineering workflows.
+        </p>
+<div class="flex flex-wrap items-center justify-center gap-4">
+<a class="inline-flex items-center justify-center bg-brand-teal text-white hover:bg-brand-teal-hover px-6 py-3 rounded-sm text-xs font-mono font-medium tracking-tight shadow-md transition-all" href="#simulator">
+<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            Open Simulator
+          </a>
+<a class="inline-flex items-center justify-center bg-white/5 border border-white/20 text-white/80 hover:text-white hover:bg-white/10 px-6 py-3 rounded-sm text-xs font-mono font-medium tracking-tight transition-all" href="#technology">
+            View Technical Architecture
+          </a>
+</div>
+</div>
+</section>
+<!-- END: Call to Action Section -->
+</main>
+<!-- BEGIN: Footer -->
+<footer class="bg-[#F5F6F3] border-t border-brand-border py-12 px-4 lg:px-8" data-purpose="main-footer">
+<div class="max-w-[1600px] mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-brand-border/60">
+<!-- Brand Info -->
+<div class="space-y-3">
+<div class="flex items-center space-x-2">
+<svg class="w-5 h-5 text-brand-teal" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<rect height="7" rx="1" width="7" x="3" y="3"></rect>
+<rect height="7" rx="1" width="7" x="14" y="3"></rect>
+<rect height="7" rx="1" width="7" x="3" y="14"></rect>
+<rect fill="#247C70" height="7" rx="1" width="7" x="14" y="14"></rect>
+</svg>
+<span class="font-mono text-xs font-bold text-brand-graphite uppercase">IO Signal Sudoku</span>
+</div>
+<p class="text-xs text-brand-graphite/70 leading-relaxed font-sans">
+            Constraint-based industrial I/O allocation and real-time 3D control cabinet inspection workbench.
+          </p>
+<div class="text-[11px] font-mono text-brand-dim">
+            IEC 61131-2 Standard Compliant
+          </div>
+</div>
+<!-- Navigation Col 1 -->
+<div>
+<div class="font-mono text-xs font-semibold uppercase text-brand-graphite mb-3">Product</div>
+<ul class="text-xs font-mono space-y-2 text-brand-graphite/75">
+<li><a class="hover:text-brand-teal" href="#simulator">3D Cabinet Simulator</a></li>
+<li><a class="hover:text-brand-teal" href="#how-it-works">CP-SAT Solver Engine</a></li>
+<li><a class="hover:text-brand-teal" href="#capabilities">Rule Validator (IS &amp; SIL)</a></li>
+<li><a class="hover:text-brand-teal" href="#technology">Delta Churn Analysis</a></li>
+</ul>
+</div>
+<!-- Navigation Col 2 -->
+<div>
+<div class="font-mono text-xs font-semibold uppercase text-brand-graphite mb-3">Specifications</div>
+<ul class="text-xs font-mono space-y-2 text-brand-graphite/75">
+<li><span class="text-brand-dim">Enclosure:</span> Rittal TS8 / VX25</li>
+<li><span class="text-brand-dim">Rails:</span> TS35/7.5 &amp; TS35/15</li>
+<li><span class="text-brand-dim">Architecture:</span> Electronic Marshaling</li>
+<li><span class="text-brand-dim">Supported I/O:</span> CHARM, ET200SP, PointIO</li>
+</ul>
+</div>
+<!-- Navigation Col 3 -->
+<div>
+<div class="font-mono text-xs font-semibold uppercase text-brand-graphite mb-3">Engineering System</div>
+<ul class="text-xs font-mono space-y-2 text-brand-graphite/75">
+<li class="flex items-center"><span class="w-2 h-2 rounded-full bg-brand-green mr-2"></span>Engine: Ready</li>
+<li><span class="text-brand-dim">Release:</span> v3.4.1-rc2</li>
+<li><span class="text-brand-dim">Build:</span> 2025.02-ORTOOLS</li>
+<li class="text-[11px] text-brand-dim">Targeting EPC &amp; DCS Integrators</li>
+</ul>
+</div>
+</div>
+<!-- Bottom Metadata Bar -->
+<div class="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono text-brand-dim gap-4">
+<div>
+          © 2025 IO SIGNAL SUDOKU. All engineering rights reserved.
+        </div>
+<div class="flex items-center space-x-6">
+<span>IEC 61131-2 Strict Mode</span>
+<span>Zero Rewiring Drift Baseline</span>
+<span>Security &amp; Provenance Pinned</span>
+</div>
+</div>
+</div>
+</footer>
+<!-- END: Footer -->
+<!-- BEGIN: Three.js CAD Hero Scene Execution Script -->
+<script data-purpose="cad-hero-initialization">
+    (function() {
+      const container = document.getElementById('threejs-container-cabinet-hero');
+      if (!container) return;
+
+      const width = container.clientWidth || window.innerWidth;
+      const height = container.clientHeight || 540;
+
+      const scene = new THREE.Scene();
+      scene.background = null; // Transparent background for hero integration
+
+      const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
+      camera.position.set(3.0, 1.2, 3.8);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      // Clean studio CAD lighting
+      const ambientLight = new THREE.AmbientLight(0xdce5e2, 0.9);
+      scene.add(ambientLight);
+
+      const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      keyLight.position.set(4, 7, 5);
+      keyLight.castShadow = true;
+      keyLight.shadow.mapSize.width = 1024;
+      keyLight.shadow.mapSize.height = 1024;
+      keyLight.shadow.bias = -0.0005;
+      scene.add(keyLight);
+
+      const fillLight = new THREE.DirectionalLight(0xa5bcbe, 0.6);
+      fillLight.position.set(-5, 3, -2);
+      scene.add(fillLight);
+
+      const tealRim = new THREE.DirectionalLight(0x247c70, 0.25);
+      tealRim.position.set(0, -4, -3);
+      scene.add(tealRim);
+
+      // Materials (Refined Industrial CAD palette)
+      const matCabinetSteel = new THREE.MeshStandardMaterial({
+        color: 0x939b97,
+        roughness: 0.45,
+        metalness: 0.35
+      });
+      const matCabinetInside = new THREE.MeshStandardMaterial({
+        color: 0xe0e5e2,
+        roughness: 0.55,
+        metalness: 0.2
+      });
+      const matOrangeGasket = new THREE.MeshLambertMaterial({ color: 0xd95a2b });
+      const matGalvanizedRail = new THREE.MeshStandardMaterial({
+        color: 0xb5beba,
+        roughness: 0.35,
+        metalness: 0.8
+      });
+      const matTrunkingGrey = new THREE.MeshLambertMaterial({ color: 0x424a48 });
+      const matCiocBlack = new THREE.MeshLambertMaterial({ color: 0x1f2423 });
+      const matBaseplateDark = new THREE.MeshLambertMaterial({ color: 0x2b3230 });
+      const matCharmGreen = new THREE.MeshLambertMaterial({ color: 0x39815a }); // Validated assignment
+      const matCharmTeal = new THREE.MeshLambertMaterial({ color: 0x247c70 });   // Selected slot
+      const matCharmAmber = new THREE.MeshLambertMaterial({ color: 0xc58a2b });  // Warning / Incompatible
+      const matCharmGrey = new THREE.MeshLambertMaterial({ color: 0x6e7874 });   // Spare / Available
+
+      // Cabinet Enclosure
+      const cabWidth = 1.8;
+      const cabHeight = 3.1;
+      const cabDepth = 0.85;
+      const cabWall = 0.05;
+
+      const cabinetGroup = new THREE.Group();
+      scene.add(cabinetGroup);
+
+      // Backplate
+      const backplateMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWidth - cabWall*2, cabHeight - cabWall*2, 0.02), matCabinetInside);
+      backplateMesh.position.set(0, 0, -cabDepth/2 + 0.03);
+      backplateMesh.receiveShadow = true;
+      cabinetGroup.add(backplateMesh);
+
+      // Outer Enclosure Walls
+      const topMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, cabWall, cabDepth), matCabinetSteel);
+      topMesh.position.set(0, cabHeight/2 - cabWall/2, 0);
+      cabinetGroup.add(topMesh);
+
+      const btmMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, cabWall, cabDepth), matCabinetSteel);
+      btmMesh.position.set(0, -cabHeight/2 + cabWall/2, 0);
+      cabinetGroup.add(btmMesh);
+
+      const leftMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWall, cabHeight, cabDepth), matCabinetSteel);
+      leftMesh.position.set(-cabWidth/2 + cabWall/2, 0, 0);
+      cabinetGroup.add(leftMesh);
+
+      const rightMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWall, cabHeight, cabDepth), matCabinetSteel);
+      rightMesh.position.set(cabWidth/2 - cabWall/2, 0, 0);
+      cabinetGroup.add(rightMesh);
+
+      // Plinth
+      const plinth = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, 0.22, cabDepth), new THREE.MeshLambertMaterial({ color: 0x252b29 }));
+      plinth.position.set(0, -cabHeight/2 - 0.11, 0);
+      cabinetGroup.add(plinth);
+
+      // Open Door (Swung open at ~108 degrees)
+      const doorGroup = new THREE.Group();
+      doorGroup.position.set(-cabWidth/2, 0, cabDepth/2);
+      doorGroup.rotation.y = -Math.PI * 0.62;
+
+      const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, cabHeight, 0.04), matCabinetSteel);
+      doorLeaf.position.set(cabWidth/2, 0, 0);
+      doorGroup.add(doorLeaf);
+
+      const pocket = new THREE.Mesh(new THREE.BoxGeometry(cabWidth*0.7, cabHeight*0.24, 0.03), new THREE.MeshLambertMaterial({ color: 0x737d79 }));
+      pocket.position.set(cabWidth/2, -cabHeight*0.2, 0.035);
+      doorGroup.add(pocket);
+
+      const gasket = new THREE.Mesh(new THREE.BoxGeometry(cabWidth*0.96, cabHeight*0.96, 0.01), matOrangeGasket);
+      gasket.position.set(cabWidth/2, 0, 0.022);
+      doorGroup.add(gasket);
+
+      cabinetGroup.add(doorGroup);
+
+      // DIN Rails and Wire Trunking
+      const railPositionsY = [0.82, 0.1, -0.62];
+      const railZ = -cabDepth/2 + 0.08;
+
+      // Vertical ducts
+      const ductW = 0.075;
+      const ductGeoV = new THREE.BoxGeometry(ductW, cabHeight - 0.4, ductW);
+      const leftDuct = new THREE.Mesh(ductGeoV, matTrunkingGrey);
+      leftDuct.position.set(-cabWidth/2 + 0.16, 0, railZ + 0.04);
+      cabinetGroup.add(leftDuct);
+
+      const rightDuct = new THREE.Mesh(ductGeoV, matTrunkingGrey);
+      rightDuct.position.set(cabWidth/2 - 0.16, 0, railZ + 0.04);
+      cabinetGroup.add(rightDuct);
+
+      // Horizontal ducts
+      [-0.26, 0.46, 1.2].forEach(y => {
+        const duct = new THREE.Mesh(new THREE.BoxGeometry(cabWidth - 0.25, ductW, ductW), matTrunkingGrey);
+        duct.position.set(0, y, railZ + 0.04);
+        cabinetGroup.add(duct);
+      });
+
+      // Rails & Mounted Modules
+      railPositionsY.forEach((yPos, railIdx) => {
+        const dinRail = new THREE.Mesh(new THREE.BoxGeometry(cabWidth - 0.4, 0.038, 0.015), matGalvanizedRail);
+        dinRail.position.set(0, yPos, railZ);
+        dinRail.castShadow = true;
+        cabinetGroup.add(dinRail);
+
+        if (railIdx === 0) {
+          // Top Rail: Power Supplies, Primary & Standby CIOC
+          const psMesh = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.22, 0.16), new THREE.MeshLambertMaterial({ color: 0x3d4644 }));
+          psMesh.position.set(-0.45, yPos + 0.02, railZ + 0.09);
+          cabinetGroup.add(psMesh);
+
+          [-0.1, 0.18].forEach((xPos) => {
+            const cioc = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.25, 0.18), matCiocBlack);
+            cioc.position.set(xPos, yPos + 0.03, railZ + 0.1);
+            cabinetGroup.add(cioc);
+
+            const led = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.018, 0.01), new THREE.MeshBasicMaterial({ color: 0x39815a }));
+            led.position.set(xPos - 0.06, yPos + 0.11, railZ + 0.195);
+            cabinetGroup.add(led);
+          });
+
+          const termBlock = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.15, 0.12), new THREE.MeshLambertMaterial({ color: 0x8a928e }));
+          termBlock.position.set(0.44, yPos, railZ + 0.07);
+          cabinetGroup.add(termBlock);
+        }
+
+        if (railIdx === 1 || railIdx === 2) {
+          // Rails 1 & 2: Baseplates (BP-01, BP-02, BP-03, BP-04)
+          [-0.32, 0.32].forEach((bpX, bpSubIdx) => {
+            const baseplate = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.26, 0.07), matBaseplateDark);
+            baseplate.position.set(bpX, yPos, railZ + 0.04);
+            cabinetGroup.add(baseplate);
+
+            // 16 CHARM slots (2 rows of 8)
+            const slotPitchX = 0.06;
+            const slotPitchY = 0.09;
+            const startX = bpX - (7 * slotPitchX)/2;
+
+            for (let r = 0; r < 2; r++) {
+              for (let c = 0; c < 8; c++) {
+                const slotNum = r * 8 + c + 1;
+                const charmX = startX + c * slotPitchX;
+                const charmY = yPos + (r === 0 ? slotPitchY/2 : -slotPitchY/2);
+
+                let charmMat = matCharmGreen; // Subdued green for validated assignment
+                if (bpSubIdx === 1 && railIdx === 1 && slotNum === 5) {
+                  charmMat = matCharmTeal; // Selected position (Teal)
+                } else if (bpSubIdx === 1 && railIdx === 1 && slotNum === 9) {
+                  charmMat = matCharmAmber; // Restrained amber warning
+                } else if (slotNum > 12) {
+                  charmMat = matCharmGrey; // Available / Spare
+                }
+
+                const charm = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.07, 0.06), charmMat);
+                charm.position.set(charmX, charmY, railZ + 0.09);
+                charm.castShadow = true;
+                cabinetGroup.add(charm);
+
+                const terminal = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.014, 0.02), new THREE.MeshLambertMaterial({ color: 0xedf1ee }));
+                terminal.position.set(charmX, charmY - 0.038, railZ + 0.08);
+                cabinetGroup.add(terminal);
+              }
+            }
+          });
+        }
+      });
+
+      // Cable bundles entering bottom gland plate
+      const cableColors = [0x2f3533, 0x1d2c29, 0x3d352b, 0x223647];
+      for (let i = 0; i < 6; i++) {
+        const curve = new THREE.CatmullRomCurve3([
+          new THREE.Vector3(-0.35 + i*0.14, -cabHeight/2 + 0.08, 0.1),
+          new THREE.Vector3(-0.48 + (i%2)*0.1, -cabHeight/2 + 0.55, railZ + 0.05),
+          new THREE.Vector3(-cabWidth/2 + 0.16, -0.55 + i*0.2, railZ + 0.06)
+        ]);
+        const tubeGeo = new THREE.TubeGeometry(curve, 14, 0.013, 6, false);
+        const cableMesh = new THREE.Mesh(tubeGeo, new THREE.MeshLambertMaterial({ color: cableColors[i % 4] }));
+        cabinetGroup.add(cableMesh);
+      }
+
+      // Interactive subtle orbit & rotation
+      let isDragging = false;
+      let prevMouse = { x: 0, y: 0 };
+      let spherical = { radius: 4.6, theta: 0.52, phi: 1.28 };
+      let targetSpherical = { radius: 4.6, theta: 0.52, phi: 1.28 };
+      let targetLookAt = new THREE.Vector3(0, 0, 0);
+
+      function updateCamera() {
+        camera.position.x = targetLookAt.x + spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
+        camera.position.y = targetLookAt.y + spherical.radius * Math.cos(spherical.phi);
+        camera.position.z = targetLookAt.z + spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
+        camera.lookAt(targetLookAt);
+      }
+      updateCamera();
+
+      renderer.domElement.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        prevMouse = { x: e.clientX, y: e.clientY };
+      });
+
+      window.addEventListener('mouseup', () => { isDragging = false; });
+
+      renderer.domElement.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const deltaX = e.clientX - prevMouse.x;
+        const deltaY = e.clientY - prevMouse.y;
+        targetSpherical.theta -= deltaX * 0.007;
+        targetSpherical.phi = Math.max(0.3, Math.min(Math.PI - 0.3, targetSpherical.phi - deltaY * 0.007));
+        prevMouse = { x: e.clientX, y: e.clientY };
+      });
+
+      renderer.domElement.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        targetSpherical.radius = Math.max(1.8, Math.min(7.5, targetSpherical.radius + e.deltaY * 0.003));
+      }, { passive: false });
+
+      // Camera presets exposed globally
+      window.cadHeroReset = function() { targetSpherical = { radius: 4.6, theta: 0.52, phi: 1.28 }; };
+      window.cadHeroZoomIn = function() { targetSpherical.radius = Math.max(1.8, targetSpherical.radius * 0.8); };
+      window.cadHeroZoomOut = function() { targetSpherical.radius = Math.min(7.5, targetSpherical.radius * 1.25); };
+
+      // Subtle ambient idle float when idle
+      let idleTime = 0;
+      function animate() {
+        requestAnimationFrame(animate);
+        if (!isDragging) {
+          idleTime += 0.005;
+          targetSpherical.theta += Math.sin(idleTime) * 0.0004;
+        }
+        spherical.radius += (targetSpherical.radius - spherical.radius) * 0.08;
+        spherical.theta += (targetSpherical.theta - spherical.theta) * 0.08;
+        spherical.phi += (targetSpherical.phi - spherical.phi) * 0.08;
+        updateCamera();
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener('resize', () => {
+        const w = container.clientWidth || window.innerWidth;
+        const h = container.clientHeight || 540;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      });
+    })();
+  </script>
+<!-- END: Three.js CAD Hero Scene Execution Script -->
+</body></html>

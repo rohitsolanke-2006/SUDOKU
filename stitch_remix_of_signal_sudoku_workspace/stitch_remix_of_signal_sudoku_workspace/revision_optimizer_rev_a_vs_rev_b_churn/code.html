@@ -1,0 +1,765 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-surface-variant": "#3e4946", "surface": "#f5fbf7", "surface-container-low": "#eff5f1", "outline-variant": "#bec9c5", "background": "#f5fbf7", "secondary": "#206b46", "primary-fixed": "#a0f2e3", "secondary-fixed": "#a8f3c4", "on-primary-fixed": "#00201c", "secondary-fixed-dim": "#8dd6a9", "primary": "#006258", "tertiary": "#784e00", "error-container": "#ffdad6", "surface-dim": "#d5dbd8", "tertiary-container": "#996500", "inverse-on-surface": "#ecf2ef", "surface-container-highest": "#dee4e0", "on-primary": "#ffffff", "on-secondary-fixed-variant": "#005231", "on-secondary-container": "#28714c", "primary-container": "#247c70", "on-secondary": "#ffffff", "on-tertiary-fixed-variant": "#624000", "on-primary-container": "#c8fff4", "on-tertiary": "#ffffff", "inverse-primary": "#84d5c7", "tertiary-fixed-dim": "#fdba57", "primary-fixed-dim": "#84d5c7", "surface-container-high": "#e4e9e6", "surface-bright": "#f5fbf7", "on-background": "#171d1b", "on-error-container": "#93000a", "secondary-container": "#a8f3c4", "on-tertiary-container": "#fff2e5", "on-tertiary-fixed": "#291800", "on-surface": "#171d1b", "surface-variant": "#dee4e0", "tertiary-fixed": "#ffddb3", "outline": "#6e7976", "inverse-surface": "#2c3230", "on-secondary-fixed": "#002111", "surface-container": "#e9efec", "surface-container-lowest": "#ffffff", "on-primary-fixed-variant": "#005047", "on-error": "#ffffff", "error": "#ba1a1a", "surface-tint": "#026b5f" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "margin": "0.5rem", "gutter": "0.5rem", "space-md": "0.5rem", "space-xs": "0.125rem", "space-lg": "0.75rem", "space-xl": "1rem", "space-sm": "0.25rem" }, "fontFamily": { "caption": ["Inter"], "body-sm": ["Inter"], "body-md": ["Inter"], "headline-sm": ["Inter"], "label-code-lg": ["JetBrains Mono"], "headline-lg": ["Inter"], "headline-md": ["Inter"], "label-code-sm": ["JetBrains Mono"], "label-code-md": ["JetBrains Mono"] }, "fontSize": { "caption": ["0.6875rem", {"lineHeight": "0.875rem", "letterSpacing": "0.04em", "fontWeight": "500"}], "body-sm": ["0.75rem", {"lineHeight": "1rem", "letterSpacing": "0", "fontWeight": "400"}], "body-md": ["0.8125rem", {"lineHeight": "1.125rem", "letterSpacing": "0", "fontWeight": "400"}], "headline-sm": ["0.875rem", {"lineHeight": "1.125rem", "letterSpacing": "0", "fontWeight": "600"}], "label-code-lg": ["0.875rem", {"lineHeight": "1.125rem", "letterSpacing": "0.02em", "fontWeight": "500"}], "headline-lg": ["1.25rem", {"lineHeight": "1.5rem", "letterSpacing": "-0.01em", "fontWeight": "600"}], "headline-md": ["1rem", {"lineHeight": "1.25rem", "letterSpacing": "-0.005em", "fontWeight": "600"}], "label-code-sm": ["0.6875rem", {"lineHeight": "0.875rem", "letterSpacing": "0.03em", "fontWeight": "400"}], "label-code-md": ["0.75rem", {"lineHeight": "1rem", "letterSpacing": "0.01em", "fontWeight": "500"}] } } } };</script></head><body class="bg-surface font-body-md text-on-surface antialiased select-none"><header class="fixed top-0 left-0 right-0 z-50 bg-surface-container border-b border-outline-variant"><div class="h-20 w-full flex flex-col"><div class="h-10 px-space-md bg-surface-container flex items-center justify-between border-b border-outline-variant"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-primary text-[18px]">developer_board</span><span class="font-headline-sm text-headline-sm tracking-tight text-on-surface uppercase">IO SIGNAL SUDOKU</span></div><div class="h-4 w-[1px] bg-outline-variant"></div><div class="flex items-center gap-space-sm"><span class="font-caption text-caption text-on-surface-variant uppercase">PROJECT:</span><span class="font-label-code-md text-label-code-md text-on-surface font-semibold">Plant Expansion — Unit A</span><span class="font-label-code-sm text-label-code-sm px-space-sm py-[1px] bg-surface-container-high text-on-surface border border-outline-variant rounded">REV B [Active]</span></div><div class="h-4 w-[1px] bg-outline-variant"></div><div class="flex items-center gap-space-xs"><button class="w-6 h-6 flex items-center justify-center bg-surface-container-lowest border border-outline-variant hover:bg-surface-container hover:text-on-surface text-on-surface-variant transition-colors rounded" title="Undo (Ctrl+Z)"><span class="material-symbols-outlined text-[16px]">undo</span></button><button class="w-6 h-6 flex items-center justify-center bg-surface-container-lowest border border-outline-variant hover:bg-surface-container hover:text-on-surface text-on-surface-variant transition-colors rounded" title="Redo (Ctrl+Y)"><span class="material-symbols-outlined text-[16px]">redo</span></button></div></div><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-xs text-on-surface-variant"><span class="material-symbols-outlined text-secondary text-[16px]">cloud_done</span><span class="font-label-code-sm text-label-code-sm">All Changes Saved</span></div><div class="h-4 w-[1px] bg-outline-variant"></div><div class="flex items-center gap-space-xs px-space-sm py-[2px] bg-secondary-fixed border border-secondary text-on-secondary-fixed-variant rounded"><span class="material-symbols-outlined text-[15px]">verified</span><span class="font-label-code-sm text-label-code-sm font-semibold">14/14 Rules Validated</span></div><div class="h-4 w-[1px] bg-outline-variant"></div><div class="flex items-center gap-space-md"><div class="text-right leading-none"><div class="font-caption text-caption font-semibold text-on-surface">J. Vance</div><div class="font-label-code-sm text-label-code-sm text-on-surface-variant">Lead I&amp;C Engineer</div></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div><div class="h-10 px-space-md bg-surface-container-low flex items-center justify-between gap-space-md"><nav class="flex items-center h-full gap-space-xs" data-active-classes="bg-surface-container-highest text-primary font-semibold border-primary"><a class="h-7 px-space-md flex items-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface text-caption font-caption border border-transparent rounded transition-colors" data-path="cad-matrix-editor" href="#">Matrix CAD</a><a class="h-7 px-space-md flex items-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface text-caption font-caption border border-transparent rounded transition-colors" data-path="channel-io-palette" href="#">Channel Palette</a><a class="h-7 px-space-md flex items-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface text-caption font-caption border border-transparent rounded transition-colors" data-path="hardware-topology" href="#">Hardware 3D</a><a class="h-7 px-space-md flex items-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface text-caption font-caption border border-transparent rounded transition-colors" data-path="rules-constraints" href="#">Rules &amp; Constraints</a><a class="h-7 px-space-md flex items-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface text-caption font-caption border border-transparent rounded transition-colors" data-path="validation-audit" href="#">Validation Audit</a><a class="h-7 px-space-md flex items-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface text-caption font-caption border border-transparent rounded transition-colors" data-path="reports-export" href="#">Reports &amp; Export</a></nav><div class="flex items-center gap-space-sm"><div class="flex items-center gap-space-xs bg-surface-container px-space-sm py-[2px] border border-outline-variant rounded"><span class="font-caption text-caption text-on-surface-variant uppercase mr-space-xs">View Tools:</span><button class="w-6 h-6 flex items-center justify-center bg-surface-container-lowest border border-outline-variant hover:bg-surface-container hover:text-on-surface text-on-surface transition-colors rounded" title="Select Mode"><span class="material-symbols-outlined text-[15px]">arrow_selector_tool</span></button><button class="w-6 h-6 flex items-center justify-center bg-surface-container-lowest border border-outline-variant hover:bg-surface-container hover:text-on-surface text-on-surface-variant transition-colors rounded" title="Orbit Camera"><span class="material-symbols-outlined text-[15px]">orbit</span></button><button class="w-6 h-6 flex items-center justify-center bg-surface-container-lowest border border-outline-variant hover:bg-surface-container hover:text-on-surface text-on-surface-variant transition-colors rounded" title="Pan Plane"><span class="material-symbols-outlined text-[15px]">pan_tool</span></button><button class="w-6 h-6 flex items-center justify-center bg-surface-container-lowest border border-outline-variant hover:bg-surface-container hover:text-on-surface text-on-surface-variant transition-colors rounded" title="Zoom Extents"><span class="material-symbols-outlined text-[15px]">zoom_in</span></button><button class="w-6 h-6 flex items-center justify-center bg-surface-container-lowest border border-outline-variant hover:bg-surface-container hover:text-on-surface text-on-surface-variant transition-colors rounded" title="Fit View to Selection"><span class="material-symbols-outlined text-[15px]">filter_center_focus</span></button><button class="w-6 h-6 flex items-center justify-center bg-surface-container-lowest border border-outline-variant hover:bg-surface-container hover:text-on-surface text-on-surface-variant transition-colors rounded" title="Toggle Wireframe Mode"><span class="material-symbols-outlined text-[15px]">grid_4x4</span></button><button class="w-6 h-6 flex items-center justify-center bg-surface-container-lowest border border-outline-variant hover:bg-surface-container hover:text-on-surface text-on-surface-variant transition-colors rounded" title="Trace Cable Route"><span class="material-symbols-outlined text-[15px]">route</span></button></div><button class="h-6 px-space-md flex items-center gap-space-xs bg-primary text-on-primary hover:bg-primary-container font-caption text-caption rounded border border-primary transition-colors"><span class="material-symbols-outlined text-[14px]">publish</span>Auto-Solve</button></div></div></div></header><aside class="fixed left-0 top-20 bottom-8 w-64 bg-surface-container-low border-r border-outline-variant z-40 flex flex-col"><div class="h-7 px-space-md bg-surface-container border-b border-outline-variant flex items-center justify-between"><span class="font-caption text-caption font-semibold uppercase text-on-surface-variant tracking-wider">I/O Channel Explorer</span><div class="flex items-center gap-space-xs"><button class="w-5 h-5 flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" title="Import MDB/XLSX"><span class="material-symbols-outlined text-[14px]">file_open</span></button><button class="w-5 h-5 flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" title="Collapse Explorer"><span class="material-symbols-outlined text-[14px]">first_page</span></button></div></div><nav class="flex-1 overflow-y-auto p-space-xs space-y-space-xs" data-active-classes="bg-surface-container-highest text-primary border-l-2 border-primary font-semibold"><a class="flex items-center gap-space-sm px-space-md py-space-xs text-on-surface-variant hover:bg-surface-container hover:text-on-surface text-caption font-caption rounded transition-colors" data-path="cad-matrix-editor" href="#"><span class="material-symbols-outlined text-[16px]">apps</span>9x9 Sudoku Matrix</a><a class="flex items-center gap-space-sm px-space-md py-space-xs text-on-surface-variant hover:bg-surface-container hover:text-on-surface text-caption font-caption rounded transition-colors" data-path="channel-io-palette" href="#"><span class="material-symbols-outlined text-[16px]">input</span>Channel Palette (81ch)</a><a class="flex items-center gap-space-sm px-space-md py-space-xs text-on-surface-variant hover:bg-surface-container hover:text-on-surface text-caption font-caption rounded transition-colors" data-path="hardware-topology" href="#"><span class="material-symbols-outlined text-[16px]">view_in_ar</span>Rack R01 Chassis 3D</a><a class="flex items-center gap-space-sm px-space-md py-space-xs text-on-surface-variant hover:bg-surface-container hover:text-on-surface text-caption font-caption rounded transition-colors" data-path="rules-constraints" href="#"><span class="material-symbols-outlined text-[16px]">gavel</span>Safety Rules (SIL-3)</a><a class="flex items-center gap-space-sm px-space-md py-space-xs text-on-surface-variant hover:bg-surface-container hover:text-on-surface text-caption font-caption rounded transition-colors" data-path="validation-audit" href="#"><span class="material-symbols-outlined text-[16px]">fact_check</span>Parity &amp; Clash Audit</a><a class="flex items-center gap-space-sm px-space-md py-space-xs text-on-surface-variant hover:bg-surface-container hover:text-on-surface text-caption font-caption rounded transition-colors" data-path="reports-export" href="#"><span class="material-symbols-outlined text-[16px]">description</span>Wiring Schedules</a></nav><div class="h-28 border-t border-outline-variant bg-surface-container p-space-sm flex flex-col justify-between"><div class="space-y-[2px]"><div class="flex justify-between items-center"><span class="font-caption text-caption text-on-surface-variant">Allocated Slots:</span><span class="font-label-code-sm text-label-code-sm font-semibold text-on-surface">57 / 81</span></div><div class="flex justify-between items-center"><span class="font-caption text-caption text-on-surface-variant">Parity Faults:</span><span class="font-label-code-sm text-label-code-sm font-semibold text-secondary">0 Detected</span></div><div class="flex justify-between items-center"><span class="font-caption text-caption text-on-surface-variant">Contention Alerts:</span><span class="font-label-code-sm text-label-code-sm font-semibold text-tertiary">2 Warnings</span></div></div><div class="flex items-center justify-between text-caption font-caption text-on-surface-variant pt-space-xs border-t border-outline-variant"><span class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary inline-block"></span>ENGINE READY</span><span class="font-label-code-sm text-label-code-sm">SYS_OK</span></div></div></aside><div class="pl-64"><main class="relative pt-20 pb-8 min-h-screen bg-surface-container-low w-full px-space-md"><div class="flex flex-col w-full">
+<!-- Top Telemetry & Churn Minimizer Header Strip -->
+<div class="bg-surface-container border-b border-outline-variant p-space-sm flex flex-col gap-space-sm shadow-sm">
+<div class="flex flex-wrap items-center justify-between gap-space-md">
+<!-- Revision Pair Comparison Selector -->
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs bg-surface-container-lowest px-space-sm py-[3px] border border-outline-variant rounded">
+<span class="material-symbols-outlined text-[16px] text-primary">history_toggle_off</span>
+<span class="font-caption text-caption text-on-surface-variant uppercase font-semibold">Comparison Mode:</span>
+<span class="font-label-code-sm text-label-code-sm text-on-surface font-bold bg-surface-container-high px-space-xs py-[1px] rounded">REV A (Baseline: 464 ch)</span>
+<span class="material-symbols-outlined text-[14px] text-primary">arrow_forward</span>
+<span class="font-label-code-sm text-label-code-sm text-primary font-bold bg-secondary-fixed/50 px-space-xs py-[1px] rounded">REV B (Draft: 482 ch, +18 Δ)</span>
+</div>
+<div class="h-4 w-[1px] bg-outline-variant"></div>
+<div class="flex items-center gap-space-xs font-label-code-sm text-label-code-sm text-on-surface">
+<span class="inline-block w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span>OR-Tools CP-SAT v9.8 [Online]</span>
+<span class="text-on-surface-variant font-caption text-caption ml-space-xs">(Solve Latency: 142ms)</span>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex items-center gap-space-xs">
+<button class="h-6 px-space-md flex items-center gap-space-xs bg-primary text-on-primary hover:bg-primary-container font-caption text-caption rounded border border-primary transition-colors font-semibold" id="btn-run-solver">
+<span class="material-symbols-outlined text-[14px]">play_circle</span>Run Churn Minimization Solver
+        </button>
+<button class="h-6 px-space-md flex items-center gap-space-xs bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container font-caption text-caption rounded transition-colors">
+<span class="material-symbols-outlined text-[14px]">rule_folder</span>Simulate Manual Override
+        </button>
+<button class="h-6 px-space-md flex items-center gap-space-xs bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container font-caption text-caption rounded transition-colors">
+<span class="material-symbols-outlined text-[14px]">file_download</span>Export Delta Schedule (.xlsx)
+        </button>
+<button class="h-6 px-space-md flex items-center gap-space-xs bg-secondary text-on-secondary hover:bg-secondary/90 font-caption text-caption rounded transition-colors font-semibold">
+<span class="material-symbols-outlined text-[14px]">verified</span>Accept REV B Baseline
+        </button>
+</div>
+</div>
+<!-- Live Churn Index KPIs & Weight Toggles -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-sm items-center">
+<!-- Churn Metrics Bar (7 Cols) -->
+<div class="xl:col-span-7 grid grid-cols-2 sm:grid-cols-5 gap-space-xs">
+<div class="bg-surface-container-lowest p-space-xs px-space-sm border border-outline-variant rounded">
+<div class="font-caption text-caption text-on-surface-variant uppercase text-[10px]">Churn Index</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-label-code-lg text-label-code-lg font-bold text-secondary">0.012</span>
+<span class="font-caption text-caption text-secondary font-semibold">Minimal Drift</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-xs px-space-sm border border-outline-variant rounded">
+<div class="font-caption text-caption text-on-surface-variant uppercase text-[10px]">Static Retained</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-label-code-lg text-label-code-lg font-bold text-on-surface">96.3%</span>
+<span class="font-caption text-caption text-on-surface-variant">464 Unmoved</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-xs px-space-sm border border-outline-variant rounded">
+<div class="font-caption text-caption text-on-surface-variant uppercase text-[10px]">Physical Rewires</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-label-code-lg text-label-code-lg font-bold text-tertiary">4 Pins</span>
+<span class="font-caption text-caption text-tertiary font-semibold">(0.8%)</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-xs px-space-sm border border-outline-variant rounded">
+<div class="font-caption text-caption text-on-surface-variant uppercase text-[10px]">Delta Additions</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-label-code-lg text-label-code-lg font-bold text-primary">+18 ch</span>
+<span class="font-caption text-caption text-on-surface-variant">2 Unallocated</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-xs px-space-sm border border-outline-variant rounded">
+<div class="font-caption text-caption text-on-surface-variant uppercase text-[10px]">Labor Hours Saved</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-label-code-lg text-label-code-lg font-bold text-secondary">98.2%</span>
+<span class="font-caption text-caption text-on-surface-variant">-58.5 h</span>
+</div>
+</div>
+</div>
+<!-- Objective Function Sliders & Weights (5 Cols) -->
+<div class="xl:col-span-5 bg-surface-container-lowest p-space-xs px-space-sm border border-outline-variant rounded flex flex-col justify-center gap-[3px]">
+<div class="flex items-center justify-between text-[10px] font-caption text-caption text-on-surface-variant font-semibold">
+<span>OPTIMIZATION PENALTY WEIGHTS (L1 DISTANCE)</span>
+<span class="text-primary font-label-code-sm text-label-code-sm">J = Σ(w₁Δ_pin + w₂Δ_pair + w₃Δ_therm)</span>
+</div>
+<div class="grid grid-cols-4 gap-space-xs text-center text-[10px]">
+<div class="bg-surface-container p-[2px] rounded border border-outline-variant/60">
+<div class="text-on-surface-variant font-caption">Pin Retention</div>
+<div class="font-label-code-sm text-label-code-sm font-bold text-primary">10x [LOCK]</div>
+</div>
+<div class="bg-surface-container p-[2px] rounded border border-outline-variant/60">
+<div class="text-on-surface-variant font-caption">Cable Pair</div>
+<div class="font-label-code-sm text-label-code-sm font-bold text-on-surface">3x (Pair Strict)</div>
+</div>
+<div class="bg-surface-container p-[2px] rounded border border-outline-variant/60">
+<div class="text-on-surface-variant font-caption">Thermal Balance</div>
+<div class="font-label-code-sm text-label-code-sm font-bold text-on-surface">1x (Max 68%)</div>
+</div>
+<div class="bg-secondary-fixed/40 p-[2px] rounded border border-secondary">
+<div class="text-secondary font-caption font-semibold">Ex-ia Safety</div>
+<div class="font-label-code-sm text-label-code-sm font-bold text-secondary">HARD-LOCK</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Viewport: Split Grid + Graphical Baseplate View + Right Explainability Inspector -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-0 border-b border-outline-variant bg-surface-container-low min-h-[620px]">
+<!-- LEFT + CENTER COLUMNS: Synchronized Marshalling Delta Grid (8 Cols) -->
+<div class="lg:col-span-8 flex flex-col border-r border-outline-variant bg-surface">
+<!-- Sub-toolbar: Filters & Pin Legend -->
+<div class="h-8 px-space-md bg-surface-container flex items-center justify-between border-b border-outline-variant text-[11px]">
+<div class="flex items-center gap-space-md">
+<span class="font-caption text-caption font-bold uppercase text-on-surface tracking-wider">Marshalling Bay Allocation Matrix</span>
+<div class="flex items-center gap-space-xs">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-secondary-fixed text-on-secondary-fixed-variant font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Retained (464)
+            </span>
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Relocated (4)
+            </span>
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-primary-fixed text-on-primary-fixed font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> New (+18)
+            </span>
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-error-container text-on-error-container font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> Resolved Conflict (1)
+            </span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="font-caption text-caption text-on-surface-variant">Filter Rack:</span>
+<select class="h-5 text-[11px] bg-surface-container-lowest border border-outline-variant rounded px-1 font-label-code-sm text-label-code-sm">
+<option>CAB-01 &gt; CIOC-01 (Active Bay)</option>
+<option>CAB-01 &gt; CIOC-02</option>
+<option>CAB-02 &gt; CIOC-01</option>
+</select>
+</div>
+</div>
+<!-- Synchronized Graphical Baseplate Delta Strip (16-ch CHARM Carrier view) -->
+<div class="bg-surface-container-high/60 border-b border-outline-variant p-space-sm flex flex-col gap-1">
+<div class="flex items-center justify-between text-[11px] font-caption text-caption text-on-surface-variant">
+<span class="font-semibold uppercase tracking-wider text-[10px] text-on-surface">Baseplate Topography Footprint (CAB-01:CIOC-01 64-Terminal Bank)</span>
+<span class="font-label-code-sm text-label-code-sm text-on-surface-variant">Terminal Carrier Health: 61.4% Capacity</span>
+</div>
+<!-- 4 Baseplate Blocks (16 Channels each = 64 pins) -->
+<div class="grid grid-cols-4 gap-space-xs">
+<!-- BP-01 -->
+<div class="bg-surface-container-lowest p-space-xs border border-outline-variant rounded flex flex-col gap-1">
+<div class="flex items-center justify-between font-caption text-caption font-semibold text-[10px] border-b border-outline-variant/40 pb-0.5">
+<span>BP-01 (AI 4-20mA HART)</span>
+<span class="font-label-code-sm text-label-code-sm text-on-surface-variant">15/16</span>
+</div>
+<div class="grid grid-cols-8 gap-[2px]">
+<!-- Pins 1..16 -->
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary" title="CH-01: RETAINED">01</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary" title="CH-02: RETAINED">02</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary" title="CH-03: RETAINED">03</div>
+<!-- CH-04 Relocated TT-204 was here in Rev A -->
+<div class="h-4 bg-tertiary-fixed border border-tertiary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-tertiary animate-pulse cursor-pointer ring-1 ring-tertiary" title="CH-04: VACATED (TT-204 moved to BP-03:CH-08)">04⇄</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">05</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">06</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">07</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">08</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">09</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">10</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">11</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">12</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">13</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">14</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">15</div>
+<div class="h-4 bg-surface-container border border-dashed border-outline-variant text-[8px] flex items-center justify-center font-label-code-sm text-on-surface-variant" title="CH-16: SPARE">SP</div>
+</div>
+</div>
+<!-- BP-02 -->
+<div class="bg-surface-container-lowest p-space-xs border border-outline-variant rounded flex flex-col gap-1">
+<div class="flex items-center justify-between font-caption text-caption font-semibold text-[10px] border-b border-outline-variant/40 pb-0.5">
+<span>BP-02 (DI 24VDC Dry)</span>
+<span class="font-label-code-sm text-label-code-sm text-on-surface-variant">16/16</span>
+</div>
+<div class="grid grid-cols-8 gap-[2px]">
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">01</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">02</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">03</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">04</div>
+<!-- CH-05 PT-101 static highlighted row in table -->
+<div class="h-4 bg-secondary border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-on-secondary" title="CH-05: PT-101 RETAINED">05*</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">06</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">07</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">08</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">09</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">10</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">11</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">12</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">13</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">14</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">15</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">16</div>
+</div>
+</div>
+<!-- BP-03 -->
+<div class="bg-surface-container-lowest p-space-xs border border-outline-variant rounded flex flex-col gap-1">
+<div class="flex items-center justify-between font-caption text-caption font-semibold text-[10px] border-b border-outline-variant/40 pb-0.5">
+<span>BP-03 (RTD / TC Temp)</span>
+<span class="font-label-code-sm text-label-code-sm text-tertiary">14/16 (Δ Recv)</span>
+</div>
+<div class="grid grid-cols-8 gap-[2px]">
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">01</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">02</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">03</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">04</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">05</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">06</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">07</div>
+<!-- CH-08 TT-204 Relocated HERE -->
+<div class="h-4 bg-tertiary text-on-tertiary border border-tertiary text-[8px] flex items-center justify-center font-label-code-sm font-bold animate-pulse cursor-pointer" title="CH-08: TT-204 (INCOMING FROM BP-01)">08★</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">09</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">10</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">11</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">12</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">13</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">14</div>
+<div class="h-4 bg-surface-container border border-dashed border-outline-variant text-[8px] flex items-center justify-center font-label-code-sm text-on-surface-variant">SP</div>
+<div class="h-4 bg-surface-container border border-dashed border-outline-variant text-[8px] flex items-center justify-center font-label-code-sm text-on-surface-variant">SP</div>
+</div>
+</div>
+<!-- BP-04 -->
+<div class="bg-surface-container-lowest p-space-xs border border-outline-variant rounded flex flex-col gap-1">
+<div class="flex items-center justify-between font-caption text-caption font-semibold text-[10px] border-b border-outline-variant/40 pb-0.5">
+<span>BP-04 (AO 4-20mA SIL-3)</span>
+<span class="font-label-code-sm text-label-code-sm text-primary">12/16 (+New)</span>
+</div>
+<div class="grid grid-cols-8 gap-[2px]">
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">01</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">02</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">03</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">04</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">05</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">06</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">07</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">08</div>
+<!-- CH-09 FT-104B NEW IN REV B -->
+<div class="h-4 bg-primary text-on-primary border border-primary text-[8px] flex items-center justify-center font-label-code-sm font-bold cursor-pointer" title="CH-09: FT-104B (NEWLY ALLOCATED)">09+</div>
+<!-- CH-10 PT-100 Remediated -->
+<div class="h-4 bg-error-container text-on-error-container border border-error text-[8px] flex items-center justify-center font-label-code-sm font-bold cursor-pointer" title="CH-10: PT-100 (THERMAL OVERFLOW SOLVED)">10!</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">11</div>
+<div class="h-4 bg-secondary/20 border border-secondary text-[8px] flex items-center justify-center font-label-code-sm font-bold text-secondary">12</div>
+<div class="h-4 bg-surface-container border border-dashed border-outline-variant text-[8px] flex items-center justify-center font-label-code-sm text-on-surface-variant">SP</div>
+<div class="h-4 bg-surface-container border border-dashed border-outline-variant text-[8px] flex items-center justify-center font-label-code-sm text-on-surface-variant">SP</div>
+<div class="h-4 bg-surface-container border border-dashed border-outline-variant text-[8px] flex items-center justify-center font-label-code-sm text-on-surface-variant">SP</div>
+<div class="h-4 bg-surface-container border border-dashed border-outline-variant text-[8px] flex items-center justify-center font-label-code-sm text-on-surface-variant">SP</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Synchronized Two-Column Comparison Grid Header -->
+<div class="grid grid-cols-12 bg-surface-container border-b border-outline-variant text-caption font-caption text-on-surface-variant font-semibold select-none">
+<div class="col-span-1 p-space-xs text-center border-r border-outline-variant">STATUS</div>
+<div class="col-span-2 p-space-xs border-r border-outline-variant">SIGNAL TAG &amp; SERVICE</div>
+<div class="col-span-3 p-space-xs border-r border-outline-variant bg-surface-container-high/40">
+<span class="text-on-surface font-bold">REV A BASELINE</span> (VERIFIED)
+        </div>
+<div class="col-span-4 p-space-xs border-r border-outline-variant bg-secondary-fixed/20">
+<span class="text-primary font-bold">REV B PROPOSED</span> (SOLVER PLAN)
+        </div>
+<div class="col-span-2 p-space-xs text-right pr-space-md">REWIRE IMPACT</div>
+</div>
+<!-- Interactive Comparison Rows (Scrollable Trough) -->
+<div class="flex-1 overflow-y-auto divide-y divide-outline-variant/60 font-label-code-sm text-label-code-sm">
+<!-- Row 1: RETAINED (STATIC) PT-101 -->
+<div class="signal-row grid grid-cols-12 items-center hover:bg-secondary-fixed/20 transition-colors py-1 cursor-pointer bg-surface" data-signal="PT-101">
+<div class="col-span-1 text-center">
+<span class="inline-block px-1 py-0.2 bg-secondary-fixed text-on-secondary-fixed-variant text-[10px] font-caption font-bold rounded">STATIC</span>
+</div>
+<div class="col-span-2 px-space-xs min-w-0">
+<div class="font-bold text-on-surface truncate">PT-101</div>
+<div class="text-[10px] font-caption text-on-surface-variant truncate">Deethanizer Reboiler Press</div>
+</div>
+<div class="col-span-3 px-space-xs bg-surface-container-high/20 border-r border-outline-variant/40 flex items-center gap-space-xs">
+<span class="font-semibold text-on-surface">CAB01:CIOC01:BP02</span>
+<span class="bg-surface-container-highest px-1 rounded font-bold text-on-surface">CH-05</span>
+<span class="text-[10px] font-caption text-secondary">24V DC</span>
+</div>
+<div class="col-span-4 px-space-xs flex items-center justify-between border-r border-outline-variant/40">
+<div class="flex items-center gap-space-xs">
+<span class="font-semibold text-secondary">CAB01:CIOC01:BP02</span>
+<span class="bg-secondary-fixed px-1 rounded font-bold text-on-secondary-fixed-variant">CH-05</span>
+<span class="material-symbols-outlined text-secondary text-[14px]">check</span>
+</div>
+<span class="text-[10px] font-caption text-on-surface-variant pr-space-xs">0m drift</span>
+</div>
+<div class="col-span-2 text-right pr-space-md font-caption text-caption text-secondary font-semibold">
+            Zero Labor (Pinned)
+          </div>
+</div>
+<!-- Row 2: RELOCATED (RULE-DRIVEN) TT-204 (Active Selected Focus Row) -->
+<div class="signal-row active-row grid grid-cols-12 items-center bg-tertiary-fixed/30 border-l-4 border-l-tertiary py-1.5 cursor-pointer ring-1 ring-tertiary/50" data-signal="TT-204">
+<div class="col-span-1 text-center">
+<span class="inline-block px-1 py-0.2 bg-tertiary text-on-tertiary text-[10px] font-caption font-bold rounded">SHIFT</span>
+</div>
+<div class="col-span-2 px-space-xs min-w-0">
+<div class="font-bold text-on-surface flex items-center gap-1 truncate">
+<span>TT-204</span>
+<span class="material-symbols-outlined text-tertiary text-[14px]">tune</span>
+</div>
+<div class="text-[10px] font-caption text-on-surface-variant truncate">Compressor Bearing Temp B</div>
+</div>
+<div class="col-span-3 px-space-xs bg-surface-container-high/40 border-r border-outline-variant/40 flex items-center gap-space-xs line-through text-on-surface-variant">
+<span>CAB01:CIOC01:BP01</span>
+<span class="bg-surface-container-highest px-1 rounded">CH-04</span>
+<span class="text-[10px] font-caption">AI 4-20</span>
+</div>
+<div class="col-span-4 px-space-xs flex items-center justify-between border-r border-outline-variant/40 bg-tertiary-fixed/40">
+<div class="flex items-center gap-space-xs">
+<span class="font-bold text-tertiary">CAB01:CIOC01:BP03</span>
+<span class="bg-tertiary text-on-tertiary px-1 rounded font-bold">CH-08</span>
+<span class="material-symbols-outlined text-tertiary text-[14px]">trending_flat</span>
+</div>
+<span class="text-[10px] font-caption text-tertiary font-bold pr-space-xs">HARD-07 RULE</span>
+</div>
+<div class="col-span-2 text-right pr-space-md font-caption text-caption text-tertiary font-bold">
+            Rewire: 1 Pair Jumper
+          </div>
+</div>
+<!-- Row 3: NEW IN REV B FT-104B -->
+<div class="signal-row grid grid-cols-12 items-center hover:bg-primary-fixed/20 transition-colors py-1 cursor-pointer bg-surface" data-signal="FT-104B">
+<div class="col-span-1 text-center">
+<span class="inline-block px-1 py-0.2 bg-primary text-on-primary text-[10px] font-caption font-bold rounded">NEW</span>
+</div>
+<div class="col-span-2 px-space-xs min-w-0">
+<div class="font-bold text-primary truncate">FT-104B</div>
+<div class="text-[10px] font-caption text-on-surface-variant truncate">Backup Boiler Feedwater</div>
+</div>
+<div class="col-span-3 px-space-xs bg-surface-container-high/20 border-r border-outline-variant/40 flex items-center gap-space-xs text-on-surface-variant/50 italic">
+<span>[Unassigned in REV A]</span>
+<span class="text-[10px] font-caption">∅ Pin</span>
+</div>
+<div class="col-span-4 px-space-xs flex items-center justify-between border-r border-outline-variant/40 bg-primary-fixed/30">
+<div class="flex items-center gap-space-xs">
+<span class="font-semibold text-primary">CAB01:CIOC01:BP04</span>
+<span class="bg-primary text-on-primary px-1 rounded font-bold">CH-09</span>
+<span class="material-symbols-outlined text-primary text-[14px]">add_circle</span>
+</div>
+<span class="text-[10px] font-caption text-primary font-semibold pr-space-xs">Duty/Stby Pair</span>
+</div>
+<div class="col-span-2 text-right pr-space-md font-caption text-caption text-primary font-semibold">
+            Fresh Landing (New)
+          </div>
+</div>
+<!-- Row 4: CONFLICT REMEDIATED PT-100 -->
+<div class="signal-row grid grid-cols-12 items-center hover:bg-error-container/20 transition-colors py-1 cursor-pointer bg-surface" data-signal="PT-100">
+<div class="col-span-1 text-center">
+<span class="inline-block px-1 py-0.2 bg-error text-on-error text-[10px] font-caption font-bold rounded">THERM</span>
+</div>
+<div class="col-span-2 px-space-xs min-w-0">
+<div class="font-bold text-on-surface truncate">PT-100</div>
+<div class="text-[10px] font-caption text-on-surface-variant truncate">High Pressure Flare Header</div>
+</div>
+<div class="col-span-3 px-space-xs bg-surface-container-high/20 border-r border-outline-variant/40 flex items-center gap-space-xs text-on-surface-variant line-through">
+<span>CAB01:CIOC01:BP01</span>
+<span class="bg-surface-container-highest px-1 rounded">CH-02</span>
+<span class="text-[10px] text-error font-caption">Overload</span>
+</div>
+<div class="col-span-4 px-space-xs flex items-center justify-between border-r border-outline-variant/40 bg-error-container/30">
+<div class="flex items-center gap-space-xs">
+<span class="font-semibold text-on-surface">CAB01:CIOC01:BP04</span>
+<span class="bg-error-container text-on-error-container px-1 rounded font-bold">CH-10</span>
+<span class="material-symbols-outlined text-error text-[14px]">heat_pump</span>
+</div>
+<span class="text-[10px] font-caption text-error font-bold pr-space-xs">&lt;68% Dissipation</span>
+</div>
+<div class="col-span-2 text-right pr-space-md font-caption text-caption text-error font-semibold">
+            Rewire: 1 Pair Jumper
+          </div>
+</div>
+<!-- Row 5: RETAINED (STATIC) XV-202A -->
+<div class="signal-row grid grid-cols-12 items-center hover:bg-secondary-fixed/20 transition-colors py-1 cursor-pointer bg-surface" data-signal="XV-202A">
+<div class="col-span-1 text-center">
+<span class="inline-block px-1 py-0.2 bg-secondary-fixed text-on-secondary-fixed-variant text-[10px] font-caption font-bold rounded">STATIC</span>
+</div>
+<div class="col-span-2 px-space-xs min-w-0">
+<div class="font-bold text-on-surface truncate">XV-202A</div>
+<div class="text-[10px] font-caption text-on-surface-variant truncate">Suction Isolation Valve Open</div>
+</div>
+<div class="col-span-3 px-space-xs bg-surface-container-high/20 border-r border-outline-variant/40 flex items-center gap-space-xs">
+<span class="font-semibold text-on-surface">CAB01:CIOC01:BP02</span>
+<span class="bg-surface-container-highest px-1 rounded font-bold text-on-surface">CH-08</span>
+<span class="text-[10px] font-caption text-secondary">24V DC</span>
+</div>
+<div class="col-span-4 px-space-xs flex items-center justify-between border-r border-outline-variant/40">
+<div class="flex items-center gap-space-xs">
+<span class="font-semibold text-secondary">CAB01:CIOC01:BP02</span>
+<span class="bg-secondary-fixed px-1 rounded font-bold text-on-secondary-fixed-variant">CH-08</span>
+<span class="material-symbols-outlined text-secondary text-[14px]">check</span>
+</div>
+<span class="text-[10px] font-caption text-on-surface-variant pr-space-xs">0m drift</span>
+</div>
+<div class="col-span-2 text-right pr-space-md font-caption text-caption text-secondary font-semibold">
+            Zero Labor (Pinned)
+          </div>
+</div>
+<!-- Row 6: RETAINED (STATIC) XV-202B -->
+<div class="signal-row grid grid-cols-12 items-center hover:bg-secondary-fixed/20 transition-colors py-1 cursor-pointer bg-surface" data-signal="XV-202B">
+<div class="col-span-1 text-center">
+<span class="inline-block px-1 py-0.2 bg-secondary-fixed text-on-secondary-fixed-variant text-[10px] font-caption font-bold rounded">STATIC</span>
+</div>
+<div class="col-span-2 px-space-xs min-w-0">
+<div class="font-bold text-on-surface truncate">XV-202B</div>
+<div class="text-[10px] font-caption text-on-surface-variant truncate">Suction Isolation Valve Close</div>
+</div>
+<div class="col-span-3 px-space-xs bg-surface-container-high/20 border-r border-outline-variant/40 flex items-center gap-space-xs">
+<span class="font-semibold text-on-surface">CAB01:CIOC01:BP02</span>
+<span class="bg-surface-container-highest px-1 rounded font-bold text-on-surface">CH-09</span>
+<span class="text-[10px] font-caption text-secondary">24V DC</span>
+</div>
+<div class="col-span-4 px-space-xs flex items-center justify-between border-r border-outline-variant/40">
+<div class="flex items-center gap-space-xs">
+<span class="font-semibold text-secondary">CAB01:CIOC01:BP02</span>
+<span class="bg-secondary-fixed px-1 rounded font-bold text-on-secondary-fixed-variant">CH-09</span>
+<span class="material-symbols-outlined text-secondary text-[14px]">check</span>
+</div>
+<span class="text-[10px] font-caption text-on-surface-variant pr-space-xs">0m drift</span>
+</div>
+<div class="col-span-2 text-right pr-space-md font-caption text-caption text-secondary font-semibold">
+            Zero Labor (Pinned)
+          </div>
+</div>
+<!-- Row 7: RELOCATED (SAFETY BARRIER SEPARATION) ST-301 -->
+<div class="signal-row grid grid-cols-12 items-center hover:bg-tertiary-fixed/20 transition-colors py-1 cursor-pointer bg-surface" data-signal="ST-301">
+<div class="col-span-1 text-center">
+<span class="inline-block px-1 py-0.2 bg-tertiary text-on-tertiary text-[10px] font-caption font-bold rounded">SHIFT</span>
+</div>
+<div class="col-span-2 px-space-xs min-w-0">
+<div class="font-bold text-on-surface truncate">ST-301</div>
+<div class="text-[10px] font-caption text-on-surface-variant truncate">Turbine Overspeed Pickup</div>
+</div>
+<div class="col-span-3 px-space-xs bg-surface-container-high/20 border-r border-outline-variant/40 flex items-center gap-space-xs line-through text-on-surface-variant">
+<span>CAB01:CIOC02:BP01</span>
+<span class="bg-surface-container-highest px-1 rounded">CH-03</span>
+<span class="text-[10px] font-caption">Pulse</span>
+</div>
+<div class="col-span-4 px-space-xs flex items-center justify-between border-r border-outline-variant/40 bg-tertiary-fixed/30">
+<div class="flex items-center gap-space-xs">
+<span class="font-bold text-tertiary">CAB01:CIOC02:BP02</span>
+<span class="bg-tertiary text-on-tertiary px-1 rounded font-bold">CH-01</span>
+<span class="material-symbols-outlined text-tertiary text-[14px]">trending_flat</span>
+</div>
+<span class="text-[10px] font-caption text-tertiary font-bold pr-space-xs">Ex-ia 50mm GAP</span>
+</div>
+<div class="col-span-2 text-right pr-space-md font-caption text-caption text-tertiary font-bold">
+            Rewire: 1 Pair Jumper
+          </div>
+</div>
+<!-- Row 8: RETAINED (STATIC) LIT-405 -->
+<div class="signal-row grid grid-cols-12 items-center hover:bg-secondary-fixed/20 transition-colors py-1 cursor-pointer bg-surface" data-signal="LIT-405">
+<div class="col-span-1 text-center">
+<span class="inline-block px-1 py-0.2 bg-secondary-fixed text-on-secondary-fixed-variant text-[10px] font-caption font-bold rounded">STATIC</span>
+</div>
+<div class="col-span-2 px-space-xs min-w-0">
+<div class="font-bold text-on-surface truncate">LIT-405</div>
+<div class="text-[10px] font-caption text-on-surface-variant truncate">NGL Condensate Sump Level</div>
+</div>
+<div class="col-span-3 px-space-xs bg-surface-container-high/20 border-r border-outline-variant/40 flex items-center gap-space-xs">
+<span class="font-semibold text-on-surface">CAB01:CIOC01:BP01</span>
+<span class="bg-surface-container-highest px-1 rounded font-bold text-on-surface">CH-06</span>
+<span class="text-[10px] font-caption text-secondary">4-20mA</span>
+</div>
+<div class="col-span-4 px-space-xs flex items-center justify-between border-r border-outline-variant/40">
+<div class="flex items-center gap-space-xs">
+<span class="font-semibold text-secondary">CAB01:CIOC01:BP01</span>
+<span class="bg-secondary-fixed px-1 rounded font-bold text-on-secondary-fixed-variant">CH-06</span>
+<span class="material-symbols-outlined text-secondary text-[14px]">check</span>
+</div>
+<span class="text-[10px] font-caption text-on-surface-variant pr-space-xs">0m drift</span>
+</div>
+<div class="col-span-2 text-right pr-space-md font-caption text-caption text-secondary font-semibold">
+            Zero Labor (Pinned)
+          </div>
+</div>
+</div>
+<!-- Grid Footer Summary Bar -->
+<div class="h-6 px-space-md bg-surface-container border-t border-outline-variant flex items-center justify-between text-caption font-caption text-on-surface-variant">
+<div class="flex items-center gap-space-md">
+<span>Displaying 8 of 482 signals</span>
+<span class="text-secondary font-semibold">464 Static Retained</span>
+<span class="text-tertiary font-semibold">4 Physical Shifts</span>
+<span class="text-primary font-semibold">14 New Draft Slotted</span>
+</div>
+<div class="flex items-center gap-space-sm font-label-code-sm text-label-code-sm">
+<span>TERMINATION DRIFT RATE: <strong class="text-on-surface">0.0085 per ch</strong></span>
+</div>
+</div>
+</div>
+<!-- RIGHT INSPECTOR COLUMN: Explainability & Proof Engine (4 Cols) -->
+<div class="lg:col-span-4 flex flex-col bg-surface-container-lowest">
+<!-- Panel Header -->
+<div class="h-8 px-space-md bg-surface-container border-b border-outline-variant flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[16px]">psychology_alt</span>
+<span class="font-caption text-caption font-bold uppercase tracking-wider text-on-surface">Solver Explainability &amp; Proof</span>
+</div>
+<span class="px-space-xs py-[1px] bg-tertiary-fixed text-on-tertiary-fixed font-label-code-sm text-label-code-sm font-semibold rounded">
+          SELECTED: TT-204
+        </span>
+</div>
+<!-- Explainability Content (Scrollable) -->
+<div class="flex-1 overflow-y-auto p-space-md flex flex-col gap-space-md">
+<!-- Big Rationale Banner -->
+<div class="bg-surface-container-low p-space-sm border-l-4 border-l-tertiary border border-outline-variant rounded flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption font-bold text-tertiary uppercase">RELOCATION REASONING MATRIX</span>
+<span class="font-label-code-sm text-label-code-sm text-on-surface-variant">Cost Metric: +1 Jumper</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface">
+            Why did TT-204 relocate to BP-03:CH-08?
+          </div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-snug">
+            Signal <strong>TT-204</strong> was moved from Baseplate BP-01 (4-20mA HART analog loop) to BP-03 (RTD carrier) to satisfy safety and shielding constraints introduced by RTD 3-wire sensor additions in Unit A expansion.
+          </p>
+</div>
+<!-- Mathematical Constraint & Proof Breakdown -->
+<div class="flex flex-col gap-space-xs">
+<div class="font-caption text-caption font-semibold uppercase text-on-surface-variant tracking-wider flex items-center justify-between">
+<span>Hard Constraint Proof Tree</span>
+<span class="text-secondary font-label-code-sm text-label-code-sm">4/4 Passed</span>
+</div>
+<!-- Constraint 1: HARD-07 -->
+<div class="bg-surface-container-low p-space-xs px-space-sm border border-outline-variant rounded flex flex-col gap-0.5">
+<div class="flex items-center justify-between">
+<span class="font-label-code-sm text-label-code-sm font-bold text-tertiary">Rule HARD-07: RTD Shield Commonality</span>
+<span class="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+</div>
+<p class="font-caption text-caption text-on-surface-variant">
+              RTD Pt100 3-wire sensors require continuous drain-wire grounding on dedicated RTD CHARM backplanes to prevent 50Hz induced inductive interference. BP-01 did not offer common shield return.
+            </p>
+<div class="bg-surface-container-lowest p-1 rounded font-label-code-sm text-[11px] text-on-surface font-semibold flex justify-between">
+<span>Evaluated: <strong class="text-primary">BP-03:CH-08</strong> (RTD Carrier)</span>
+<span class="text-secondary">SATISFIED</span>
+</div>
+</div>
+<!-- Constraint 2: Multicore Pair Integrity -->
+<div class="bg-surface-container-low p-space-xs px-space-sm border border-outline-variant rounded flex flex-col gap-0.5">
+<div class="flex items-center justify-between">
+<span class="font-label-code-sm text-label-code-sm font-bold text-on-surface">Rule SOFT-02: Multicore Cable-Pair Integrity</span>
+<span class="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+</div>
+<p class="font-caption text-caption text-on-surface-variant">
+              Cable tag <code class="font-label-code-sm text-label-code-sm text-primary">CBL-COMP-04</code> pairs TT-204 with TT-203. Moving to adjacent terminal BP-03:CH-08 preserves pair twisted geometry without splitting cable bundle jackets.
+            </p>
+<div class="bg-surface-container-lowest p-1 rounded font-label-code-sm text-[11px] text-on-surface font-semibold flex justify-between">
+<span>Twisted Pair Cohesion:</span>
+<span class="text-secondary">100% Retained</span>
+</div>
+</div>
+<!-- Constraint 3: Thermal Carrier Balance -->
+<div class="bg-surface-container-low p-space-xs px-space-sm border border-outline-variant rounded flex flex-col gap-0.5">
+<div class="flex items-center justify-between">
+<span class="font-label-code-sm text-label-code-sm font-bold text-on-surface">Rule HARD-11: CIOC Thermal Budget (&lt;68%)</span>
+<span class="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+</div>
+<p class="font-caption text-caption text-on-surface-variant">
+              BP-03 carrier dissipation sits at 44.1W (rated 75W max). Allocating TT-204 adds 0.85W, maintaining comfortable headroom well below CIOC de-rating curve.
+            </p>
+<div class="w-full bg-surface-container-highest rounded-full h-1.5 mt-1">
+<div class="bg-secondary h-1.5 rounded-full" style="width: 59%"></div>
+</div>
+</div>
+</div>
+<!-- Field Labor & Cost Differential -->
+<div class="bg-surface-container-low p-space-sm border border-outline-variant rounded flex flex-col gap-space-xs">
+<div class="font-caption text-caption font-semibold uppercase text-on-surface-variant">
+            Rewiring Schedule &amp; Labor Impact
+          </div>
+<div class="grid grid-cols-2 gap-space-xs text-[11px]">
+<div class="bg-surface-container-lowest p-space-xs border border-outline-variant/60 rounded">
+<div class="text-on-surface-variant font-caption">Jumper Cut &amp; Strip</div>
+<div class="font-label-code-sm text-label-code-sm font-bold text-on-surface">1 Ferrule Pair (0.75mm²)</div>
+</div>
+<div class="bg-surface-container-lowest p-space-xs border border-outline-variant/60 rounded">
+<div class="text-on-surface-variant font-caption">Marshalling Drift</div>
+<div class="font-label-code-sm text-label-code-sm font-bold text-on-surface">220mm (Intra-chassis)</div>
+</div>
+<div class="bg-surface-container-lowest p-space-xs border border-outline-variant/60 rounded">
+<div class="text-on-surface-variant font-caption">Estimated Electrician Time</div>
+<div class="font-label-code-sm text-label-code-sm font-bold text-on-surface">~6.5 minutes</div>
+</div>
+<div class="bg-surface-container-lowest p-space-xs border border-outline-variant/60 rounded">
+<div class="text-on-surface-variant font-caption">Labor Cost vs Unconstrained</div>
+<div class="font-label-code-sm text-label-code-sm font-bold text-secondary">-$4,210 Saved</div>
+</div>
+</div>
+</div>
+<!-- Interactive Signal Details Table -->
+<div class="flex flex-col gap-1">
+<div class="font-caption text-caption font-semibold uppercase text-on-surface-variant">
+            Technical Specification Properties
+          </div>
+<table class="w-full text-[11px] font-label-code-sm border border-outline-variant/60 rounded overflow-hidden">
+<tbody class="divide-y divide-outline-variant/40 bg-surface-container-lowest">
+<tr>
+<td class="p-1 px-2 font-caption text-on-surface-variant bg-surface-container-low w-1/3">Channel Spec</td>
+<td class="p-1 px-2 font-bold text-on-surface">RTD Pt100 (Alpha 0.00385)</td>
+</tr>
+<tr>
+<td class="p-1 px-2 font-caption text-on-surface-variant bg-surface-container-low">Isolation Level</td>
+<td class="p-1 px-2 text-on-surface">2500 VDC Galvanic</td>
+</tr>
+<tr>
+<td class="p-1 px-2 font-caption text-on-surface-variant bg-surface-container-low">Ex Barrier Class</td>
+<td class="p-1 px-2 text-secondary font-bold">Zone 1 / Div 1 [Ex-ia] IIC</td>
+</tr>
+<tr>
+<td class="p-1 px-2 font-caption text-on-surface-variant bg-surface-container-low">Ferrule Spec</td>
+<td class="p-1 px-2 text-on-surface">Twin-wire insulated 2x0.75mm²</td>
+</tr>
+<tr>
+<td class="p-1 px-2 font-caption text-on-surface-variant bg-surface-container-low">Cable Shield Ground</td>
+<td class="p-1 px-2 text-on-surface">Chassis Earth Bar E03 (Direct)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Quick Overrides Toggle Section -->
+<div class="p-space-sm bg-surface-container border border-outline-variant rounded flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-caption text-caption font-bold text-on-surface uppercase">Force Freeze Assignment</span>
+<span class="font-caption text-caption text-on-surface-variant text-[10px]">Lock TT-204 to BP-03:CH-08 across all solver runs</span>
+</div>
+<button class="h-6 px-space-sm bg-surface-container-lowest border border-outline-variant hover:bg-surface-container-high text-primary font-caption text-caption font-semibold rounded flex items-center gap-1 transition-colors" id="btn-pin-toggle">
+<span class="material-symbols-outlined text-[14px]">push_pin</span>PIN LOCK
+          </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Detailed Diagnostic & Jumper Trace Bar -->
+<div class="bg-surface-container border-t border-outline-variant p-space-sm flex flex-col md:flex-row items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs text-secondary font-label-code-sm text-label-code-sm font-semibold">
+<span class="material-symbols-outlined text-[16px]">verified_user</span>
+<span>ZERO ORPHAN TERMINALS DETECTED</span>
+</div>
+<div class="h-4 w-[1px] bg-outline-variant"></div>
+<div class="font-caption text-caption text-on-surface-variant">
+        L1 Objective Distance: <strong class="text-on-surface font-label-code-sm">0.042</strong> • Total Jumper Path Delta: <strong class="text-on-surface font-label-code-sm">880mm</strong> • Cabinet Heat Delta: <strong class="text-secondary font-label-code-sm">-1.2W</strong>
+</div>
+</div>
+<div class="flex items-center gap-space-xs text-caption font-caption">
+<span class="text-on-surface-variant">Revision Audit Stamp:</span>
+<span class="font-label-code-sm text-label-code-sm text-on-surface bg-surface-container-highest px-space-xs py-[2px] rounded border border-outline-variant font-bold">
+        SHA-256: 9b2d87a41...c81f
+      </span>
+<button class="h-5 px-space-xs bg-surface-container-lowest border border-outline-variant hover:bg-surface-container rounded text-on-surface-variant hover:text-on-surface" title="Copy Hash">
+<span class="material-symbols-outlined text-[13px]">content_copy</span>
+</button>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    // Dynamic interactive behavior for row selection and inspector updates
+    const signalData = {
+      'PT-101': {
+        tag: 'PT-101',
+        title: 'Why did PT-101 remain unchanged?',
+        desc: 'Signal PT-101 is locked to BP-02:CH-05 due to strict baseline retention weight (10x). Channel electrical characteristics and carrier heat loads match baseline specifications with zero delta.',
+        badge: 'STATIC (RETAINED)',
+        badgeClass: 'bg-secondary-fixed text-on-secondary-fixed-variant',
+        carrier: 'BP-02:CH-05',
+        deltaCost: '0 Jumpers (Zero labor)',
+        rule: 'WEIGHT-01: Baseline Pin Retention (Weight 10x)',
+        savings: '100% Pinned'
+      },
+      'TT-204': {
+        tag: 'TT-204',
+        title: 'Why did TT-204 relocate to BP-03:CH-08?',
+        desc: 'Signal TT-204 was moved from Baseplate BP-01 (4-20mA HART analog loop) to BP-03 (RTD carrier) to satisfy safety and shielding constraints introduced by RTD 3-wire sensor additions in Unit A expansion.',
+        badge: 'SHIFT (RULE HARD-07)',
+        badgeClass: 'bg-tertiary-fixed text-on-tertiary-fixed',
+        carrier: 'BP-03:CH-08',
+        deltaCost: '+1 Jumper pair rewire',
+        rule: 'Rule HARD-07: RTD Shield Commonality Requirement',
+        savings: '98.2% vs Full Reshuffle'
+      },
+      'FT-104B': {
+        tag: 'FT-104B',
+        title: 'Why was FT-104B placed in BP-04:CH-09?',
+        desc: 'Newly introduced redundant transmitter for boiler feedwater. The CP-SAT solver placed it in BP-04 to maintain duty/standby physical separation while respecting the SIL-3 carrier integrity boundary.',
+        badge: 'NEW DRAFT ALLOCATION',
+        badgeClass: 'bg-primary-fixed text-on-primary-fixed',
+        carrier: 'BP-04:CH-09',
+        deltaCost: 'Fresh Landing (New wire landing)',
+        rule: 'Rule SIL-03: Active/Standby Physical Segregation',
+        savings: 'Optimized Landing'
+      },
+      'PT-100': {
+        tag: 'PT-100',
+        title: 'Why was PT-100 relocated from BP-01 to BP-04?',
+        desc: 'BP-01 reached 71.2% thermal carrier dissipation due to adjacent HART transmitter impedance. PT-100 was moved to BP-04 to bring BP-01 thermal loading safely back below the 68% threshold.',
+        badge: 'THERMAL MITIGATION',
+        badgeClass: 'bg-error-container text-on-error-container',
+        carrier: 'BP-04:CH-10',
+        deltaCost: '+1 Jumper pair rewire',
+        rule: 'Rule HARD-11: CIOC Thermal Budget (<68% Max)',
+        savings: 'Cabinet Overheat Avoided'
+      }
+    };
+
+    const rows = document.querySelectorAll('.signal-row');
+    rows.forEach(row => {
+      row.addEventListener('click', () => {
+        rows.forEach(r => {
+          r.classList.remove('bg-tertiary-fixed/30', 'border-l-4', 'border-l-tertiary', 'ring-1', 'ring-tertiary/50');
+        });
+        row.classList.add('bg-tertiary-fixed/30', 'border-l-4', 'border-l-tertiary', 'ring-1', 'ring-tertiary/50');
+        
+        const signalTag = row.getAttribute('data-signal');
+        const data = signalData[signalTag];
+        if (data) {
+          const inspectorTagBadge = document.querySelector('.lg\\:col-span-4 .font-label-code-sm.font-semibold.rounded');
+          if (inspectorTagBadge) inspectorTagBadge.textContent = 'SELECTED: ' + data.tag;
+          
+          const bannerTitle = document.querySelector('.lg\\:col-span-4 .font-headline-sm');
+          if (bannerTitle) bannerTitle.textContent = data.title;
+          
+          const bannerDesc = document.querySelector('.lg\\:col-span-4 .font-body-sm');
+          if (bannerDesc) bannerDesc.textContent = data.desc;
+        }
+      });
+    });
+
+    // Solver button micro-feedback
+    const solverBtn = document.getElementById('btn-run-solver');
+    if (solverBtn) {
+      solverBtn.addEventListener('click', () => {
+        const originalText = solverBtn.innerHTML;
+        solverBtn.innerHTML = '<span class="material-symbols-outlined text-[14px] animate-spin">refresh</span> Optimizing Churn...';
+        solverBtn.disabled = true;
+        setTimeout(() => {
+          solverBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">check</span> Solved (0.012 Index)';
+          setTimeout(() => {
+            solverBtn.innerHTML = originalText;
+            solverBtn.disabled = false;
+          }, 2000);
+        }, 600);
+      });
+    }
+
+    // Pin toggle button micro-feedback
+    const pinBtn = document.getElementById('btn-pin-toggle');
+    if (pinBtn) {
+      let pinned = false;
+      pinBtn.addEventListener('click', () => {
+        pinned = !pinned;
+        if (pinned) {
+          pinBtn.classList.remove('text-primary');
+          pinBtn.classList.add('bg-primary', 'text-on-primary');
+          pinBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">lock</span> LOCKED';
+        } else {
+          pinBtn.classList.remove('bg-primary', 'text-on-primary');
+          pinBtn.classList.add('text-primary');
+          pinBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">push_pin</span> PIN LOCK';
+        }
+      });
+    }
+  })();
+</script></main></div><footer class="fixed bottom-0 left-0 right-0 h-8 bg-surface-container border-t border-outline-variant z-50 flex items-center justify-between px-space-md"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-secondary text-[14px]">terminal</span><span class="font-caption text-caption uppercase text-on-surface-variant font-semibold">Diagnostic Ledger:</span><span class="font-label-code-sm text-label-code-sm text-on-surface">IO Sudoku Matrix Solver v3.4.1 [Online] — Zero Rule Contradictions</span></div></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs"><span class="font-caption text-caption text-on-surface-variant">Grid Cursor:</span><span class="font-label-code-sm text-label-code-sm text-on-surface font-semibold">R04:C07 [AI4-mA]</span></div><div class="h-3 w-[1px] bg-outline-variant"></div><div class="flex items-center gap-space-xs"><span class="font-caption text-caption text-on-surface-variant">Scale:</span><span class="font-label-code-sm text-label-code-sm text-on-surface">100% (1440x900 DOCKED)</span></div></div></footer></body></html>

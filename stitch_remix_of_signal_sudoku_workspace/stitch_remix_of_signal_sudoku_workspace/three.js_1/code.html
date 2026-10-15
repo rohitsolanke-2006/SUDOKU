@@ -1,0 +1,482 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width,initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+<!-- STITCH_THREEJS_START:ANIMATION_19 class="fixed inset-0 w-full h-full bg-transparent" -->
+<div class="fixed inset-0 w-full h-full bg-transparent" style="display:block;">
+<script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+<div id="threejs-container-ANIMATION_19" style="width:100%;height:100%"></div>
+<script>
+(function() {
+  const container = document.getElementById('threejs-container-ANIMATION_19');
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  // Three.js 3D Industrial Control Cabinet Scene
+// Rittal TS8 enclosure with open door, galvanized DIN rails, Panduit slatted wire ducts,
+// DeltaV CIOC communication controllers, 8-carrier baseplates, 16-channel CHARM terminal blocks,
+// wire bundles, and interactive camera/selection raycasting.
+
+const width = container.clientWidth || window.innerWidth;
+const height = container.clientHeight || window.innerHeight;
+
+// Scene & Camera setup
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1e2424); // Clean technical viewport dark graphite
+
+const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+camera.position.set(2.8, 1.4, 4.2);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setSize(width, height);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+// Lighting: Technical CAD studio illumination
+const ambientLight = new THREE.AmbientLight(0xdce5e2, 0.75);
+scene.add(ambientLight);
+
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.1);
+keyLight.position.set(4, 6, 5);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.width = 2048;
+keyLight.shadow.mapSize.height = 2048;
+keyLight.shadow.bias = -0.0005;
+scene.add(keyLight);
+
+const fillLight = new THREE.DirectionalLight(0xaac2be, 0.5);
+fillLight.position.set(-5, 3, -2);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(0x79f28b, 0.15); // subtle green rim
+rimLight.position.set(0, -4, -3);
+scene.add(rimLight);
+
+// Interactive objects registry
+const selectableObjects = [];
+const charmMeshes = [];
+
+// Materials (Industrial CAD PBR-like with Lambert/Phong for guaranteed clarity & rendering stability)
+const matCabinetSteel = new THREE.MeshStandardMaterial({
+  color: 0x8a928e,
+  roughness: 0.45,
+  metalness: 0.4
+});
+const matCabinetInside = new THREE.MeshStandardMaterial({
+  color: 0xd3d8d5,
+  roughness: 0.6,
+  metalness: 0.2
+});
+const matOrangeGasket = new THREE.MeshLambertMaterial({ color: 0xd95a2b });
+const matGalvanizedRail = new THREE.MeshStandardMaterial({
+  color: 0xb5beba,
+  roughness: 0.35,
+  metalness: 0.8
+});
+const matTrunkingGrey = new THREE.MeshLambertMaterial({ color: 0x47514e });
+const matCiocBlack = new THREE.MeshLambertMaterial({ color: 0x222625 });
+const matBaseplateDark = new THREE.MeshLambertMaterial({ color: 0x2d3432 });
+const matCharmGreen = new THREE.MeshLambertMaterial({ color: 0x39815a }); // Valid assigned AI
+const matCharmTeal = new THREE.MeshLambertMaterial({ color: 0x247c70 }); // Selected
+const matCharmGrey = new THREE.MeshLambertMaterial({ color: 0x6e7874 }); // Spare / Empty
+const matCharmAmber = new THREE.MeshLambertMaterial({ color: 0xc58a2b }); // Warning / TQ
+const matCharmRed = new THREE.MeshLambertMaterial({ color: 0xb94a48 }); // Violation
+
+// Cabinet Enclosure (800mm x 2000mm x 600mm scale equivalent in scene units)
+const cabWidth = 1.8;
+const cabHeight = 3.2;
+const cabDepth = 0.9;
+const cabWall = 0.05;
+
+const cabinetGroup = new THREE.Group();
+scene.add(cabinetGroup);
+
+// Backplate (Galvanized steel inside panel)
+const backplateGeo = new THREE.BoxGeometry(cabWidth - cabWall*2, cabHeight - cabWall*2, 0.02);
+const backplateMesh = new THREE.Mesh(backplateGeo, matCabinetInside);
+backplateMesh.position.set(0, 0, -cabDepth/2 + 0.03);
+backplateMesh.receiveShadow = true;
+cabinetGroup.add(backplateMesh);
+
+// Outer Frame: Top, Bottom, Left, Right
+const topMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, cabWall, cabDepth), matCabinetSteel);
+topMesh.position.set(0, cabHeight/2 - cabWall/2, 0);
+cabinetGroup.add(topMesh);
+
+const btmMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, cabWall, cabDepth), matCabinetSteel);
+btmMesh.position.set(0, -cabHeight/2 + cabWall/2, 0);
+cabinetGroup.add(btmMesh);
+
+const leftMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWall, cabHeight, cabDepth), matCabinetSteel);
+leftMesh.position.set(-cabWidth/2 + cabWall/2, 0, 0);
+cabinetGroup.add(leftMesh);
+
+const rightMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWall, cabHeight, cabDepth), matCabinetSteel);
+rightMesh.position.set(cabWidth/2 - cabWall/2, 0, 0);
+cabinetGroup.add(rightMesh);
+
+// Plinth (Base riser)
+const plinth = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, 0.25, cabDepth), new THREE.MeshLambertMaterial({ color: 0x2a302e }));
+plinth.position.set(0, -cabHeight/2 - 0.125, 0);
+cabinetGroup.add(plinth);
+
+// Open Cabinet Door (Swung open at ~105 degrees on left hinge)
+const doorGroup = new THREE.Group();
+doorGroup.position.set(-cabWidth/2, 0, cabDepth/2);
+doorGroup.rotation.y = -Math.PI * 0.6; // Open outward left
+
+const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, cabHeight, 0.04), matCabinetSteel);
+doorLeaf.position.set(cabWidth/2, 0, 0);
+doorGroup.add(doorLeaf);
+
+// Door stiffener frame & document pocket
+const pocket = new THREE.Mesh(new THREE.BoxGeometry(cabWidth*0.7, cabHeight*0.25, 0.04), new THREE.MeshLambertMaterial({ color: 0x737d79 }));
+pocket.position.set(cabWidth/2, -cabHeight*0.2, 0.04);
+doorGroup.add(pocket);
+
+// Door rubber seal strip
+const gasket = new THREE.Mesh(new THREE.BoxGeometry(cabWidth*0.96, cabHeight*0.96, 0.01), matOrangeGasket);
+gasket.position.set(cabWidth/2, 0, 0.022);
+doorGroup.add(gasket);
+
+cabinetGroup.add(doorGroup);
+
+// Internal Hardware: 3 DIN Rails with Panduit slatted wire trunking ducts
+const railPositionsY = [0.85, 0.1, -0.65];
+const railZ = -cabDepth/2 + 0.08;
+
+// Wire trunking runs (Horizontal and vertical)
+const ductW = 0.08;
+const ductH = 0.08;
+const ductGeoH = new THREE.BoxGeometry(cabWidth - 0.25, ductH, ductW);
+const ductGeoV = new THREE.BoxGeometry(ductW, cabHeight - 0.4, ductW);
+
+// Vertical side wireways
+const leftDuct = new THREE.Mesh(ductGeoV, matTrunkingGrey);
+leftDuct.position.set(-cabWidth/2 + 0.16, 0, railZ + 0.04);
+cabinetGroup.add(leftDuct);
+
+const rightDuct = new THREE.Mesh(ductGeoV, matTrunkingGrey);
+rightDuct.position.set(cabWidth/2 - 0.16, 0, railZ + 0.04);
+cabinetGroup.add(rightDuct);
+
+// Horizontal wireways between rails
+[-0.28, 0.48, 1.25].forEach(y => {
+  const duct = new THREE.Mesh(ductGeoH, matTrunkingGrey);
+  duct.position.set(0, y, railZ + 0.04);
+  cabinetGroup.add(duct);
+});
+
+// Build 3 Mounting DIN Rails
+railPositionsY.forEach((yPos, railIdx) => {
+  // DIN Rail steel bar (TS35/7.5)
+  const dinRail = new THREE.Mesh(new THREE.BoxGeometry(cabWidth - 0.4, 0.04, 0.015), matGalvanizedRail);
+  dinRail.position.set(0, yPos, railZ);
+  dinRail.castShadow = true;
+  cabinetGroup.add(dinRail);
+
+  if (railIdx === 0) {
+    // Top Rail: Power Supplies (24VDC), Redundant CIOC Controllers & Fiber Optic Head
+    const psMesh = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.22, 0.16), new THREE.MeshLambertMaterial({ color: 0x3d4644 }));
+    psMesh.position.set(-0.45, yPos + 0.02, railZ + 0.09);
+    cabinetGroup.add(psMesh);
+
+    // Primary & Redundant CIOC Units
+    [-0.1, 0.18].forEach((xPos, cIdx) => {
+      const cioc = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.25, 0.18), matCiocBlack);
+      cioc.position.set(xPos, yPos + 0.03, railZ + 0.1);
+      cioc.userData = {
+        type: 'CIOC',
+        id: `CIOC-0${cIdx + 1}`,
+        desc: cIdx === 0 ? 'Primary CIOC (Online)' : 'Standby Redundant CIOC'
+      };
+      selectableObjects.push(cioc);
+      cabinetGroup.add(cioc);
+
+      // Status LED indicator
+      const led = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 0.01), new THREE.MeshBasicMaterial({ color: 0x79f28b }));
+      led.position.set(xPos - 0.06, yPos + 0.11, railZ + 0.195);
+      cabinetGroup.add(led);
+    });
+
+    // Terminal bus bar end covers
+    const termBlock = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.15, 0.12), new THREE.MeshLambertMaterial({ color: 0x8a928e }));
+    termBlock.position.set(0.44, yPos, railZ + 0.07);
+    cabinetGroup.add(termBlock);
+  }
+
+  if (railIdx === 1 || railIdx === 2) {
+    // Rail 1 & 2: CHARM Baseplates (BP-01, BP-02, BP-03, BP-04)
+    const bpNames = railIdx === 1 ? ['BP-01 [AI/AO]', 'BP-02 [HART/IS]'] : ['BP-03 [RTD/TC]', 'BP-04 [DI/DO]'];
+    
+    [-0.32, 0.32].forEach((bpX, bpSubIdx) => {
+      const bpId = bpNames[bpSubIdx];
+      // Baseplate 8-carrier carrier backplane
+      const baseplate = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.26, 0.07), matBaseplateDark);
+      baseplate.position.set(bpX, yPos, railZ + 0.04);
+      baseplate.userData = {
+        type: 'BASEPLATE',
+        id: bpId,
+        rail: `Rail ${railIdx}`,
+        slots: 16
+      };
+      selectableObjects.push(baseplate);
+      cabinetGroup.add(baseplate);
+
+      // 16 individual CHARM modules per baseplate (2 rows of 8)
+      const slotPitchX = 0.06;
+      const slotPitchY = 0.09;
+      const startX = bpX - (7 * slotPitchX)/2;
+
+      for (let r = 0; r < 2; r++) {
+        for (let c = 0; c < 8; c++) {
+          const slotNum = r * 8 + c + 1;
+          const slotTag = `CH-${String(slotNum).padStart(2, '0')}`;
+          const charmX = startX + c * slotPitchX;
+          const charmY = yPos + (r === 0 ? slotPitchY/2 : -slotPitchY/2);
+
+          // Assign realistic signal states based on benchmark project
+          let charmMat = matCharmGreen;
+          let statusLabel = 'VALID';
+          let signalTag = `PT-10${slotNum}`;
+
+          if (bpSubIdx === 1 && railIdx === 1 && slotNum === 5) {
+            charmMat = matCharmTeal; // CH-05 Active Focus (PT-101)
+            statusLabel = 'SELECTED';
+            signalTag = 'PT-101';
+          } else if (bpSubIdx === 1 && railIdx === 1 && slotNum === 9) {
+            charmMat = matCharmAmber; // TQ-104 warning
+            statusLabel = 'TQ_WARNING';
+            signalTag = 'FT-104B';
+          } else if (bpSubIdx === 0 && railIdx === 2 && slotNum === 8) {
+            charmMat = matCharmGreen; // Relocated TT-204
+            statusLabel = 'RELOCATED_VALID';
+            signalTag = 'TT-204';
+          } else if (slotNum > 12) {
+            charmMat = matCharmGrey; // Spare available
+            statusLabel = 'SPARE';
+            signalTag = '[SPARE]';
+          }
+
+          const charmGeo = new THREE.BoxGeometry(0.045, 0.07, 0.06);
+          const charm = new THREE.Mesh(charmGeo, charmMat);
+          charm.position.set(charmX, charmY, railZ + 0.09);
+          charm.castShadow = true;
+          charm.userData = {
+            type: 'CHARM',
+            baseplate: bpId,
+            slot: slotTag,
+            signal: signalTag,
+            status: statusLabel,
+            fullAddress: `CAB-01 > CIOC-01 > ${bpId.split(' ')[0]} > ${slotTag}`
+          };
+          charmMeshes.push(charm);
+          selectableObjects.push(charm);
+          cabinetGroup.add(charm);
+
+          // Small white terminal ferrule clip
+          const terminal = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.015, 0.02), new THREE.MeshLambertMaterial({ color: 0xecf0ed }));
+          terminal.position.set(charmX, charmY - 0.038, railZ + 0.08);
+          cabinetGroup.add(terminal);
+        }
+      }
+    });
+  }
+});
+
+// Bottom Gland Plate & Field Cables (Multi-pair industrial shielded cables entering base)
+const glandPlate = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.02, 0.4), new THREE.MeshLambertMaterial({ color: 0x5a6360 }));
+glandPlate.position.set(0, -cabHeight/2 + 0.07, 0);
+cabinetGroup.add(glandPlate);
+
+// Plausible Cable Traces emerging from bottom gland plate up side wireways
+const cableColors = [0x2f3533, 0x1a2e2a, 0x3d352b, 0x223647];
+for (let i = 0; i < 8; i++) {
+  const curve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.4 + i*0.11, -cabHeight/2 + 0.08, 0.1),
+    new THREE.Vector3(-0.55 + (i%2)*0.1, -cabHeight/2 + 0.6, railZ + 0.05),
+    new THREE.Vector3(-cabWidth/2 + 0.16, -0.6 + i*0.18, railZ + 0.06)
+  ]);
+  const tubeGeo = new THREE.TubeGeometry(curve, 16, 0.014, 8, false);
+  const cableMesh = new THREE.Mesh(tubeGeo, new THREE.MeshLambertMaterial({ color: cableColors[i % 4] }));
+  cabinetGroup.add(cableMesh);
+}
+
+// Coordinate Reference / Ground Grid
+const gridHelper = new THREE.GridHelper(6, 24, 0x247c70, 0x2b3634);
+gridHelper.position.y = -cabHeight/2 - 0.25;
+scene.add(gridHelper);
+
+// Orbit Controls (Embedded vanilla implementation for robustness)
+let isDragging = false;
+let isPanning = false;
+let previousMousePosition = { x: 0, y: 0 };
+let spherical = {
+  radius: 4.8,
+  theta: 0.55, // Horizontal angle
+  phi: 1.25    // Vertical angle
+};
+let targetLookAt = new THREE.Vector3(0, 0, 0);
+
+function updateCameraPosition() {
+  camera.position.x = targetLookAt.x + spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
+  camera.position.y = targetLookAt.y + spherical.radius * Math.cos(spherical.phi);
+  camera.position.z = targetLookAt.z + spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
+  camera.lookAt(targetLookAt);
+}
+updateCameraPosition();
+
+// Smooth camera target interpolation
+let targetSpherical = { radius: 4.8, theta: 0.55, phi: 1.25 };
+let targetCenter = new THREE.Vector3(0, 0, 0);
+
+window.focusOnHardware = function(type, id) {
+  if (type === 'CABINET') {
+    targetSpherical = { radius: 4.8, theta: 0.55, phi: 1.25 };
+    targetCenter.set(0, 0, 0);
+  } else if (type === 'BP-02' || id === 'BP-02') {
+    targetSpherical = { radius: 1.6, theta: 0.2, phi: 1.45 };
+    targetCenter.set(0.32, 0.1, railZ + 0.1);
+  } else if (type === 'CIOC-01') {
+    targetSpherical = { radius: 1.8, theta: 0.1, phi: 1.3 };
+    targetCenter.set(-0.1, 0.85, railZ + 0.1);
+  } else if (type === 'CHARM') {
+    targetSpherical = { radius: 0.9, theta: 0.15, phi: 1.5 };
+    targetCenter.set(0.24, 0.14, railZ + 0.12);
+  }
+};
+
+// Mouse Interaction & Raycasting
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+renderer.domElement.addEventListener('mousedown', (e) => {
+  if (e.button === 0) isDragging = true;
+  if (e.button === 2) isPanning = true;
+  previousMousePosition = { x: e.clientX, y: e.clientY };
+});
+
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+  isPanning = false;
+});
+
+renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
+
+renderer.domElement.addEventListener('mousemove', (e) => {
+  const deltaX = e.clientX - previousMousePosition.x;
+  const deltaY = e.clientY - previousMousePosition.y;
+
+  if (isDragging) {
+    targetSpherical.theta -= deltaX * 0.007;
+    targetSpherical.phi = Math.max(0.2, Math.min(Math.PI - 0.2, targetSpherical.phi - deltaY * 0.007));
+  } else if (isPanning) {
+    const panSpeed = 0.003 * targetSpherical.radius;
+    targetCenter.x -= deltaX * panSpeed;
+    targetCenter.y += deltaY * panSpeed;
+  }
+
+  previousMousePosition = { x: e.clientX, y: e.clientY };
+
+  // Calculate mouse for raycast hover
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+});
+
+// Wheel Zoom
+renderer.domElement.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  targetSpherical.radius = Math.max(0.6, Math.min(9.0, targetSpherical.radius + e.deltaY * 0.003));
+}, { passive: false });
+
+// Click to Select Component in CAD
+renderer.domElement.addEventListener('click', (e) => {
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(selectableObjects, false);
+
+  if (intersects.length > 0) {
+    const hitObj = intersects[0].object;
+    const data = hitObj.userData;
+    if (window.onComponentSelected) {
+      window.onComponentSelected(data);
+    }
+  }
+});
+
+// Resize handler
+window.addEventListener('resize', () => {
+  const newW = container.clientWidth || window.innerWidth;
+  const newH = container.clientHeight || window.innerHeight;
+  camera.aspect = newW / newH;
+  camera.updateProjectionMatrix();
+  renderer.setSize(newW, newH);
+});
+
+// Expose camera controls to DOM buttons
+window.cadResetView = function() {
+  targetSpherical = { radius: 4.8, theta: 0.55, phi: 1.25 };
+  targetCenter.set(0, 0, 0);
+};
+
+window.cadZoomIn = function() {
+  targetSpherical.radius = Math.max(0.6, targetSpherical.radius * 0.75);
+};
+
+window.cadZoomOut = function() {
+  targetSpherical.radius = Math.min(9.0, targetSpherical.radius * 1.35);
+};
+
+window.cadFocusTop = function() {
+  targetSpherical = { radius: 3.2, theta: 0.01, phi: 0.1 };
+  targetCenter.set(0, 0, 0);
+};
+
+window.cadFocusFront = function() {
+  targetSpherical = { radius: 3.6, theta: 0.0, phi: Math.PI / 2 };
+  targetCenter.set(0, 0, 0);
+};
+
+// Render Loop
+let animFrame;
+function animate() {
+  animFrame = requestAnimationFrame(animate);
+
+  // Smooth lerp camera movement
+  spherical.radius += (targetSpherical.radius - spherical.radius) * 0.1;
+  spherical.theta += (targetSpherical.theta - spherical.theta) * 0.1;
+  spherical.phi += (targetSpherical.phi - spherical.phi) * 0.1;
+  targetLookAt.lerp(targetCenter, 0.1);
+
+  updateCameraPosition();
+  renderer.render(scene, camera);
+}
+animate();
+
+return () => {
+  cancelAnimationFrame(animFrame);
+  renderer.dispose();
+};
+
+})();
+</script>
+</div>
+<!-- STITCH_THREEJS_END:ANIMATION_19 -->
+
+
+</body></html>

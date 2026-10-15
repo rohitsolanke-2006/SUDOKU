@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html class="h-full" lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta content="cad_simulator" name="shell-type">
+  <title>IO SIGNAL SUDOKU — Industrial 3D Cabinet Simulator & CAD Workstation</title>
+  
+  <!-- Typography & Technical CAD Icons -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#247c70',
+            'brand-dark': '#1a5f56',
+            'brand-light': '#38a394',
+            valid: '#2e7d32',
+            'valid-light': '#e8f5e9',
+            warn: '#c58a2b',
+            'warn-light': '#fef7e0',
+            error: '#b94a48',
+            'error-light': '#fdf2f2',
+            graphite: '#1f2423',
+            'graphite-dark': '#161a19',
+            'graphite-muted': '#586360',
+            frame: '#eaedea',
+            surface: '#f4f6f4',
+            'surface-dark': '#131817',
+            border: '#c8ceca',
+            'border-light': '#dde1dd',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Three.js r128 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    body {
+      user-select: none;
+      -webkit-user-select: none;
+      overscroll-behavior: none;
+    }
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #b5beb9;
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #eaedea;
+    }
+    /* 3D Viewport Tooltip */
+    #cad-tooltip {
+      pointer-events: none;
+      transform: translate(-50%, -125%);
+      transition: opacity 0.12s ease-out;
+    }
+    /* Active toolbar button */
+    .tool-btn.active {
+      background-color: #247c70 !important;
+      color: #ffffff !important;
+      border-color: #1a5f56 !important;
+    }
+    .tool-btn.active .material-symbols-outlined {
+      color: #ffffff !important;
+    }
+    /* Warning badge pulsing */
+    @keyframes alert-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.55; transform: scale(1.08); }
+    }
+    .badge-pulse {
+      animation: alert-pulse 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+
+<body class="h-full bg-surface text-graphite font-sans text-xs antialiased flex flex-col overflow-hidden">
+
+  <!-- 3.A TOP APPLICATION HEADER (~44px) -->
+  <header class="h-[44px] bg-graphite-dark text-neutral-200 border-b border-neutral-800 px-3 flex items-center justify-between shrink-0 z-40 select-none">
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 font-mono font-bold tracking-tight text-brand-light">
+        <span class="material-symbols-outlined text-[19px] text-teal-400">developer_board</span>
+        <span class="tracking-normal text-[13px] text-white font-semibold">IO SIGNAL SUDOKU</span>
+        <span class="text-[9.5px] px-1 py-0.5 bg-teal-950/80 text-teal-300 border border-teal-700/60 rounded-xs font-mono">CAD v3.4</span>
+      </div>
+      <div class="h-3.5 w-[1px] bg-neutral-700"></div>
+      <div class="flex items-center gap-2 font-mono text-[11px]">
+        <span class="text-neutral-400 font-normal">PROJECT:</span>
+        <span class="font-medium text-white">Plant Expansion</span>
+        <span class="text-neutral-500">/</span>
+        <span class="text-neutral-300 font-normal">Unit A [Process Area]</span>
+      </div>
+      <div class="h-3.5 w-[1px] bg-neutral-700"></div>
+      <div class="flex items-center gap-1.5 font-mono text-[10.5px]">
+        <span class="text-neutral-400">REV:</span>
+        <div class="relative inline-flex items-center">
+          <select id="rev-select" onchange="switchRevision(this.value)" class="h-[22px] pl-1.5 pr-4 text-[10px] bg-neutral-800 border border-neutral-700 text-teal-300 font-semibold rounded-xs appearance-none focus:outline-none focus:border-teal-500 cursor-pointer shadow-xs">
+            <option value="REV_B" selected>REV B [Active Draft]</option>
+            <option value="REV_A">REV A [Approved Baseline]</option>
+            <option value="REV_C_PREVIEW">REV C [Simulation Sandbox]</option>
+          </select>
+          <span class="material-symbols-outlined text-[12px] text-teal-400 absolute right-1 pointer-events-none">arrow_drop_down</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 font-mono text-[10.5px]">
+      <div class="flex items-center gap-1.5 px-2 py-0.5 bg-neutral-900 border border-neutral-700/80 rounded-xs">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]"></span>
+        <span id="system-status-text" class="text-neutral-200 font-medium">Engine Ready</span>
+        <span class="text-neutral-600">|</span>
+        <span class="text-neutral-400 text-[9.5px]">IEC 61131-2 Strict</span>
+      </div>
+      <div class="flex items-center gap-1 text-neutral-400" title="Project changes saved">
+        <span class="material-symbols-outlined text-[14px] text-emerald-400">cloud_done</span>
+        <span class="text-[10px] hidden sm:inline">Saved</span>
+      </div>
+      <div class="h-3.5 w-[1px] bg-neutral-700"></div>
+      <a href="../revision_optimizer_rev_a_vs_rev_b_churn/code.html" class="h-6 px-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700 rounded-xs font-mono text-[10px] flex items-center gap-1.5 transition-colors" title="Switch to Sudoku Matrix Churn Optimizer Screen">
+        <span class="material-symbols-outlined text-[13px] text-teal-400">grid_view</span>
+        <span>Sudoku Matrix</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- 3.B CAD ACTION TOOLBAR (~38px) -->
+  <nav class="h-[38px] bg-frame border-b border-border px-3 flex items-center justify-between shrink-0 z-30 select-none shadow-2xs">
+    <div class="flex items-center gap-1">
+      <div class="flex items-center gap-0.5 bg-surface border border-border p-0.5 rounded-xs">
+        <button id="tool-select" onclick="setCadTool('SELECT')" class="tool-btn active h-6 px-2 flex items-center gap-1 hover:bg-frame rounded-xs text-graphite font-mono text-[10.5px] transition-colors" title="Select Tool (Shortcut: 1)">
+          <span class="material-symbols-outlined text-[14px]">arrow_selector_tool</span>
+          <span>Select</span>
+        </button>
+        <button id="tool-orbit" onclick="setCadTool('ORBIT')" class="tool-btn h-6 px-2 flex items-center gap-1 hover:bg-frame rounded-xs text-graphite font-mono text-[10.5px] transition-colors" title="3D Orbit Camera (Shortcut: 2)">
+          <span class="material-symbols-outlined text-[14px]">orbit</span>
+          <span>Orbit</span>
+        </button>
+        <button id="tool-pan" onclick="setCadTool('PAN')" class="tool-btn h-6 px-2 flex items-center gap-1 hover:bg-frame rounded-xs text-graphite font-mono text-[10.5px] transition-colors" title="Pan Plane (Shortcut: 3)">
+          <span class="material-symbols-outlined text-[14px]">pan_tool</span>
+          <span>Pan</span>
+        </button>
+      </div>
+
+      <div class="h-4 w-[1px] bg-border mx-1"></div>
+
+      <div class="flex items-center gap-0.5 bg-surface border border-border p-0.5 rounded-xs">
+        <button onclick="cadZoomIn()" class="w-6 h-6 flex items-center justify-center hover:bg-frame rounded-xs text-graphite transition-colors" title="Zoom In (+)">
+          <span class="material-symbols-outlined text-[15px]">zoom_in</span>
+        </button>
+        <button onclick="cadZoomOut()" class="w-6 h-6 flex items-center justify-center hover:bg-frame rounded-xs text-graphite transition-colors" title="Zoom Out (-)">
+          <span class="material-symbols-outlined text-[15px]">zoom_out</span>
+        </button>
+        <button onclick="cadFitToView()" class="h-6 px-2 flex items-center gap-1 hover:bg-frame rounded-xs text-graphite font-mono text-[10px] transition-colors font-medium" title="Fit to View (Reset Camera - Shortcut: F)">
+          <span class="material-symbols-outlined text-[14px]">filter_center_focus</span>
+          <span>Fit to View</span>
+        </button>
+      </div>
+
+      <div class="h-4 w-[1px] bg-border mx-1"></div>
+
+      <div class="flex items-center gap-0.5 bg-surface border border-border p-0.5 rounded-xs font-mono text-[10px]">
+        <button onclick="cadSetView('ISO')" id="preset-iso" class="h-6 px-1.5 hover:bg-frame rounded-xs text-brand font-bold bg-brand/10 transition-colors" title="Isometric 3/4 Perspective">ISO</button>
+        <button onclick="cadSetView('FRONT')" id="preset-front" class="h-6 px-1.5 hover:bg-frame rounded-xs text-graphite transition-colors" title="Direct Front Elevation">FRONT</button>
+        <button onclick="cadSetView('SIDE')" id="preset-side" class="h-6 px-1.5 hover:bg-frame rounded-xs text-graphite transition-colors" title="Side Elevation">SIDE</button>
+        <button onclick="cadSetView('TOP')" id="preset-top" class="h-6 px-1.5 hover:bg-frame rounded-xs text-graphite transition-colors" title="Top Plan View">TOP</button>
+      </div>
+
+      <div class="h-4 w-[1px] bg-border mx-1"></div>
+
+      <div class="flex items-center gap-1">
+        <button id="toggle-wiring-btn" onclick="toggleWiringVisibility()" class="h-6 px-2 flex items-center gap-1 bg-white hover:bg-frame border border-border rounded-xs text-graphite font-mono text-[10px] transition-colors shadow-2xs" title="Show / Hide Field Cabling & Jumpers (Shortcut: W)">
+          <span class="material-symbols-outlined text-[13px] text-brand">cable</span>
+          <span id="wiring-btn-label">Wiring: ON</span>
+        </button>
+        <button id="toggle-labels-btn" onclick="toggleLabelsVisibility()" class="h-6 px-2 flex items-center gap-1 bg-white hover:bg-frame border border-border rounded-xs text-graphite font-mono text-[10px] transition-colors shadow-2xs" title="Show / Hide Component Labels (Shortcut: L)">
+          <span class="material-symbols-outlined text-[13px] text-brand">label</span>
+          <span id="labels-btn-label">Labels: ON</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button onclick="runValidationCheck()" class="h-7 px-2.5 bg-white hover:bg-frame text-graphite border border-border rounded-xs font-mono font-medium text-[11px] flex items-center gap-1.5 transition-colors shadow-2xs active:bg-neutral-200">
+        <span class="material-symbols-outlined text-[14px] text-brand">fact_check</span>
+        <span>Validate</span>
+      </button>
+      <button onclick="runAllocationSolver()" class="h-7 px-3 bg-brand hover:bg-brand-dark text-white rounded-xs font-mono font-medium text-[11px] flex items-center gap-1.5 transition-colors shadow-xs active:scale-[0.98]">
+        <span class="material-symbols-outlined text-[14px]">tune</span>
+        <span>Run I/O Allocation</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN WORKSPACE -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- 3.C LEFT EQUIPMENT HIERARCHY TREE (~18%) -->
+    <aside id="left-tree-sidebar" class="w-[235px] shrink-0 bg-frame border-r border-border flex flex-col z-20 select-none transition-all duration-150">
+      <div class="p-2 border-b border-border bg-surface flex flex-col gap-1.5 shrink-0">
+        <div class="flex items-center justify-between text-[10px] font-mono text-neutral-600 uppercase tracking-wider font-semibold">
+          <span class="flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px] text-brand">account_tree</span>
+            <span>Equipment Hierarchy</span>
+          </span>
+          <button onclick="collapseAllTreeNodes()" class="hover:text-brand transition-colors text-[9px] uppercase tracking-normal" title="Collapse All Nodes">
+            Collapse All
+          </button>
+        </div>
+        <div class="relative">
+          <input 
+            type="text" 
+            id="tree-search-input" 
+            placeholder="Search tag, slot, or module..." 
+            oninput="filterEquipmentTree(this.value)"
+            class="w-full h-6 pl-6 pr-6 bg-white border border-border rounded-xs text-[10.5px] font-mono text-graphite placeholder:text-neutral-400 focus:outline-none focus:border-brand"
+          />
+          <span class="material-symbols-outlined text-[13px] text-neutral-400 absolute left-1.5 top-1.5 pointer-events-none">search</span>
+          <button id="clear-search-btn" onclick="clearTreeSearch()" class="hidden absolute right-1.5 top-1 text-neutral-400 hover:text-graphite">
+            <span class="material-symbols-outlined text-[13px]">close</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="tree-container" class="flex-1 overflow-y-auto p-1.5 font-mono text-[11px] space-y-0.5">
+        <div class="tree-node" data-id="PROJ" data-search="project plant expansion unit a">
+          <div class="flex items-center justify-between py-0.5 px-1 font-semibold text-graphite rounded hover:bg-surface cursor-pointer" onclick="toggleTreeNode(this, 'PROJ')">
+            <div class="flex items-center gap-1 truncate">
+              <span class="material-symbols-outlined text-[12px] text-neutral-500 tree-arrow">expand_more</span>
+              <span class="material-symbols-outlined text-[14px] text-neutral-600">factory</span>
+              <span class="truncate">Plant Expansion</span>
+            </div>
+            <span class="text-[9px] text-neutral-400 px-1">PROJ</span>
+          </div>
+
+          <div class="tree-children pl-2.5 ml-1 border-l border-border/80 space-y-0.5">
+            <div class="tree-node" data-id="UNIT-A" data-search="unit a process area">
+              <div class="flex items-center justify-between py-0.5 px-1 font-medium text-graphite rounded hover:bg-surface cursor-pointer" onclick="toggleTreeNode(this, 'UNIT-A')">
+                <div class="flex items-center gap-1 truncate">
+                  <span class="material-symbols-outlined text-[12px] text-neutral-500 tree-arrow">expand_more</span>
+                  <span class="material-symbols-outlined text-[13px] text-neutral-600">domain</span>
+                  <span class="truncate">Unit A [Process]</span>
+                </div>
+                <span class="w-1.5 h-1.5 rounded-full bg-valid shrink-0"></span>
+              </div>
+
+              <div class="tree-children pl-2.5 ml-1 border-l border-border/80 space-y-0.5">
+                <div class="tree-node active-node" id="tree-node-CAB-01" data-id="CAB-01" data-search="cab-01 marshaling cabinet rittal ts8">
+                  <div class="flex items-center justify-between py-1 px-1 rounded hover:bg-surface cursor-pointer text-graphite" onclick="selectCabinetFromTree()">
+                    <div class="flex items-center gap-1.5 truncate">
+                      <span class="material-symbols-outlined text-[12px] text-neutral-500 tree-arrow" onclick="event.stopPropagation(); toggleTreeNode(this.parentElement.parentElement, 'CAB-01')">expand_more</span>
+                      <span class="material-symbols-outlined text-[14px] text-brand">dns</span>
+                      <span class="font-semibold truncate">CAB-01</span>
+                      <span class="text-[9px] text-neutral-500 truncate">(Marshaling)</span>
+                    </div>
+                    <span class="text-[8.5px] px-1 py-[0.5px] bg-brand text-white font-mono rounded-xs">HERO</span>
+                  </div>
+
+                  <div class="tree-children pl-2.5 ml-1 border-l border-border/80 space-y-0.5">
+                    <div class="tree-node" id="tree-node-CIOC-01" data-id="CIOC-01" data-search="cioc-01 controller primary deltav">
+                      <div class="flex items-center justify-between py-0.5 px-1 rounded hover:bg-surface cursor-pointer text-graphite" onclick="selectHardware('CIOC', 'CIOC-01')">
+                        <div class="flex items-center gap-1 truncate">
+                          <span class="material-symbols-outlined text-[11px] text-neutral-400">arrow_right</span>
+                          <span class="material-symbols-outlined text-[13px] text-neutral-700">developer_board</span>
+                          <span class="font-medium truncate">CIOC-01</span>
+                          <span class="text-[8.5px] text-valid font-bold">[PRI]</span>
+                        </div>
+                        <span class="w-1.5 h-1.5 rounded-full bg-valid shrink-0" title="Active Online"></span>
+                      </div>
+                    </div>
+
+                    <div class="tree-node" id="tree-node-CIOC-02" data-id="CIOC-02" data-search="cioc-02 controller standby redundant">
+                      <div class="flex items-center justify-between py-0.5 px-1 rounded hover:bg-surface cursor-pointer text-neutral-600" onclick="selectHardware('CIOC', 'CIOC-02')">
+                        <div class="flex items-center gap-1 truncate">
+                          <span class="material-symbols-outlined text-[11px] text-neutral-400">arrow_right</span>
+                          <span class="material-symbols-outlined text-[13px] text-neutral-500">developer_board</span>
+                          <span class="font-medium truncate">CIOC-02</span>
+                          <span class="text-[8.5px] text-neutral-500">[STBY]</span>
+                        </div>
+                        <span class="w-1.5 h-1.5 rounded-full bg-valid/60 shrink-0" title="Standby Ready"></span>
+                      </div>
+                    </div>
+
+                    <div class="tree-node" id="tree-node-BP-01" data-id="BP-01" data-search="bp-01 baseplate ai 4-20ma 16 charm analog input">
+                      <div class="flex items-center justify-between py-0.5 px-1 rounded hover:bg-surface cursor-pointer text-graphite" onclick="toggleTreeNode(this, 'BP-01'); selectHardware('BASEPLATE', 'BP-01')">
+                        <div class="flex items-center gap-1 truncate">
+                          <span class="material-symbols-outlined text-[11px] text-neutral-500 tree-arrow">chevron_right</span>
+                          <span class="material-symbols-outlined text-[13px] text-neutral-600">memory</span>
+                          <span class="font-semibold truncate">BP-01</span>
+                          <span class="text-[9px] text-neutral-500 truncate">(AI 4-20mA)</span>
+                        </div>
+                        <span class="text-[8.5px] font-mono text-neutral-500">15/16</span>
+                      </div>
+                      <div class="tree-children hidden pl-2.5 ml-1 border-l border-border/80 space-y-0.5" id="channels-BP-01"></div>
+                    </div>
+
+                    <div class="tree-node" id="tree-node-BP-02" data-id="BP-02" data-search="bp-02 baseplate hart is intrinsic safety pt-101 ft-104b">
+                      <div class="flex items-center justify-between py-0.5 px-1 rounded hover:bg-surface cursor-pointer text-brand font-medium bg-brand/5 border border-brand/20" onclick="toggleTreeNode(this, 'BP-02'); selectHardware('BASEPLATE', 'BP-02')">
+                        <div class="flex items-center gap-1 truncate">
+                          <span class="material-symbols-outlined text-[11px] text-brand tree-arrow">expand_more</span>
+                          <span class="material-symbols-outlined text-[13px] text-brand">memory</span>
+                          <span class="font-bold truncate">BP-02</span>
+                          <span class="text-[9px] text-brand truncate">(HART / IS)</span>
+                        </div>
+                        <span class="text-[8px] px-1 bg-brand text-white font-mono font-bold rounded-xs">16/16</span>
+                      </div>
+                      <div class="tree-children pl-2.5 ml-1 border-l border-border/80 space-y-0.5" id="channels-BP-02"></div>
+                    </div>
+
+                    <div class="tree-node" id="tree-node-BP-03" data-id="BP-03" data-search="bp-03 baseplate rtd tc temperature tt-204">
+                      <div class="flex items-center justify-between py-0.5 px-1 rounded hover:bg-surface cursor-pointer text-graphite" onclick="toggleTreeNode(this, 'BP-03'); selectHardware('BASEPLATE', 'BP-03')">
+                        <div class="flex items-center gap-1 truncate">
+                          <span class="material-symbols-outlined text-[11px] text-neutral-500 tree-arrow">chevron_right</span>
+                          <span class="material-symbols-outlined text-[13px] text-neutral-600">memory</span>
+                          <span class="font-semibold truncate">BP-03</span>
+                          <span class="text-[9px] text-neutral-500 truncate">(RTD / TC)</span>
+                        </div>
+                        <span class="text-[8.5px] font-mono text-neutral-500">14/16</span>
+                      </div>
+                      <div class="tree-children hidden pl-2.5 ml-1 border-l border-border/80 space-y-0.5" id="channels-BP-03"></div>
+                    </div>
+
+                    <div class="tree-node" id="tree-node-BP-04" data-id="BP-04" data-search="bp-04 baseplate di do 24vdc discrete digital">
+                      <div class="flex items-center justify-between py-0.5 px-1 rounded hover:bg-surface cursor-pointer text-graphite" onclick="toggleTreeNode(this, 'BP-04'); selectHardware('BASEPLATE', 'BP-04')">
+                        <div class="flex items-center gap-1 truncate">
+                          <span class="material-symbols-outlined text-[11px] text-neutral-500 tree-arrow">chevron_right</span>
+                          <span class="material-symbols-outlined text-[13px] text-neutral-600">memory</span>
+                          <span class="font-semibold truncate">BP-04</span>
+                          <span class="text-[9px] text-neutral-500 truncate">(DI / DO)</span>
+                        </div>
+                        <span class="text-[8.5px] font-mono text-neutral-500">12/16</span>
+                      </div>
+                      <div class="tree-children hidden pl-2.5 ml-1 border-l border-border/80 space-y-0.5" id="channels-BP-04"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="tree-node opacity-80" id="tree-node-CAB-02" data-id="CAB-02" data-search="cab-02 remote io cabinet">
+                  <div class="flex items-center justify-between py-0.5 px-1 rounded hover:bg-surface cursor-pointer text-neutral-600" onclick="alert('CAB-02 (Remote I/O Enclosure) is located in Unit A Substation. Switch active cabinet via project navigator.')">
+                    <div class="flex items-center gap-1.5 truncate">
+                      <span class="material-symbols-outlined text-[11px] text-neutral-400">chevron_right</span>
+                      <span class="material-symbols-outlined text-[13px] text-neutral-500">dns</span>
+                      <span class="font-medium truncate">CAB-02</span>
+                      <span class="text-[9px] text-neutral-400 truncate">[Remote IO]</span>
+                    </div>
+                    <span class="w-1.5 h-1.5 rounded-full bg-valid/60 shrink-0"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-2 border-t border-border bg-surface text-[10px] font-mono text-neutral-600 flex justify-between items-center shrink-0">
+        <span>Allocated: <strong id="tree-alloc-count" class="text-graphite font-semibold">57/81</strong></span>
+        <span class="text-valid font-medium flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-valid"></span>
+          <span>0 Violations</span>
+        </span>
+      </div>
+    </aside>
+
+    <!-- 3.D CENTRAL 3D CABINET WORKSPACE (~61%) -->
+    <main class="flex-1 h-full bg-surface-dark relative overflow-hidden flex flex-col">
+      <div id="threejs-cad-viewport" class="w-full h-full relative cursor-default block"></div>
+
+      <div id="cad-tooltip" class="absolute hidden z-30 px-2 py-1 bg-black/85 border border-teal-500/60 text-white font-mono text-[10px] rounded-xs shadow-lg backdrop-blur-xs flex flex-col gap-0.5">
+        <div class="flex items-center gap-1.5">
+          <span id="tooltip-status-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span id="tooltip-title" class="font-bold text-teal-300">CH-05 // PT-101</span>
+        </div>
+        <span id="tooltip-desc" class="text-neutral-300 text-[9px]">AI 4-20mA HART • Validated</span>
+      </div>
+
+      <div class="absolute top-3 left-3 z-10 pointer-events-none flex flex-col gap-1.5">
+        <div class="px-2.5 py-1.5 bg-black/75 border border-white/15 text-white font-mono text-[10.5px] rounded-xs backdrop-blur-sm flex items-center gap-2 shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="font-bold tracking-wider text-teal-200">CAB-01</span>
+          <span class="text-neutral-400 font-normal">// Rittal TS8 (800×2000×600mm)</span>
+          <span class="text-neutral-500">|</span>
+          <span class="text-neutral-300 font-sans text-[10px]">Ex-e IP54 Marshaling Enclosure</span>
+        </div>
+
+        <div class="px-2 py-1 bg-black/55 border border-white/10 text-neutral-300 font-mono text-[9px] rounded-xs w-fit backdrop-blur-xs flex items-center gap-3">
+          <span>ORBIT: <strong class="text-white">LMB</strong></span>
+          <span>PAN: <strong class="text-white">RMB / Pan Tool</strong></span>
+          <span>ZOOM: <strong class="text-white">Scroll</strong></span>
+          <span>SELECT: <strong class="text-white">Click Hardware</strong></span>
+        </div>
+      </div>
+
+      <div class="absolute top-3 right-3 z-10 pointer-events-none flex flex-col items-end gap-1">
+        <div class="p-2 bg-black/75 border border-white/15 rounded-xs backdrop-blur-sm flex flex-col items-center shadow-sm">
+          <div class="w-10 h-10 border border-teal-500/50 relative flex items-center justify-center font-mono text-[8px] text-teal-300">
+            <span class="absolute top-0 text-[7px] text-neutral-400">Y+ TOP</span>
+            <span class="font-bold text-teal-200 text-[9px]" id="gizmo-view-label">ISO</span>
+            <span class="absolute bottom-0 text-[7px] text-neutral-400">Z+ FRONT</span>
+            <span class="absolute left-0.5 text-[6.5px] text-neutral-400">X-</span>
+            <span class="absolute right-0.5 text-[6.5px] text-neutral-400">X+</span>
+          </div>
+          <span class="font-mono text-[8px] text-neutral-400 mt-1">TS35 DIN</span>
+        </div>
+      </div>
+
+      <div class="absolute bottom-11 left-3 z-10 flex items-center gap-1 bg-black/70 border border-white/15 p-1 rounded-xs backdrop-blur-sm shadow-sm">
+        <button onclick="cadSetView('ISO')" class="px-2 py-0.5 hover:bg-white/15 text-white font-mono text-[10px] rounded-xs transition-colors" title="Full Cabinet Isometric View">FULL CAB-01</button>
+        <div class="h-3 w-[1px] bg-white/20 mx-0.5"></div>
+        <button onclick="focusOnHardware('BP-02')" class="px-2 py-0.5 bg-teal-800/90 hover:bg-teal-700 text-teal-100 font-mono text-[10px] rounded-xs transition-colors font-semibold flex items-center gap-1" title="Focus Baseplate BP-02">
+          <span class="material-symbols-outlined text-[12px]">center_focus_strong</span>
+          <span>BP-02 [HART]</span>
+        </button>
+        <button onclick="focusOnHardware('CIOC-01')" class="px-2 py-0.5 hover:bg-white/15 text-white font-mono text-[10px] rounded-xs transition-colors" title="Focus Primary Controller">
+          <span>CIOC-01</span>
+        </button>
+        <button onclick="focusOnHardware('BP-01')" class="px-2 py-0.5 hover:bg-white/15 text-white font-mono text-[10px] rounded-xs transition-colors" title="Focus Baseplate BP-01">
+          <span>BP-01</span>
+        </button>
+      </div>
+    </main>
+
+    <!-- 3.E RIGHT CONTEXTUAL OBJECT INSPECTOR (~21%) -->
+    <aside id="inspector-sidebar" class="w-[285px] shrink-0 bg-frame border-l border-border flex flex-col z-20 select-none shadow-xs">
+      <div class="h-9 px-3 bg-surface border-b border-border flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-1.5 font-mono text-[11px] font-semibold text-graphite">
+          <span class="material-symbols-outlined text-[15px] text-brand">pin</span>
+          <span>Contextual Inspector</span>
+        </div>
+        <span id="insp-header-badge" class="px-1.5 py-[2px] bg-emerald-100 border border-emerald-300 text-valid font-mono font-bold text-[9.5px] rounded-xs">
+          Valid & Pinned
+        </span>
+      </div>
+
+      <div id="inspector-content" class="flex-1 overflow-y-auto p-2.5 space-y-2 text-[11px]">
+        <div class="bg-white border border-border p-2.5 rounded-xs space-y-1 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <span class="font-mono text-[9px] text-neutral-500 uppercase tracking-wider block" id="insp-type-label">Component Slot</span>
+            <span class="font-mono text-[9px] px-1 py-0.5 bg-surface border border-border rounded-xs text-neutral-600 font-medium" id="insp-sub-code">INST-142</span>
+          </div>
+          <div class="font-mono text-[12.5px] font-bold text-brand truncate" id="insp-slot-title">CHARM Position [CH-05]</div>
+          <div class="font-mono text-[9.5px] text-neutral-500 truncate bg-surface px-1.5 py-0.5 rounded-xs border border-border/70" id="insp-hierarchy-path">
+            CAB-01 &gt; CIOC-01 &gt; BP-02 &gt; CH-05
+          </div>
+        </div>
+
+        <div class="bg-white border border-border p-2.5 rounded-xs shadow-2xs space-y-2">
+          <div class="flex justify-between items-start">
+            <div>
+              <span class="font-mono text-[9px] text-neutral-500 uppercase tracking-wider block">Signal Tag</span>
+              <span class="font-mono font-bold text-[13px] text-graphite block" id="insp-tag-name">PT-101</span>
+            </div>
+            <div id="insp-tag-badge" class="px-1.5 py-0.5 bg-brand/10 border border-brand/30 text-brand font-mono font-semibold text-[9.5px] rounded-xs">
+              AI 4-20mA
+            </div>
+          </div>
+          <div class="text-neutral-700 text-[10.5px] leading-snug bg-surface/70 p-1.5 rounded-xs border border-border/40" id="insp-service-desc">
+            Deethanizer Reboiler Pressure Transmitter
+          </div>
+          <div class="pt-1.5 border-t border-border/70 space-y-1.5 font-mono text-[10px]" id="insp-specs-table"></div>
+        </div>
+
+        <div class="bg-white border border-border p-2.5 rounded-xs shadow-2xs space-y-1.5" id="insp-solver-card">
+          <div class="flex items-center justify-between">
+            <span class="font-mono text-[9px] text-neutral-500 uppercase tracking-wider block">Rule Verification Rationale</span>
+            <span class="text-[9px] font-mono text-valid font-semibold">100% PASS</span>
+          </div>
+          <div class="space-y-1.5 text-[10px]" id="insp-rationale-list">
+            <div class="flex items-start gap-1.5">
+              <span class="material-symbols-outlined text-[13px] text-valid shrink-0 mt-0.5">check_circle</span>
+              <span class="text-graphite font-sans leading-tight">Passes IS barrier rule HARD-04 (Galvanic isolation &gt; 2500V).</span>
+            </div>
+            <div class="flex items-start gap-1.5">
+              <span class="material-symbols-outlined text-[13px] text-valid shrink-0 mt-0.5">check_circle</span>
+              <span class="text-graphite font-sans leading-tight">Zero rewiring drift (0m labor delta preserved from REV-A baseline).</span>
+            </div>
+            <div class="flex items-start gap-1.5">
+              <span class="material-symbols-outlined text-[13px] text-brand shrink-0 mt-0.5">cable</span>
+              <span class="text-graphite font-sans leading-tight">Paired adjacent to PT-102 inside multicore trunk CBL-101A.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-border p-2 rounded-xs space-y-1.5" id="insp-actions-box">
+          <span class="font-mono text-[9px] text-neutral-500 uppercase tracking-wider block">Engineering Actions</span>
+          <div class="flex gap-1.5">
+            <button id="lock-slot-btn" onclick="toggleLockCurrentSlot()" class="flex-1 h-7 bg-surface hover:bg-frame border border-border rounded-xs font-mono text-[10px] text-graphite font-medium flex items-center justify-center gap-1 transition-colors shadow-2xs">
+              <span class="material-symbols-outlined text-[13px] text-neutral-600" id="lock-icon">lock</span>
+              <span id="lock-label">Lock Slot</span>
+            </button>
+            <button onclick="rerouteCurrentSignal()" class="flex-1 h-7 bg-brand hover:bg-brand-dark text-white rounded-xs font-mono text-[10px] font-medium flex items-center justify-center gap-1 transition-colors shadow-2xs">
+              <span class="material-symbols-outlined text-[13px]">alt_route</span>
+              <span>Auto-Reroute</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-2 border-t border-border bg-surface flex items-center justify-between font-mono text-[9.5px] text-neutral-500 shrink-0">
+        <span>Slot ID: <strong id="insp-footer-id" class="text-graphite">CH-05</strong></span>
+        <span>Bus: <strong class="text-brand">DeltaV CIOC-1</strong></span>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- 3.F BOTTOM DIAGNOSTICS & AUDIT PANEL -->
+  <footer id="diagnostic-panel" class="shrink-0 bg-frame border-t border-border z-30 transition-all duration-200">
+    <div class="h-[30px] px-3 flex items-center justify-between cursor-pointer hover:bg-surface select-none" onclick="toggleDiagnosticsDrawer()">
+      <div class="flex items-center gap-3 font-mono text-[11px]">
+        <div class="flex items-center gap-1.5 text-graphite font-semibold">
+          <span class="material-symbols-outlined text-[15px] text-brand">terminal</span>
+          <span>Diagnostics & Rule Validator</span>
+        </div>
+        <div class="h-3.5 w-[1px] bg-border"></div>
+        <div class="flex items-center gap-1" onclick="event.stopPropagation()">
+          <button onclick="switchDiagTab('VALIDATION')" id="diag-tab-VALIDATION" class="px-2 py-0.5 rounded-xs bg-white border border-border text-[10px] text-graphite font-medium flex items-center gap-1 shadow-2xs">
+            <span class="w-1.5 h-1.5 rounded-full bg-warn badge-pulse"></span>
+            <span>Warnings (2)</span>
+          </button>
+          <button onclick="switchDiagTab('ALLOCATION')" id="diag-tab-ALLOCATION" class="px-2 py-0.5 rounded-xs hover:bg-white text-[10px] text-neutral-600 font-medium">
+            <span>Allocation (57/81)</span>
+          </button>
+          <button onclick="switchDiagTab('RULES')" id="diag-tab-RULES" class="px-2 py-0.5 rounded-xs hover:bg-white text-[10px] text-neutral-600 font-medium">
+            <span>Safety Rules (IEC 61131)</span>
+          </button>
+          <button onclick="switchDiagTab('LOG')" id="diag-tab-LOG" class="px-2 py-0.5 rounded-xs hover:bg-white text-[10px] text-neutral-600 font-medium">
+            <span>Solver Log</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 font-mono text-[10px] text-neutral-500">
+        <span class="hidden sm:inline">Engine: Google OR-Tools CP-SAT v9.8</span>
+        <span class="text-neutral-300">|</span>
+        <span class="flex items-center gap-1 text-graphite font-semibold">
+          <span id="drawer-toggle-text">Expand</span>
+          <span class="material-symbols-outlined text-[15px] transition-transform" id="drawer-toggle-chevron">expand_less</span>
+        </span>
+      </div>
+    </div>
+
+    <div id="diagnostics-tray" class="hidden h-32 border-t border-border bg-white overflow-y-auto px-3 py-2 font-mono text-[10.5px]">
+      <div id="diag-content-VALIDATION" class="space-y-1">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="text-[9.5px] text-neutral-500 border-b border-border uppercase">
+              <th class="pb-1 font-medium w-16">Rule ID</th>
+              <th class="pb-1 font-medium w-20">Signal</th>
+              <th class="pb-1 font-medium w-36">Severity</th>
+              <th class="pb-1 font-medium w-48">Engineering Rule</th>
+              <th class="pb-1 font-medium">Resolution Rationale</th>
+              <th class="pb-1 font-medium text-right w-24">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border/60 text-[10.5px]">
+            <tr class="hover:bg-amber-50/50">
+              <td class="py-1 font-bold text-warn">TQ-104</td>
+              <td class="py-1 font-bold text-graphite cursor-pointer hover:underline" onclick="selectHardware('CHARM', 'BP-02-CH-09'); focusOnHardware('BP-02');">FT-104B</td>
+              <td class="py-1">
+                <span class="px-1.5 py-0.5 bg-amber-50 border border-amber-300 text-warn font-semibold text-[9px] rounded-xs">
+                  DUTY/STANDBY CONTENTION
+                </span>
+              </td>
+              <td class="py-1 text-neutral-700">HARD-04 Redundancy Segregation</td>
+              <td class="py-1 text-neutral-600">Shares CIOC-01 with Primary FT-104A. Moving to CAB-01 BP-04 or remote CIOC resolves risk.</td>
+              <td class="py-1 text-right">
+                <button onclick="resolveWarning('TQ-104')" class="px-2 py-0.5 bg-brand text-white text-[9.5px] rounded-xs hover:bg-brand-dark transition-colors shadow-2xs font-semibold">
+                  Auto-Reroute
+                </button>
+              </td>
+            </tr>
+            <tr class="hover:bg-neutral-50">
+              <td class="py-1 font-bold text-neutral-600">INFO-08</td>
+              <td class="py-1 font-bold text-graphite cursor-pointer hover:underline" onclick="selectHardware('CHARM', 'BP-03-CH-08'); focusOnHardware('BP-03');">TT-204</td>
+              <td class="py-1">
+                <span class="px-1.5 py-0.5 bg-neutral-100 border border-neutral-300 text-neutral-600 font-semibold text-[9px] rounded-xs">
+                  SHIELD OPTIMIZATION
+                </span>
+              </td>
+              <td class="py-1 text-neutral-700">SOFT-02 Multicore Cable Clustering</td>
+              <td class="py-1 text-neutral-600">Pairs cleanly with RTD 3-wire shield bus on Baseplate BP-03. Reduces chassis jumper drift by 180mm.</td>
+              <td class="py-1 text-right">
+                <button onclick="resolveWarning('INFO-08')" class="px-2 py-0.5 bg-surface text-graphite border border-border text-[9.5px] rounded-xs hover:bg-frame transition-colors shadow-2xs font-medium">
+                  Apply
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="diag-content-ALLOCATION" class="hidden space-y-2 text-[10.5px]">
+        <div class="grid grid-cols-4 gap-3">
+          <div class="p-2 bg-surface border border-border rounded-xs">
+            <span class="text-neutral-500 text-[9px] block uppercase">Cabinet Allocation Density</span>
+            <div class="text-[14px] font-bold text-graphite font-mono">57 / 81 Channels (70.4%)</div>
+            <span class="text-valid text-[9.5px]">Within 75% Target Margin</span>
+          </div>
+          <div class="p-2 bg-surface border border-border rounded-xs">
+            <span class="text-neutral-500 text-[9px] block uppercase">Baseplate Utilization</span>
+            <div class="text-[14px] font-bold text-graphite font-mono">4 Carriers Installed</div>
+            <span class="text-neutral-600 text-[9.5px]">64 Total CHARM Positions</span>
+          </div>
+          <div class="p-2 bg-surface border border-border rounded-xs">
+            <span class="text-neutral-500 text-[9px] block uppercase">Available Spare Slots</span>
+            <div class="text-[14px] font-bold text-brand font-mono">7 Verified Spares</div>
+            <span class="text-neutral-600 text-[9.5px]">Ready for Unit A Expansion</span>
+          </div>
+          <div class="p-2 bg-surface border border-border rounded-xs">
+            <span class="text-neutral-500 text-[9px] block uppercase">Thermal Dissipation Budget</span>
+            <div class="text-[14px] font-bold text-graphite font-mono">44.1 W / 75.0 W Max</div>
+            <span class="text-valid text-[9.5px]">58.8% Cabinet Heat Load</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="diag-content-RULES" class="hidden space-y-1 text-[10.5px]">
+        <div class="grid grid-cols-2 gap-2">
+          <div class="p-1.5 bg-surface border border-border rounded-xs flex items-center justify-between">
+            <div>
+              <span class="font-bold text-graphite">HARD-01: Galvanic Isolation</span>
+              <span class="text-neutral-500 text-[9.5px] block">Ex-ia Intrinsic Safety Barrier &gt; 2500V test verified.</span>
+            </div>
+            <span class="px-1.5 py-0.5 bg-emerald-100 text-valid font-bold text-[9px] rounded-xs">PASSED</span>
+          </div>
+          <div class="p-1.5 bg-surface border border-border rounded-xs flex items-center justify-between">
+            <div>
+              <span class="font-bold text-graphite">HARD-04: Duty/Standby Segregation</span>
+              <span class="text-neutral-500 text-[9.5px] block">Primary and standby transmitters isolated on distinct carriers.</span>
+            </div>
+            <span class="px-1.5 py-0.5 bg-amber-100 text-warn font-bold text-[9px] rounded-xs">WARNING</span>
+          </div>
+          <div class="p-1.5 bg-surface border border-border rounded-xs flex items-center justify-between">
+            <div>
+              <span class="font-bold text-graphite">HARD-07: RTD Shield Commonality</span>
+              <span class="text-neutral-500 text-[9.5px] block">3-wire RTD drain shields grouped to avoid 50Hz ground loops.</span>
+            </div>
+            <span class="px-1.5 py-0.5 bg-emerald-100 text-valid font-bold text-[9px] rounded-xs">PASSED</span>
+          </div>
+          <div class="p-1.5 bg-surface border border-border rounded-xs flex items-center justify-between">
+            <div>
+              <span class="font-bold text-graphite">HARD-11: CIOC Thermal Envelope</span>
+              <span class="text-neutral-500 text-[9.5px] block">Total chassis dissipation under 68% rated ceiling.</span>
+            </div>
+            <span class="px-1.5 py-0.5 bg-emerald-100 text-valid font-bold text-[9px] rounded-xs">PASSED</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="diag-content-LOG" class="hidden font-mono text-[10px] space-y-0.5 text-neutral-200 bg-neutral-900 p-2 rounded-xs">
+        <div class="text-teal-400">[2026-10-12 03:00:01] IO SIGNAL SUDOKU Engine initialized (OR-Tools CP-SAT v9.8).</div>
+        <div class="text-neutral-400">[2026-10-12 03:00:02] Ingested Unit A instrument schedule: 81 channels, 4 multicore trunks.</div>
+        <div class="text-emerald-400">[2026-10-12 03:00:03] Physical hardware mapped: Rittal TS8, 2x CIOC, 4x 8-Carrier Baseplates.</div>
+        <div class="text-neutral-400">[2026-10-12 03:00:04] Constraint matrix solved in 142ms. 57 slots pinned, 0 hard contradictions.</div>
+        <div class="text-amber-400">[2026-10-12 03:00:05] Alert flagged: TQ-104 (FT-104B duty/standby carrier co-location).</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- SCRIPT -->
+  <script>
+    const CABINET_DATA = {
+      id: 'CAB-01',
+      name: 'Field Marshaling Enclosure CAB-01',
+      model: 'Rittal TS8 / VX25 Industrial Enclosure',
+      dimensions: '800mm (W) × 2000mm (H) × 600mm (D)',
+      rating: 'IP54 / NEMA 12 (Ex-e Increased Safety)',
+      controllers: [
+        {
+          id: 'CIOC-01',
+          role: 'Primary Communication Controller',
+          model: 'Emerson DeltaV VE4006P2 Series 2',
+          ip: '192.168.10.15 / 24',
+          health: 'Online Active',
+          carrierBus: 'Dual 100Mbps Ethernet Carrier'
+        },
+        {
+          id: 'CIOC-02',
+          role: 'Standby Redundant Controller',
+          model: 'Emerson DeltaV VE4006P2 Series 2',
+          ip: '192.168.10.16 / 24',
+          health: 'Standby Synchronized',
+          carrierBus: 'Dual 100Mbps Ethernet Carrier'
+        }
+      ],
+      baseplates: [
+        { id: 'BP-01', name: 'Baseplate 01', type: 'AI 4-20mA HART', rail: 1, xOffset: -0.32, activeChannels: 15 },
+        { id: 'BP-02', name: 'Baseplate 02', type: 'HART / IS Barrier', rail: 1, xOffset: 0.32, activeChannels: 16 },
+        { id: 'BP-03', name: 'Baseplate 03', type: 'RTD / TC Temperature', rail: 2, xOffset: -0.32, activeChannels: 14 },
+        { id: 'BP-04', name: 'Baseplate 04', type: 'DI / DO 24VDC Discrete', rail: 2, xOffset: 0.32, activeChannels: 12 }
+      ],
+      channels: {}
+    };
+
+    CABINET_DATA.baseplates.forEach((bp) => {
+      for (let i = 1; i <= 16; i++) {
+        const slotKey = `${bp.id}-CH-${String(i).padStart(2, '0')}`;
+        let signalTag = `TAG-${bp.id.slice(3)}${String(i).padStart(2, '0')}`;
+        let status = 'VALID';
+        let desc = `Assigned instrumentation channel for ${signalTag}`;
+        let hwType = 'DeltaV CHARM';
+        let isLocked = true;
+
+        if (bp.id === 'BP-02' && i === 5) {
+          signalTag = 'PT-101';
+          desc = 'Deethanizer Reboiler Pressure Transmitter (0-100 bar)';
+          hwType = 'DeltaV AI 4-20mA HART';
+          status = 'SELECTED';
+        } else if (bp.id === 'BP-02' && i === 9) {
+          signalTag = 'FT-104B';
+          desc = 'Backup Boiler Feedwater Flow Transmitter';
+          hwType = 'DeltaV AI 4-20mA HART';
+          status = 'WARNING';
+        } else if (bp.id === 'BP-03' && i === 8) {
+          signalTag = 'TT-204';
+          desc = 'Compressor Bearing Temperature Sensor (RTD Pt100)';
+          hwType = 'DeltaV RTD Pt100 3-Wire';
+          status = 'VALID';
+        } else if (i > bp.activeChannels) {
+          signalTag = '[SPARE]';
+          desc = 'Unassigned Spare Channel (Available for expansion)';
+          hwType = 'DeltaV Spare Carrier Slot';
+          status = 'SPARE';
+          isLocked = false;
+        } else {
+          signalTag = `${bp.type.split(' ')[0]}-${bp.id.slice(3)}${String(i).padStart(2, '0')}`;
+          hwType = `DeltaV ${bp.type}`;
+        }
+
+        CABINET_DATA.channels[slotKey] = {
+          slot: `CH-${String(i).padStart(2, '0')}`,
+          baseplate: bp.id,
+          tag: signalTag,
+          desc: desc,
+          hw: hwType,
+          status: status,
+          locked: isLocked,
+          pins: `Pair ${String(i*2 - 1).padStart(2, '0')} / ${String(i*2).padStart(2, '0')}`,
+          hazard: bp.id === 'BP-02' ? 'Ex-ia IIC (Zone 1 Intrinsic Safety)' : 'Non-Hazardous / Zone 2 General',
+          cable: `CBL-10${bp.rail}A (Pair ${i})`,
+          thermal: (0.7 + (i % 4) * 0.08).toFixed(2) + ' W'
+        };
+      }
+    });
+
+    let currentSelectedObject = {
+      type: 'CHARM',
+      id: 'BP-02-CH-05',
+      data: CABINET_DATA.channels['BP-02-CH-05']
+    };
+
+    const container = document.getElementById('threejs-cad-viewport');
+    let width = container.clientWidth || window.innerWidth * 0.61;
+    let height = container.clientHeight || window.innerHeight;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x131817);
+
+    const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
+
+    const INITIAL_SPHERICAL = { radius: 5.6, theta: 0.52, phi: 1.25 };
+    const INITIAL_LOOK_AT = new THREE.Vector3(0, 0, 0);
+
+    let spherical = { ...INITIAL_SPHERICAL };
+    let targetSpherical = { ...INITIAL_SPHERICAL };
+    let cameraLookAt = INITIAL_LOOK_AT.clone();
+    let targetLookAt = INITIAL_LOOK_AT.clone();
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    container.appendChild(renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0xdce5e2, 0.72);
+    scene.add(ambientLight);
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.15);
+    keyLight.position.set(4, 7, 5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.width = 2048;
+    keyLight.shadow.mapSize.height = 2048;
+    keyLight.shadow.bias = -0.0004;
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0xa5c4be, 0.55);
+    fillLight.position.set(-5, 3, -2);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.DirectionalLight(0x247c70, 0.35);
+    rimLight.position.set(0, -4, -3);
+    scene.add(rimLight);
+
+    const gridHelper = new THREE.GridHelper(8, 32, 0x247c70, 0x222c2a);
+    gridHelper.position.y = -1.95;
+    scene.add(gridHelper);
+
+    const selectableObjects = [];
+    const charmMeshRegistry = {};
+    const wireMeshGroup = new THREE.Group();
+    const labels3dGroup = new THREE.Group();
+    scene.add(wireMeshGroup);
+    scene.add(labels3dGroup);
+
+    const matCabinetOuter = new THREE.MeshStandardMaterial({ color: 0x828b87, roughness: 0.42, metalness: 0.38 });
+    const matCabinetInner = new THREE.MeshStandardMaterial({ color: 0xc8cecb, roughness: 0.55, metalness: 0.25 });
+    const matPerforatedPosts = new THREE.MeshStandardMaterial({ color: 0x6e7773, roughness: 0.38, metalness: 0.5 });
+    const matGalvanizedRail = new THREE.MeshStandardMaterial({ color: 0xbac3bf, roughness: 0.32, metalness: 0.85 });
+    const matWireDuctGrey = new THREE.MeshLambertMaterial({ color: 0x3d4644 });
+    const matCiocHousing = new THREE.MeshLambertMaterial({ color: 0x1d2221 });
+    const matBaseplateCarrier = new THREE.MeshLambertMaterial({ color: 0x29302e });
+    const matTerminalMetal = new THREE.MeshStandardMaterial({ color: 0xd8dfdc, roughness: 0.25, metalness: 0.9 });
+    const matCopperEarth = new THREE.MeshStandardMaterial({ color: 0xb86c38, roughness: 0.3, metalness: 0.95 });
+    const matGasketOrange = new THREE.MeshLambertMaterial({ color: 0xd95a2b });
+    const matSelectedHighlight = new THREE.MeshStandardMaterial({ color: 0x247c70, emissive: 0x175c52, roughness: 0.3 });
+
+    const charmMaterials = {
+      AI: new THREE.MeshLambertMaterial({ color: 0x2e7d32 }),
+      AO: new THREE.MeshLambertMaterial({ color: 0x00838f }),
+      DI: new THREE.MeshLambertMaterial({ color: 0xdde2dc }),
+      DO: new THREE.MeshLambertMaterial({ color: 0xe67e22 }),
+      RTD: new THREE.MeshLambertMaterial({ color: 0x5e35b1 }),
+      SPARE: new THREE.MeshLambertMaterial({ color: 0x525c59 }),
+      WARNING: new THREE.MeshLambertMaterial({ color: 0xc58a2b })
+    };
+
+    const cabWidth = 1.85;
+    const cabHeight = 3.35;
+    const cabDepth = 0.92;
+    const cabWall = 0.055;
+    const railZ = -cabDepth/2 + 0.11;
+
+    const cabinetGroup = new THREE.Group();
+    scene.add(cabinetGroup);
+
+    const backplate = new THREE.Mesh(
+      new THREE.BoxGeometry(cabWidth - cabWall*2, cabHeight - cabWall*2, 0.025),
+      matCabinetInner
+    );
+    backplate.position.set(0, 0, -cabDepth/2 + 0.035);
+    backplate.receiveShadow = true;
+    cabinetGroup.add(backplate);
+
+    const topCap = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, cabWall, cabDepth), matCabinetOuter);
+    topCap.position.set(0, cabHeight/2 - cabWall/2, 0);
+    topCap.castShadow = true;
+    cabinetGroup.add(topCap);
+
+    const btmFloor = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, cabWall, cabDepth), matCabinetOuter);
+    btmFloor.position.set(0, -cabHeight/2 + cabWall/2, 0);
+    btmFloor.receiveShadow = true;
+    cabinetGroup.add(btmFloor);
+
+    const leftWall = new THREE.Mesh(new THREE.BoxGeometry(cabWall, cabHeight, cabDepth), matCabinetOuter);
+    leftWall.position.set(-cabWidth/2 + cabWall/2, 0, 0);
+    leftWall.castShadow = true;
+    cabinetGroup.add(leftWall);
+
+    const rightWall = new THREE.Mesh(new THREE.BoxGeometry(cabWall, cabHeight, cabDepth), matCabinetOuter);
+    rightWall.position.set(cabWidth/2 - cabWall/2, 0, 0);
+    rightWall.castShadow = true;
+    cabinetGroup.add(rightWall);
+
+    const backCover = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, cabHeight, cabWall), matCabinetOuter);
+    backCover.position.set(0, 0, -cabDepth/2 - cabWall/2);
+    cabinetGroup.add(backCover);
+
+    const plinthMesh = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, 0.28, cabDepth), new THREE.MeshLambertMaterial({ color: 0x222725 }));
+    plinthMesh.position.set(0, -cabHeight/2 - 0.14, 0);
+    cabinetGroup.add(plinthMesh);
+
+    [-cabWidth/2 + 0.15, cabWidth/2 - 0.15].forEach(ex => {
+      [-cabDepth/2 + 0.15, cabDepth/2 - 0.15].forEach(ez => {
+        const eyeBolt = new THREE.Mesh(new THREE.TorusGeometry(0.045, 0.012, 8, 16), matTerminalMetal);
+        eyeBolt.rotation.x = Math.PI / 2;
+        eyeBolt.position.set(ex, cabHeight/2 + 0.045, ez);
+        cabinetGroup.add(eyeBolt);
+      });
+    });
+
+    [-cabWidth/2 + cabWall + 0.02, cabWidth/2 - cabWall - 0.02].forEach(px => {
+      const cornerPost = new THREE.Mesh(new THREE.BoxGeometry(0.05, cabHeight - cabWall*2, 0.05), matPerforatedPosts);
+      cornerPost.position.set(px, 0, cabDepth/2 - 0.06);
+      cornerPost.castShadow = true;
+      cabinetGroup.add(cornerPost);
+    });
+
+    const doorHinge = new THREE.Group();
+    doorHinge.position.set(-cabWidth/2, 0, cabDepth/2);
+    doorHinge.rotation.y = -Math.PI * 0.52;
+
+    const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(cabWidth, cabHeight, 0.045), matCabinetOuter);
+    doorLeaf.position.set(cabWidth/2, 0, 0);
+    doorLeaf.castShadow = true;
+    doorHinge.add(doorLeaf);
+
+    const doorGasket = new THREE.Mesh(new THREE.BoxGeometry(cabWidth * 0.96, cabHeight * 0.96, 0.01), matGasketOrange);
+    doorGasket.position.set(cabWidth/2, 0, 0.025);
+    doorHinge.add(doorGasket);
+
+    const docPocket = new THREE.Mesh(new THREE.BoxGeometry(cabWidth * 0.65, cabHeight * 0.22, 0.035), new THREE.MeshLambertMaterial({ color: 0x6e7874 }));
+    docPocket.position.set(cabWidth/2, -cabHeight * 0.22, 0.045);
+    doorHinge.add(docPocket);
+
+    const doorHandle = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.18, 0.04), matTerminalMetal);
+    doorHandle.position.set(cabWidth - 0.08, 0, 0.04);
+    doorHinge.add(doorHandle);
+
+    cabinetGroup.add(doorHinge);
+
+    topCap.userData = { type: 'CABINET', id: 'CAB-01', desc: 'Rittal TS8 Marshaling Enclosure' };
+    leftWall.userData = { type: 'CABINET', id: 'CAB-01', desc: 'Rittal TS8 Marshaling Enclosure' };
+    selectableObjects.push(topCap, leftWall);
+
+    const ductWidth = 0.085;
+    const ductDepth = 0.085;
+
+    const ductGeoV = new THREE.BoxGeometry(ductWidth, cabHeight - 0.45, ductDepth);
+    const leftDuct = new THREE.Mesh(ductGeoV, matWireDuctGrey);
+    leftDuct.position.set(-cabWidth/2 + 0.16, 0, railZ + 0.045);
+    cabinetGroup.add(leftDuct);
+
+    const rightDuct = new THREE.Mesh(ductGeoV, matWireDuctGrey);
+    rightDuct.position.set(cabWidth/2 - 0.16, 0, railZ + 0.045);
+    cabinetGroup.add(rightDuct);
+
+    const ductGeoH = new THREE.BoxGeometry(cabWidth - 0.32, ductWidth, ductDepth);
+    [-0.32, 0.48, 1.28].forEach(hy => {
+      const hDuct = new THREE.Mesh(ductGeoH, matWireDuctGrey);
+      hDuct.position.set(0, hy, railZ + 0.045);
+      cabinetGroup.add(hDuct);
+    });
+
+    const earthBusbar = new THREE.Mesh(new THREE.BoxGeometry(cabWidth - 0.5, 0.03, 0.012), matCopperEarth);
+    earthBusbar.position.set(0, -cabHeight/2 + 0.16, railZ + 0.03);
+    cabinetGroup.add(earthBusbar);
+
+    const glandPlate = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.02, 0.45), matPerforatedPosts);
+    glandPlate.position.set(0, -cabHeight/2 + 0.07, 0);
+    cabinetGroup.add(glandPlate);
+
+    for (let g = 0; g < 6; g++) {
+      const glandBody = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.04, 12), matTerminalMetal);
+      glandBody.position.set(-0.45 + g * 0.18, -cabHeight/2 + 0.09, 0.05);
+      cabinetGroup.add(glandBody);
+    }
+
+    const railHeights = [0.88, 0.08, -0.72];
+
+    railHeights.forEach((ry, railIdx) => {
+      const dinRail = new THREE.Mesh(
+        new THREE.BoxGeometry(cabWidth - 0.42, 0.035, 0.015),
+        matGalvanizedRail
+      );
+      dinRail.position.set(0, ry, railZ);
+      dinRail.castShadow = true;
+      cabinetGroup.add(dinRail);
+
+      if (railIdx === 0) {
+        const psMesh = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.24, 0.16), new THREE.MeshLambertMaterial({ color: 0x36403d }));
+        psMesh.position.set(-0.48, ry + 0.02, railZ + 0.09);
+        psMesh.castShadow = true;
+        cabinetGroup.add(psMesh);
+
+        const psLed = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.015, 0.008), new THREE.MeshBasicMaterial({ color: 0x39ff14 }));
+        psLed.position.set(-0.54, ry + 0.1, railZ + 0.175);
+        cabinetGroup.add(psLed);
+
+        [-0.12, 0.18].forEach((cx, cIdx) => {
+          const ciocId = `CIOC-0${cIdx + 1}`;
+          const isPrimary = cIdx === 0;
+
+          const ciocMesh = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.26, 0.19), matCiocHousing);
+          ciocMesh.position.set(cx, ry + 0.03, railZ + 0.105);
+          ciocMesh.castShadow = true;
+          ciocMesh.userData = {
+            type: 'CIOC',
+            id: ciocId,
+            desc: isPrimary ? 'Primary CIOC (Online Active)' : 'Standby Redundant CIOC'
+          };
+          selectableObjects.push(ciocMesh);
+          cabinetGroup.add(ciocMesh);
+
+          const ciocFace = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.24, 0.01), new THREE.MeshLambertMaterial({ color: 0x2b3330 }));
+          ciocFace.position.set(cx, ry + 0.03, railZ + 0.205);
+          cabinetGroup.add(ciocFace);
+
+          const ledPower = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.015, 0.008), new THREE.MeshBasicMaterial({ color: 0x39ff14 }));
+          ledPower.position.set(cx - 0.06, ry + 0.11, railZ + 0.212);
+          cabinetGroup.add(ledPower);
+
+          const ledActive = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.015, 0.008), new THREE.MeshBasicMaterial({ color: isPrimary ? 0x247c70 : 0xc58a2b }));
+          ledActive.position.set(cx - 0.03, ry + 0.11, railZ + 0.212);
+          cabinetGroup.add(ledActive);
+
+          [-0.03, 0.03].forEach(px => {
+            const ethPort = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.028, 0.01), matTerminalMetal);
+            ethPort.position.set(cx + px, ry - 0.06, railZ + 0.212);
+            cabinetGroup.add(ethPort);
+          });
+        });
+
+        const termBlocks = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.16, 0.12), new THREE.MeshLambertMaterial({ color: 0x75807c }));
+        termBlocks.position.set(0.48, ry, railZ + 0.07);
+        cabinetGroup.add(termBlocks);
+      }
+
+      if (railIdx === 1 || railIdx === 2) {
+        const bpPair = railIdx === 1 ? ['BP-01', 'BP-02'] : ['BP-03', 'BP-04'];
+        
+        [-0.32, 0.32].forEach((bpx, subIdx) => {
+          const bpId = bpPair[subIdx];
+          const bpData = CABINET_DATA.baseplates.find(b => b.id === bpId);
+
+          const baseplateMesh = new THREE.Mesh(
+            new THREE.BoxGeometry(0.56, 0.27, 0.075),
+            matBaseplateCarrier
+          );
+          baseplateMesh.position.set(bpx, ry, railZ + 0.045);
+          baseplateMesh.castShadow = true;
+          baseplateMesh.userData = {
+            type: 'BASEPLATE',
+            id: bpId,
+            desc: `8-Carrier Baseplate (${bpData.type})`,
+            rail: `Rail ${railIdx}`
+          };
+          selectableObjects.push(baseplateMesh);
+          cabinetGroup.add(baseplateMesh);
+
+          [-0.24, 0.24].forEach(tx => {
+            const clamp = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.29, 0.02), matGalvanizedRail);
+            clamp.position.set(bpx + tx, ry, railZ + 0.04);
+            cabinetGroup.add(clamp);
+          });
+
+          const pitchX = 0.062;
+          const pitchY = 0.095;
+          const startX = bpx - (7 * pitchX) / 2;
+
+          for (let r = 0; r < 2; r++) {
+            for (let c = 0; c < 8; c++) {
+              const chNum = r * 8 + c + 1;
+              const chKey = `${bpId}-CH-${String(chNum).padStart(2, '0')}`;
+              const chData = CABINET_DATA.channels[chKey];
+
+              const cx = startX + c * pitchX;
+              const cy = ry + (r === 0 ? pitchY/2 : -pitchY/2);
+
+              let charmMat = charmMaterials.AI;
+              if (bpId === 'BP-02' && chNum === 5) {
+                charmMat = matSelectedHighlight;
+              } else if (bpId === 'BP-02' && chNum === 9) {
+                charmMat = charmMaterials.WARNING;
+              } else if (chData.status === 'SPARE') {
+                charmMat = charmMaterials.SPARE;
+              } else if (bpId === 'BP-01') {
+                charmMat = charmMaterials.AI;
+              } else if (bpId === 'BP-02') {
+                charmMat = charmMaterials.AI;
+              } else if (bpId === 'BP-03') {
+                charmMat = charmMaterials.RTD;
+              } else if (bpId === 'BP-04') {
+                charmMat = (chNum % 2 === 0) ? charmMaterials.DO : charmMaterials.DI;
+              }
+
+              const charmGeo = new THREE.BoxGeometry(0.048, 0.072, 0.065);
+              const charmMesh = new THREE.Mesh(charmGeo, charmMat);
+              charmMesh.position.set(cx, cy, railZ + 0.095);
+              charmMesh.castShadow = true;
+              charmMesh.userData = {
+                type: 'CHARM',
+                id: chKey,
+                slot: `CH-${String(chNum).padStart(2, '0')}`,
+                baseplate: bpId,
+                data: chData
+              };
+              
+              selectableObjects.push(charmMesh);
+              charmMeshRegistry[chKey] = charmMesh;
+              cabinetGroup.add(charmMesh);
+
+              const termBlock = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.018, 0.024), matTerminalMetal);
+              termBlock.position.set(cx, cy - 0.038, railZ + 0.085);
+              cabinetGroup.add(termBlock);
+
+              const ledColor = chData.status === 'WARNING' ? 0xc58a2b : (chData.status === 'SPARE' ? 0x222222 : 0x39ff14);
+              const chLed = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.008, 0.005), new THREE.MeshBasicMaterial({ color: ledColor }));
+              chLed.position.set(cx - 0.015, cy + 0.025, railZ + 0.13);
+              cabinetGroup.add(chLed);
+
+              if (chData.status !== 'SPARE') {
+                const isLeftBank = bpx < 0;
+                const ductExitX = isLeftBank ? (-cabWidth/2 + 0.2) : (cabWidth/2 - 0.2);
+                const wireColor = (chNum % 2 === 0) ? 0x2b3833 : 0x1d364a;
+                
+                const wireCurve = new THREE.CatmullRomCurve3([
+                  new THREE.Vector3(ductExitX, cy, railZ + 0.05),
+                  new THREE.Vector3((ductExitX + cx)/2, cy - 0.015, railZ + 0.065),
+                  new THREE.Vector3(cx, cy - 0.038, railZ + 0.085)
+                ]);
+                const wireTube = new THREE.TubeGeometry(wireCurve, 8, 0.0035, 6, false);
+                const wireMesh = new THREE.Mesh(wireTube, new THREE.MeshLambertMaterial({ color: wireColor }));
+                wireMeshGroup.add(wireMesh);
+              }
+            }
+          }
+        });
+      }
+    });
+
+    const trunkColors = [0x1f2422, 0x2b3230, 0x1a2624, 0x2e3533];
+    for (let c = 0; c < 6; c++) {
+      const startX = -0.45 + c * 0.18;
+      const targetSideX = c < 3 ? (-cabWidth/2 + 0.16) : (cabWidth/2 - 0.16);
+      const targetY = -0.6 + (c % 3) * 0.55;
+
+      const cableCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(startX, -cabHeight/2 + 0.09, 0.05),
+        new THREE.Vector3(startX * 0.7, -cabHeight/2 + 0.55, railZ + 0.04),
+        new THREE.Vector3(targetSideX, targetY, railZ + 0.05)
+      ]);
+      const cableTube = new THREE.TubeGeometry(cableCurve, 18, 0.016, 8, false);
+      const cableMesh = new THREE.Mesh(cableTube, new THREE.MeshLambertMaterial({ color: trunkColors[c % 4] }));
+      cableMesh.castShadow = true;
+      wireMeshGroup.add(cableMesh);
+    }
+
+    railHeights.forEach(ry => {
+      const gCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-cabWidth/2 + 0.24, ry, railZ),
+        new THREE.Vector3(-cabWidth/2 + 0.22, (ry - cabHeight/2 + 0.16)/2, railZ + 0.02),
+        new THREE.Vector3(-cabWidth/2 + 0.28, -cabHeight/2 + 0.16, railZ + 0.03)
+      ]);
+      const gTube = new THREE.TubeGeometry(gCurve, 10, 0.006, 6, false);
+      const gMesh = new THREE.Mesh(gTube, new THREE.MeshLambertMaterial({ color: 0x4caf50 }));
+      wireMeshGroup.add(gMesh);
+    });
+
+    function updateCamera() {
+      camera.position.x = cameraLookAt.x + spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
+      camera.position.y = cameraLookAt.y + spherical.radius * Math.cos(spherical.phi);
+      camera.position.z = cameraLookAt.z + spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
+      camera.lookAt(cameraLookAt);
+    }
+    updateCamera();
+
+    let cadToolMode = 'SELECT';
+    let isMouseDown = false;
+    let isPanActive = false;
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let hoveredObject = null;
+    const tooltip = document.getElementById('cad-tooltip');
+
+    renderer.domElement.addEventListener('mousedown', (e) => {
+      isMouseDown = true;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+      isPanActive = (e.button === 2 || cadToolMode === 'PAN');
+    });
+
+    window.addEventListener('mouseup', () => {
+      isMouseDown = false;
+      isPanActive = false;
+    });
+
+    renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
+
+    renderer.domElement.addEventListener('mousemove', (e) => {
+      const deltaX = e.clientX - lastMouseX;
+      const deltaY = e.clientY - lastMouseY;
+
+      if (isMouseDown) {
+        if (isPanActive || cadToolMode === 'PAN') {
+          const panSpeed = 0.0022 * targetSpherical.radius;
+          targetLookAt.x -= deltaX * panSpeed;
+          targetLookAt.y += deltaY * panSpeed;
+        } else {
+          targetSpherical.theta -= deltaX * 0.006;
+          targetSpherical.phi = Math.max(0.15, Math.min(Math.PI - 0.15, targetSpherical.phi - deltaY * 0.006));
+        }
+      }
+
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(selectableObjects, false);
+
+      if (intersects.length > 0) {
+        const hit = intersects[0].object;
+        if (hoveredObject !== hit) {
+          hoveredObject = hit;
+        }
+
+        const d = hit.userData;
+        if (d && d.type) {
+          tooltip.style.left = `${e.clientX}px`;
+          tooltip.style.top = `${e.clientY}px`;
+          tooltip.classList.remove('hidden');
+
+          const dot = document.getElementById('tooltip-status-dot');
+          const title = document.getElementById('tooltip-title');
+          const desc = document.getElementById('tooltip-desc');
+
+          if (d.type === 'CHARM' && d.data) {
+            title.innerText = `${d.slot} // ${d.data.tag}`;
+            desc.innerText = `${d.data.hw} • ${d.data.status}`;
+            dot.className = d.data.status === 'WARNING' ? 'w-1.5 h-1.5 rounded-full bg-amber-400' : 'w-1.5 h-1.5 rounded-full bg-emerald-400';
+          } else if (d.type === 'CIOC') {
+            title.innerText = `${d.id} // Controller`;
+            desc.innerText = d.desc;
+            dot.className = 'w-1.5 h-1.5 rounded-full bg-teal-400';
+          } else if (d.type === 'BASEPLATE') {
+            title.innerText = `${d.id} // Baseplate`;
+            desc.innerText = `${d.desc} • 16 Slots`;
+            dot.className = 'w-1.5 h-1.5 rounded-full bg-teal-400';
+          } else if (d.type === 'CABINET') {
+            title.innerText = 'CAB-01 // Rittal TS8';
+            desc.innerText = 'Field Marshaling Enclosure';
+            dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
+          }
+        }
+      } else {
+        hoveredObject = null;
+        tooltip.classList.add('hidden');
+      }
+    });
+
+    renderer.domElement.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      targetSpherical.radius = Math.max(0.7, Math.min(8.5, targetSpherical.radius + e.deltaY * 0.003));
+    }, { passive: false });
+
+    renderer.domElement.addEventListener('click', (e) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(selectableObjects, false);
+
+      if (intersects.length > 0) {
+        const hit = intersects[0].object;
+        const d = hit.userData;
+        if (d && d.type) {
+          selectHardware(d.type, d.id || d.baseplate, d.data, false);
+        }
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      width = container.clientWidth || window.innerWidth * 0.61;
+      height = container.clientHeight || window.innerHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      if (e.key === '1') setCadTool('SELECT');
+      if (e.key === '2') setCadTool('ORBIT');
+      if (e.key === '3') setCadTool('PAN');
+      if (e.key === 'f' || e.key === 'F') cadFitToView();
+      if (e.key === 'w' || e.key === 'W') toggleWiringVisibility();
+      if (e.key === 'l' || e.key === 'L') toggleLabelsVisibility();
+    });
+
+    let animId;
+    function animate() {
+      animId = requestAnimationFrame(animate);
+
+      spherical.radius += (targetSpherical.radius - spherical.radius) * 0.1;
+      spherical.theta += (targetSpherical.theta - spherical.theta) * 0.1;
+      spherical.phi += (targetSpherical.phi - spherical.phi) * 0.1;
+      cameraLookAt.lerp(targetLookAt, 0.1);
+
+      updateCamera();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.setCadTool = function(mode) {
+      cadToolMode = mode;
+      document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById(`tool-${mode.toLowerCase()}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      if (mode === 'PAN') {
+        container.style.cursor = 'grab';
+      } else if (mode === 'ORBIT') {
+        container.style.cursor = 'crosshair';
+      } else {
+        container.style.cursor = 'default';
+      }
+    };
+
+    window.cadZoomIn = function() {
+      targetSpherical.radius = Math.max(0.7, targetSpherical.radius * 0.78);
+    };
+
+    window.cadZoomOut = function() {
+      targetSpherical.radius = Math.min(8.5, targetSpherical.radius * 1.28);
+    };
+
+    window.cadFitToView = function() {
+      targetSpherical = { ...INITIAL_SPHERICAL };
+      targetLookAt.set(0, 0, 0);
+      document.getElementById('gizmo-view-label').innerText = 'ISO';
+      highlightPresetBtn('preset-iso');
+    };
+
+    function highlightPresetBtn(id) {
+      ['preset-iso', 'preset-front', 'preset-side', 'preset-top'].forEach(p => {
+        const btn = document.getElementById(p);
+        if (btn) {
+          btn.classList.remove('text-brand', 'font-bold', 'bg-brand/10');
+          btn.classList.add('text-graphite');
+        }
+      });
+      const target = document.getElementById(id);
+      if (target) {
+        target.classList.add('text-brand', 'font-bold', 'bg-brand/10');
+        target.classList.remove('text-graphite');
+      }
+    }
+
+    window.cadSetView = function(view) {
+      document.getElementById('gizmo-view-label').innerText = view;
+      targetLookAt.set(0, 0, 0);
+
+      if (view === 'ISO') {
+        targetSpherical = { radius: 5.6, theta: 0.52, phi: 1.25 };
+        highlightPresetBtn('preset-iso');
+      } else if (view === 'FRONT') {
+        targetSpherical = { radius: 4.6, theta: 0.0, phi: Math.PI / 2 };
+        highlightPresetBtn('preset-front');
+      } else if (view === 'SIDE') {
+        targetSpherical = { radius: 4.6, theta: Math.PI / 2, phi: Math.PI / 2 };
+        highlightPresetBtn('preset-side');
+      } else if (view === 'TOP') {
+        targetSpherical = { radius: 4.6, theta: 0.01, phi: 0.08 };
+        highlightPresetBtn('preset-top');
+      }
+    };
+
+    let wiringVisible = true;
+    window.toggleWiringVisibility = function() {
+      wiringVisible = !wiringVisible;
+      wireMeshGroup.visible = wiringVisible;
+      const label = document.getElementById('wiring-btn-label');
+      label.innerText = wiringVisible ? 'Wiring: ON' : 'Wiring: OFF';
+      document.getElementById('toggle-wiring-btn').classList.toggle('bg-brand/10', wiringVisible);
+    };
+
+    let labelsVisible = true;
+    window.toggleLabelsVisibility = function() {
+      labelsVisible = !labelsVisible;
+      labels3dGroup.visible = labelsVisible;
+      const label = document.getElementById('labels-btn-label');
+      label.innerText = labelsVisible ? 'Labels: ON' : 'Labels: OFF';
+      document.getElementById('toggle-labels-btn').classList.toggle('bg-brand/10', labelsVisible);
+    };
+
+    window.focusOnHardware = function(type, id) {
+      if (type === 'CABINET') {
+        window.cadFitToView();
+      } else if (type === 'CIOC-01' || id === 'CIOC-01') {
+        targetSpherical = { radius: 1.7, theta: 0.1, phi: 1.35 };
+        targetLookAt.set(-0.12, 0.88, railZ + 0.1);
+      } else if (type === 'CIOC-02' || id === 'CIOC-02') {
+        targetSpherical = { radius: 1.7, theta: 0.1, phi: 1.35 };
+        targetLookAt.set(0.18, 0.88, railZ + 0.1);
+      } else if (type === 'BP-02' || id === 'BP-02') {
+        targetSpherical = { radius: 1.8, theta: 0.22, phi: 1.45 };
+        targetLookAt.set(0.32, 0.08, railZ + 0.1);
+      } else if (type === 'BP-01' || id === 'BP-01') {
+        targetSpherical = { radius: 1.8, theta: 0.22, phi: 1.45 };
+        targetLookAt.set(-0.32, 0.08, railZ + 0.1);
+      } else if (type === 'BP-03' || id === 'BP-03') {
+        targetSpherical = { radius: 1.8, theta: 0.22, phi: 1.45 };
+        targetLookAt.set(-0.32, -0.72, railZ + 0.1);
+      } else if (type === 'BP-04' || id === 'BP-04') {
+        targetSpherical = { radius: 1.8, theta: 0.22, phi: 1.45 };
+        targetLookAt.set(0.32, -0.72, railZ + 0.1);
+      }
+    };
+
+    window.selectHardware = function(type, id, data, zoomCamera = true) {
+      currentSelectedObject = { type, id, data };
+
+      Object.keys(charmMeshRegistry).forEach(k => {
+        const mesh = charmMeshRegistry[k];
+        const chData = CABINET_DATA.channels[k];
+        if (chData.status === 'WARNING') mesh.material = charmMaterials.WARNING;
+        else if (chData.status === 'SPARE') mesh.material = charmMaterials.SPARE;
+        else if (k.startsWith('BP-01') || k.startsWith('BP-02')) mesh.material = charmMaterials.AI;
+        else if (k.startsWith('BP-03')) mesh.material = charmMaterials.RTD;
+        else if (k.startsWith('BP-04')) mesh.material = charmMaterials.DI;
+      });
+
+      if (type === 'CHARM' && charmMeshRegistry[id]) {
+        charmMeshRegistry[id].material = matSelectedHighlight;
+      }
+
+      if (zoomCamera) {
+        if (type === 'CIOC') {
+          focusOnHardware(id);
+        } else if (type === 'BASEPLATE') {
+          focusOnHardware(id);
+        } else if (type === 'CHARM') {
+          const ch = CABINET_DATA.channels[id];
+          if (ch) focusOnHardware(ch.baseplate);
+        } else if (type === 'CABINET') {
+          window.cadFitToView();
+        }
+      }
+
+      document.querySelectorAll('.tree-node').forEach(n => n.classList.remove('bg-brand/10', 'border-brand/40', 'font-bold'));
+      const activeTreeNode = document.getElementById(`tree-node-${id}`) || document.getElementById(`tree-channel-${id}`);
+      if (activeTreeNode) {
+        activeTreeNode.classList.add('bg-brand/10', 'font-bold');
+      }
+
+      updateInspectorPanel(type, id, data);
+    };
+
+    window.selectCabinetFromTree = function() {
+      selectHardware('CABINET', 'CAB-01', CABINET_DATA, true);
+    };
+
+    function updateInspectorPanel(type, id, explicitData) {
+      const typeLabel = document.getElementById('insp-type-label');
+      const subCode = document.getElementById('insp-sub-code');
+      const title = document.getElementById('insp-slot-title');
+      const path = document.getElementById('insp-hierarchy-path');
+      const tagName = document.getElementById('insp-tag-name');
+      const tagBadge = document.getElementById('insp-tag-badge');
+      const desc = document.getElementById('insp-service-desc');
+      const headerBadge = document.getElementById('insp-header-badge');
+      const specsTable = document.getElementById('insp-specs-table');
+      const footerId = document.getElementById('insp-footer-id');
+
+      if (type === 'CHARM') {
+        const ch = explicitData || CABINET_DATA.channels[id] || CABINET_DATA.channels['BP-02-CH-05'];
+        typeLabel.innerText = 'Terminal Slot';
+        subCode.innerText = ch.status === 'WARNING' ? 'ALERT-TQ104' : 'INST-142';
+        title.innerText = `CHARM Position [${ch.slot}]`;
+        path.innerText = `CAB-01 > CIOC-01 > ${ch.baseplate} > ${ch.slot}`;
+        tagName.innerText = ch.tag;
+        tagBadge.innerText = ch.hw.split(' ')[1] || 'AI 4-20mA';
+        desc.innerText = ch.desc;
+        footerId.innerText = ch.slot;
+
+        if (ch.status === 'WARNING') {
+          headerBadge.className = 'px-1.5 py-[2px] bg-amber-100 border border-amber-300 text-warn font-mono font-bold text-[9.5px] rounded-xs';
+          headerBadge.innerText = 'Standby Contention';
+        } else if (ch.status === 'SPARE') {
+          headerBadge.className = 'px-1.5 py-[2px] bg-neutral-100 border border-neutral-300 text-neutral-600 font-mono font-bold text-[9.5px] rounded-xs';
+          headerBadge.innerText = 'Available Spare';
+        } else {
+          headerBadge.className = 'px-1.5 py-[2px] bg-emerald-100 border border-emerald-300 text-valid font-mono font-bold text-[9.5px] rounded-xs';
+          headerBadge.innerText = ch.locked ? 'Valid & Pinned' : 'Valid (Floating)';
+        }
+
+        specsTable.innerHTML = `
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Hardware Model:</span><span class="font-semibold text-graphite">${ch.hw}</span></div>
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Terminal Pins:</span><span class="font-medium text-graphite">${ch.pins}</span></div>
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Hazard Rating:</span><span class="text-valid font-semibold">${ch.hazard}</span></div>
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Cable Assignment:</span><span class="text-graphite font-medium">${ch.cable}</span></div>
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Thermal Dissipation:</span><span class="text-graphite font-medium">${ch.thermal}</span></div>
+        `;
+
+        document.getElementById('insp-actions-box').classList.remove('hidden');
+        document.getElementById('lock-label').innerText = ch.locked ? 'Unlock Slot' : 'Lock Slot';
+        document.getElementById('lock-icon').innerText = ch.locked ? 'lock_open' : 'lock';
+
+      } else if (type === 'CIOC') {
+        const cioc = CABINET_DATA.controllers.find(c => c.id === id) || CABINET_DATA.controllers[0];
+        typeLabel.innerText = 'Field Controller Unit';
+        subCode.innerText = 'SERIES-2';
+        title.innerText = `${cioc.id} [${cioc.role.split(' ')[0]}]`;
+        path.innerText = `CAB-01 > ${cioc.id}`;
+        tagName.innerText = cioc.id;
+        tagBadge.innerText = 'CIOC BUS';
+        desc.innerText = `${cioc.role}. Connected to 4 Carrier Baseplates (64 CHARMs max). Redundant 100Mbps Ethernet.`;
+        headerBadge.className = 'px-1.5 py-[2px] bg-emerald-100 border border-emerald-300 text-valid font-mono font-bold text-[9.5px] rounded-xs';
+        headerBadge.innerText = cioc.health;
+        footerId.innerText = cioc.id;
+
+        specsTable.innerHTML = `
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Hardware Model:</span><span class="font-semibold text-graphite">${cioc.model}</span></div>
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Subnet Address:</span><span class="font-mono text-graphite">${cioc.ip}</span></div>
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Carrier Capacity:</span><span class="font-medium text-graphite">4 Baseplates / 64 Channels</span></div>
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Active Load:</span><span class="text-valid font-semibold">57 Channels Allocated (89.1%)</span></div>
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Redundancy Sync:</span><span class="text-valid font-medium">0ms Failover Latency</span></div>
+        `;
+        document.getElementById('insp-actions-box').classList.add('hidden');
+
+      } else if (type === 'BASEPLATE') {
+        const bp = CABINET_DATA.baseplates.find(b => b.id === id) || CABINET_DATA.baseplates[1];
+        typeLabel.innerText = '8-Carrier Baseplate';
+        subCode.innerText = 'DIN TS35';
+        title.innerText = `${bp.id} [${bp.type}]`;
+        path.innerText = `CAB-01 > CIOC-01 > ${bp.id}`;
+        tagName.innerText = bp.id;
+        tagBadge.innerText = '16 SLOTS';
+        desc.innerText = `Standard DeltaV 8-Carrier DIN mounting baseplate assembly housing 16 individual plug-in CHARM terminal blocks.`;
+        headerBadge.className = 'px-1.5 py-[2px] bg-emerald-100 border border-emerald-300 text-valid font-mono font-bold text-[9.5px] rounded-xs';
+        headerBadge.innerText = 'Carrier Synchronized';
+        footerId.innerText = bp.id;
+
+        specsTable.innerHTML = `
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Signal Family:</span><span class="font-semibold text-graphite">${bp.type}</span></div>
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Mounting Position:</span><span class="font-medium text-graphite">Rail ${bp.rail} (Galvanized TS35)</span></div>
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Channel Density:</span><span class="font-medium text-graphite">${bp.activeChannels} / 16 Active Channels</span></div>
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Terminal Ground:</span><span class="text-valid font-semibold">Bonded Chassis Ground Bar</span></div>
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Thermal Load:</span><span class="text-graphite font-medium">11.4 W Dissipation</span></div>
+        `;
+        document.getElementById('insp-actions-box').classList.add('hidden');
+
+      } else if (type === 'CABINET') {
+        typeLabel.innerText = 'Marshaling Enclosure';
+        subCode.innerText = 'RITTAL TS8';
+        title.innerText = 'CAB-01 Enclosure';
+        path.innerText = `Plant Expansion > Unit A > CAB-01`;
+        tagName.innerText = 'CAB-01';
+        tagBadge.innerText = 'IP54 FIELD';
+        desc.innerText = `Industrial Marshaling and Control Enclosure with hinged front door, dual CIOC communication controllers, and 4 DIN carrier baseplates.`;
+        headerBadge.className = 'px-1.5 py-[2px] bg-emerald-100 border border-emerald-300 text-valid font-mono font-bold text-[9.5px] rounded-xs';
+        headerBadge.innerText = 'Health: 100%';
+        footerId.innerText = 'CAB-01';
+
+        specsTable.innerHTML = `
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Enclosure Model:</span><span class="font-semibold text-graphite">${CABINET_DATA.model}</span></div>
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Dimensions:</span><span class="font-medium text-graphite">${CABINET_DATA.dimensions}</span></div>
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Protection Rating:</span><span class="text-valid font-semibold">${CABINET_DATA.rating}</span></div>
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Hardware Inventory:</span><span class="text-graphite font-medium">2x CIOC, 4x Baseplates (64 CHARMs)</span></div>
+          <div class="flex justify-between items-center"><span class="text-neutral-500">Current Allocation:</span><span class="text-brand font-bold">57 / 81 Channels (70.4%)</span></div>
+        `;
+        document.getElementById('insp-actions-box').classList.add('hidden');
+      }
+    }
+
+    function populateTreeChannels() {
+      ['BP-01', 'BP-02', 'BP-03', 'BP-04'].forEach(bpId => {
+        const container = document.getElementById(`channels-${bpId}`);
+        if (!container) return;
+        container.innerHTML = '';
+
+        for (let i = 1; i <= 16; i++) {
+          const key = `${bpId}-CH-${String(i).padStart(2, '0')}`;
+          const ch = CABINET_DATA.channels[key];
+
+          const div = document.createElement('div');
+          div.id = `tree-channel-${key}`;
+          div.className = 'tree-node flex items-center justify-between py-0.5 px-1 rounded hover:bg-surface cursor-pointer text-[10px] text-graphite';
+          div.dataset.search = `${key} ${ch.slot} ${ch.tag} ${ch.hw} ${ch.desc}`.toLowerCase();
+          div.onclick = (e) => {
+            e.stopPropagation();
+            selectHardware('CHARM', key, ch, true);
+          };
+
+          let statusIndicator = '<span class="w-1.5 h-1.5 rounded-full bg-valid shrink-0"></span>';
+          if (ch.status === 'WARNING') {
+            statusIndicator = '<span class="w-1.5 h-1.5 rounded-full bg-warn badge-pulse shrink-0" title="Contention"></span>';
+          } else if (ch.status === 'SPARE') {
+            statusIndicator = '<span class="w-1.5 h-1.5 rounded-full bg-neutral-400 shrink-0" title="Spare"></span>';
+          } else if (key === 'BP-02-CH-05') {
+            statusIndicator = '<span class="w-1.5 h-1.5 rounded-full bg-brand shrink-0" title="Selected"></span>';
+          }
+
+          div.innerHTML = `
+            <div class="flex items-center gap-1 truncate">
+              <span class="text-neutral-400 text-[9px] font-mono">${ch.slot}:</span>
+              <span class="font-mono font-medium truncate ${ch.status === 'WARNING' ? 'text-warn font-bold' : ''}">${ch.tag}</span>
+            </div>
+            ${statusIndicator}
+          `;
+          container.appendChild(div);
+        }
+      });
+    }
+    populateTreeChannels();
+
+    window.toggleTreeNode = function(headerElement, nodeId) {
+      const parentNode = headerElement.closest('.tree-node');
+      const children = parentNode.querySelector('.tree-children');
+      const arrow = headerElement.querySelector('.tree-arrow');
+
+      if (children) {
+        const isHidden = children.classList.contains('hidden');
+        if (isHidden) {
+          children.classList.remove('hidden');
+          if (arrow) arrow.innerText = 'expand_more';
+        } else {
+          children.classList.add('hidden');
+          if (arrow) arrow.innerText = 'chevron_right';
+        }
+      }
+    };
+
+    window.collapseAllTreeNodes = function() {
+      document.querySelectorAll('.tree-children').forEach(c => {
+        if (!c.parentElement.id.includes('CAB-01')) {
+          c.classList.add('hidden');
+        }
+      });
+      document.querySelectorAll('.tree-arrow').forEach(a => a.innerText = 'chevron_right');
+    };
+
+    window.filterEquipmentTree = function(query) {
+      const q = query.trim().toLowerCase();
+      const clearBtn = document.getElementById('clear-search-btn');
+      clearBtn.classList.toggle('hidden', q.length === 0);
+
+      document.querySelectorAll('.tree-node').forEach(node => {
+        if (!q) {
+          node.classList.remove('hidden');
+          return;
+        }
+        const searchTerms = node.dataset.search || '';
+        const isMatch = searchTerms.includes(q);
+        if (isMatch) {
+          node.classList.remove('hidden');
+          let p = node.parentElement;
+          while (p && p.id !== 'tree-container') {
+            if (p.classList.contains('tree-children')) p.classList.remove('hidden');
+            p = p.parentElement;
+          }
+        } else {
+          const childMatches = node.querySelectorAll(`[data-search*="${q}"]`);
+          if (childMatches.length === 0) {
+            node.classList.add('hidden');
+          } else {
+            node.classList.remove('hidden');
+          }
+        }
+      });
+    };
+
+    window.clearTreeSearch = function() {
+      const input = document.getElementById('tree-search-input');
+      input.value = '';
+      filterEquipmentTree('');
+      input.focus();
+    };
+
+    let drawerExpanded = false;
+    window.toggleDiagnosticsDrawer = function() {
+      drawerExpanded = !drawerExpanded;
+      const tray = document.getElementById('diagnostics-tray');
+      const text = document.getElementById('drawer-toggle-text');
+      const chevron = document.getElementById('drawer-toggle-chevron');
+
+      if (drawerExpanded) {
+        tray.classList.remove('hidden');
+        text.innerText = 'Collapse';
+        chevron.innerText = 'expand_more';
+      } else {
+        tray.classList.add('hidden');
+        text.innerText = 'Expand';
+        chevron.innerText = 'expand_less';
+      }
+    };
+
+    window.switchDiagTab = function(tabName) {
+      ['VALIDATION', 'ALLOCATION', 'RULES', 'LOG'].forEach(t => {
+        document.getElementById(`diag-content-${t}`).classList.add('hidden');
+        document.getElementById(`diag-tab-${t}`).classList.remove('bg-white', 'border', 'border-border', 'text-graphite', 'font-semibold', 'shadow-2xs');
+        document.getElementById(`diag-tab-${t}`).classList.add('text-neutral-600');
+      });
+
+      document.getElementById(`diag-content-${tabName}`).classList.remove('hidden');
+      const activeTabBtn = document.getElementById(`diag-tab-${tabName}`);
+      activeTabBtn.classList.add('bg-white', 'border', 'border-border', 'text-graphite', 'font-semibold', 'shadow-2xs');
+      activeTabBtn.classList.remove('text-neutral-600');
+
+      if (!drawerExpanded) {
+        toggleDiagnosticsDrawer();
+      }
+    };
+
+    window.resolveWarning = function(ruleId) {
+      if (ruleId === 'TQ-104') {
+        const ch = CABINET_DATA.channels['BP-02-CH-09'];
+        ch.status = 'VALID';
+        ch.desc = 'Rerouted to isolated carrier (Segregation Rule HARD-04 Satisfied)';
+        ch.tag = 'FT-104B [Resolved]';
+        
+        if (charmMeshRegistry['BP-02-CH-09']) {
+          charmMeshRegistry['BP-02-CH-09'].material = charmMaterials.AI;
+        }
+
+        alert('Rule TQ-104 Resolved: FT-104B reassigned to isolated carrier partition. Contention cleared.');
+        selectHardware('CHARM', 'BP-02-CH-09', ch, true);
+        populateTreeChannels();
+      } else if (ruleId === 'INFO-08') {
+        alert('Heuristic Rule SOFT-02 Applied: TT-204 drain shield bonded directly to BP-03 common ground strip.');
+      }
+    };
+
+    window.runValidationCheck = function() {
+      const statusText = document.getElementById('system-status-text');
+      statusText.innerText = 'Validating Rules...';
+      
+      setTimeout(() => {
+        statusText.innerText = 'Audit Passed (2 Warnings)';
+        alert('Validation Complete:\n• Intrinsic Safety (HARD-01): 100% Passed\n• Thermal Budget (HARD-11): 58.8% (Comfortable Headroom)\n• 2 Warnings found in standby carrier partition.');
+      }, 400);
+    };
+
+    window.runAllocationSolver = function() {
+      const statusText = document.getElementById('system-status-text');
+      statusText.innerText = 'Running CP-SAT Solver...';
+      
+      setTimeout(() => {
+        statusText.innerText = '57/81 Channels Allocated';
+        alert('OR-Tools CP-SAT Solver Finished (138ms):\n• 57 Signals successfully allocated\n• 0 Contradictions detected\n• Physical wiring drift minimal (0.008m/ch)\n• All changes saved to Active Draft REV B.');
+      }, 500);
+    };
+
+    window.toggleLockCurrentSlot = function() {
+      if (currentSelectedObject.type === 'CHARM' && currentSelectedObject.data) {
+        currentSelectedObject.data.locked = !currentSelectedObject.data.locked;
+        updateInspectorPanel('CHARM', currentSelectedObject.id, currentSelectedObject.data);
+      }
+    };
+
+    window.rerouteCurrentSignal = function() {
+      if (currentSelectedObject.type === 'CHARM') {
+        alert(`Auto-Rerouting ${currentSelectedObject.data.tag}: CP-SAT solver matched alternative compatible slot with 0m rewiring delta.`);
+      }
+    };
+
+    window.switchRevision = function(rev) {
+      alert(`Switched active workspace view to: ${rev}.\nPhysical cabinet topology and constraint matrix synchronized.`);
+    };
+
+    selectHardware('CHARM', 'BP-02-CH-05', CABINET_DATA.channels['BP-02-CH-05'], false);
+    targetSpherical = { ...INITIAL_SPHERICAL };
+    targetLookAt.set(0, 0, 0);
+  </script>
+</body>
+</html>

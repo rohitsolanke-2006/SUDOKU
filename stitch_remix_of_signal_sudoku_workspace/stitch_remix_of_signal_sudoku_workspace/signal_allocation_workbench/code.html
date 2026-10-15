@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html class="h-full" lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta content="signal_allocation" name="shell-type">
+  <title>IO SIGNAL SUDOKU — Signal Allocation Workbench</title>
+  
+  <!-- Typography & CAD Icons -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#247c70',
+            'brand-dark': '#1a5f56',
+            'brand-light': '#38a394',
+            valid: '#2e7d32',
+            'valid-light': '#e8f5e9',
+            warn: '#c58a2b',
+            'warn-light': '#fef7e0',
+            error: '#b94a48',
+            'error-light': '#fdf2f2',
+            graphite: '#1f2423',
+            'graphite-dark': '#161a19',
+            frame: '#eaedea',
+            surface: '#f4f6f4',
+            border: '#c8ceca',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      user-select: none;
+      -webkit-user-select: none;
+      overscroll-behavior: none;
+    }
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #b5beb9;
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #eaedea;
+    }
+    /* Physical DIN Rail Module Glow */
+    .module-slice {
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .module-slice:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .module-slice.active {
+      outline: 2px solid #247c70;
+      outline-offset: -2px;
+    }
+  </style>
+</head>
+
+<body class="h-full bg-surface text-graphite font-sans text-xs antialiased flex flex-col overflow-hidden">
+
+  <!-- ========================================================================= -->
+  <!-- TOP APPLICATION HEADER (~44px, Charcoal Shell with Workbench Switcher)   -->
+  <!-- ========================================================================= -->
+  <header class="h-[44px] bg-graphite-dark text-neutral-200 border-b border-neutral-800 px-3 flex items-center justify-between shrink-0 z-40 select-none">
+    
+    <!-- Left: Brand Logo & Screen Switcher Tabs -->
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 font-mono font-bold tracking-tight text-teal-300">
+        <span class="material-symbols-outlined text-[19px] text-teal-400">developer_board</span>
+        <span class="tracking-normal text-[13px] text-white font-semibold">IO SIGNAL SUDOKU</span>
+        <span class="text-[9.5px] px-1.5 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-xs font-mono font-bold">BETA</span>
+      </div>
+
+      <div class="h-3.5 w-[1px] bg-neutral-700"></div>
+
+      <!-- Workbench Screen Switcher -->
+      <nav class="flex items-center gap-1 font-mono text-[11px]">
+        <a href="../3d_engineering_simulator_industrial_cabinet_cad_1/code.html" class="px-2.5 py-1 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-xs transition-colors flex items-center gap-1">
+          <span class="material-symbols-outlined text-[13px]">view_in_ar</span>
+          <span>1. 3D Cabinet Simulator</span>
+        </a>
+
+        <div class="px-2.5 py-1 bg-teal-800 text-white font-semibold rounded-xs border border-teal-600/80 shadow-xs flex items-center gap-1">
+          <span class="material-symbols-outlined text-[13px] text-teal-200">tune</span>
+          <span>2. I/O Signal Allocation</span>
+        </div>
+
+        <a href="../revision_optimizer_rev_a_vs_rev_b_churn/code.html" class="px-2.5 py-1 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-xs transition-colors flex items-center gap-1">
+          <span class="material-symbols-outlined text-[13px]">grid_view</span>
+          <span>3. Sudoku Matrix</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Right: Menu Bar & Engine Status -->
+    <div class="flex items-center gap-3 font-mono text-[10.5px]">
+      <div class="hidden lg:flex items-center gap-2 text-neutral-400 text-[10px]">
+        <span class="hover:text-white cursor-pointer">File</span>
+        <span class="hover:text-white cursor-pointer">View</span>
+        <span class="hover:text-white cursor-pointer">Extras</span>
+        <span class="hover:text-white cursor-pointer">Help</span>
+      </div>
+
+      <div class="h-3.5 w-[1px] bg-neutral-700 hidden lg:block"></div>
+
+      <div class="flex items-center gap-1.5 px-2 py-0.5 bg-neutral-900 border border-neutral-700/80 rounded-xs">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]"></span>
+        <span class="text-neutral-200 font-medium">Solver Online</span>
+        <span class="text-neutral-600">|</span>
+        <span class="text-neutral-400 text-[9.5px]">OR-Tools CP-SAT</span>
+      </div>
+
+      <div class="flex items-center gap-1 text-neutral-400">
+        <span class="material-symbols-outlined text-[14px] text-emerald-400">cloud_done</span>
+        <span class="text-[10px]">Saved</span>
+      </div>
+    </div>
+
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- SUB-HEADER: STATION TABS & ALLOCATION QUICK BAR (~36px)                   -->
+  <!-- ========================================================================= -->
+  <div class="h-[36px] bg-frame border-b border-border px-3 flex items-center justify-between shrink-0 select-none">
+    
+    <!-- Station Tabs Bar (OVERVIEW | STATION 1 | STATION 2 (Active) | STATION 3 | RESULTS) -->
+    <div class="flex items-center gap-1">
+      <button onclick="switchStation('OVERVIEW')" class="station-tab px-2.5 py-1 rounded-xs font-mono text-[10.5px] text-neutral-600 hover:bg-surface transition-colors font-medium">
+        OVERVIEW
+      </button>
+      <button onclick="switchStation('STATION_1')" class="station-tab px-2.5 py-1 rounded-xs font-mono text-[10.5px] text-neutral-600 hover:bg-surface transition-colors font-medium">
+        STATION 1 [CAB-01 CIOC-1]
+      </button>
+      <button onclick="switchStation('STATION_2')" class="station-tab active px-2.5 py-1 rounded-xs font-mono text-[10.5px] bg-white border border-border text-brand font-bold shadow-2xs">
+        STATION 2 [BP-02 HART / IS]
+      </button>
+      <button onclick="switchStation('STATION_3')" class="station-tab px-2.5 py-1 rounded-xs font-mono text-[10.5px] text-neutral-600 hover:bg-surface transition-colors font-medium">
+        STATION 3 [BP-03 RTD / TC]
+      </button>
+      <button onclick="switchStation('RESULTS')" class="station-tab px-2.5 py-1 rounded-xs font-mono text-[10.5px] text-neutral-600 hover:bg-surface transition-colors font-medium">
+        RESULTS
+      </button>
+    </div>
+
+    <!-- Quick Station Operations -->
+    <div class="flex items-center gap-1.5 font-mono text-[10px]">
+      <button onclick="alert('Creating new DIN rail station slice...')" class="h-6 px-2 bg-white hover:bg-frame border border-border rounded-xs text-graphite flex items-center gap-1 transition-colors shadow-2xs">
+        <span class="material-symbols-outlined text-[13px] text-neutral-600">add_box</span>
+        <span>New Station</span>
+      </button>
+      <button onclick="alert('Station configuration duplicated to clipboard')" class="h-6 px-2 bg-white hover:bg-frame border border-border rounded-xs text-graphite flex items-center gap-1 transition-colors shadow-2xs">
+        <span class="material-symbols-outlined text-[13px] text-neutral-600">content_copy</span>
+        <span>Copy Image</span>
+      </button>
+      <button onclick="runAutoAllocation()" class="h-6 px-2.5 bg-brand hover:bg-brand-dark text-white rounded-xs font-semibold flex items-center gap-1 transition-colors shadow-xs">
+        <span class="material-symbols-outlined text-[13px]">auto_fix_high</span>
+        <span>Auto-Allocate (CP-SAT)</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN WORKSPACE: THREE-COLUMN LAYOUT                                        -->
+  <!-- Left: Signal Library (19%) | Center: Visual Rack & Schematics (59%) | Right: BOM (22%) -->
+  <!-- ========================================================================= -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- ----------------------------------------------------------------------- -->
+    <!-- LEFT SIDEBAR: SIGNAL CATALOG & INPUT LIBRARY (~19% / 240px width)        -->
+    <!-- ----------------------------------------------------------------------- -->
+    <aside class="w-[245px] shrink-0 bg-frame border-r border-border flex flex-col select-none overflow-hidden">
+      
+      <!-- Catalog Search Input -->
+      <div class="p-2 border-b border-border bg-surface shrink-0">
+        <div class="relative">
+          <input 
+            type="text" 
+            placeholder="Search signals & sensors..." 
+            class="w-full h-6 pl-6 pr-2 bg-white border border-border rounded-xs text-[10.5px] font-mono text-graphite placeholder:text-neutral-400 focus:outline-none focus:border-brand"
+          />
+          <span class="material-symbols-outlined text-[13px] text-neutral-400 absolute left-1.5 top-1.5 pointer-events-none">search</span>
+        </div>
+      </div>
+
+      <!-- Signal Accordion Category List -->
+      <div class="flex-1 overflow-y-auto p-1.5 space-y-1 font-mono text-[10.5px]">
+        
+        <!-- Category: Digital Inputs -->
+        <div class="bg-white border border-border rounded-xs overflow-hidden">
+          <div class="px-2 py-1 bg-surface font-semibold text-graphite flex items-center justify-between cursor-pointer border-b border-border/60">
+            <span class="flex items-center gap-1 text-[11px]">
+              <span class="material-symbols-outlined text-[13px] text-brand">toggle_on</span>
+              <span>Digital inputs</span>
+            </span>
+            <span class="text-[9px] text-neutral-400">7 types</span>
+          </div>
+          <div class="p-1 space-y-0.5 text-[10px]">
+            <div class="p-1 hover:bg-surface rounded-xs cursor-pointer flex items-center justify-between group" onclick="allocateSignal('DI PNP 24V')">
+              <div>
+                <span class="font-bold text-graphite block">DI PNP</span>
+                <span class="text-neutral-500 text-[9px]">24 V DC, + switching</span>
+              </div>
+              <span class="material-symbols-outlined text-[14px] text-neutral-400 group-hover:text-brand">add_circle</span>
+            </div>
+            <div class="p-1 hover:bg-surface rounded-xs cursor-pointer flex items-center justify-between group" onclick="allocateSignal('DI NPN 24V')">
+              <div>
+                <span class="font-bold text-graphite block">DI NPN</span>
+                <span class="text-neutral-500 text-[9px]">24 V DC, - switching</span>
+              </div>
+              <span class="material-symbols-outlined text-[14px] text-neutral-400 group-hover:text-brand">add_circle</span>
+            </div>
+            <div class="p-1 hover:bg-surface rounded-xs cursor-pointer flex items-center justify-between group" onclick="allocateSignal('SDI Safety')">
+              <div>
+                <span class="font-bold text-amber-600 flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[12px]">security</span>
+                  <span>SDI Safety input</span>
+                </span>
+                <span class="text-neutral-500 text-[9px]">24 V DC, SafetyBridge</span>
+              </div>
+              <span class="material-symbols-outlined text-[14px] text-neutral-400 group-hover:text-brand">add_circle</span>
+            </div>
+            <div class="p-1 hover:bg-surface rounded-xs cursor-pointer flex items-center justify-between group" onclick="allocateSignal('DI-EX NAMUR')">
+              <div>
+                <span class="font-bold text-teal-700 flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[12px]">bolt</span>
+                  <span>DI-EX NAMUR</span>
+                </span>
+                <span class="text-neutral-500 text-[9px]">Intrinsically safe (Zone 1)</span>
+              </div>
+              <span class="material-symbols-outlined text-[14px] text-neutral-400 group-hover:text-brand">add_circle</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category: Digital Outputs -->
+        <div class="bg-white border border-border rounded-xs overflow-hidden">
+          <div class="px-2 py-1 bg-surface font-semibold text-graphite flex items-center justify-between cursor-pointer border-b border-border/60">
+            <span class="flex items-center gap-1 text-[11px]">
+              <span class="material-symbols-outlined text-[13px] text-brand">output</span>
+              <span>Digital outputs</span>
+            </span>
+            <span class="text-[9px] text-neutral-400">4 types</span>
+          </div>
+          <div class="p-1 space-y-0.5 text-[10px]">
+            <div class="p-1 hover:bg-surface rounded-xs cursor-pointer flex items-center justify-between group" onclick="allocateSignal('DO PNP 24V')">
+              <div>
+                <span class="font-bold text-graphite block">DO PNP</span>
+                <span class="text-neutral-500 text-[9px]">24 V DC, 0.5A actuator</span>
+              </div>
+              <span class="material-symbols-outlined text-[14px] text-neutral-400 group-hover:text-brand">add_circle</span>
+            </div>
+            <div class="p-1 hover:bg-surface rounded-xs cursor-pointer flex items-center justify-between group" onclick="allocateSignal('SDO Safety')">
+              <div>
+                <span class="font-bold text-amber-600 block">SDO Safety Output</span>
+                <span class="text-neutral-500 text-[9px]">Safe contactor shutoff</span>
+              </div>
+              <span class="material-symbols-outlined text-[14px] text-neutral-400 group-hover:text-brand">add_circle</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category: Analog Inputs (HART / IS) -->
+        <div class="bg-white border border-brand/40 rounded-xs overflow-hidden shadow-2xs">
+          <div class="px-2 py-1 bg-brand/10 font-bold text-brand flex items-center justify-between cursor-pointer border-b border-brand/20">
+            <span class="flex items-center gap-1 text-[11px]">
+              <span class="material-symbols-outlined text-[13px] text-brand">sensors</span>
+              <span>Analog inputs (AI)</span>
+            </span>
+            <span class="text-[8.5px] px-1 bg-brand text-white rounded-xs">ACTIVE</span>
+          </div>
+          <div class="p-1 space-y-0.5 text-[10px]">
+            <div class="p-1 bg-brand/5 border border-brand/20 rounded-xs cursor-pointer flex items-center justify-between" onclick="allocateSignal('AI 4-20mA HART')">
+              <div>
+                <span class="font-bold text-brand block">AI 4-20mA HART</span>
+                <span class="text-neutral-600 text-[9px]">PT-101 Pressure (Carrier 2)</span>
+              </div>
+              <span class="text-[8.5px] font-mono px-1 bg-white border border-border rounded-xs">CH-05</span>
+            </div>
+            <div class="p-1 hover:bg-surface rounded-xs cursor-pointer flex items-center justify-between group" onclick="allocateSignal('AI-EX HART IS')">
+              <div>
+                <span class="font-bold text-graphite block">AI-EX HART</span>
+                <span class="text-neutral-500 text-[9px]">Ex-ia IIC Galvanic Isolated</span>
+              </div>
+              <span class="material-symbols-outlined text-[14px] text-neutral-400 group-hover:text-brand">add_circle</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category: Temperature Measurement -->
+        <div class="bg-white border border-border rounded-xs overflow-hidden">
+          <div class="px-2 py-1 bg-surface font-semibold text-graphite flex items-center justify-between cursor-pointer border-b border-border/60">
+            <span class="flex items-center gap-1 text-[11px]">
+              <span class="material-symbols-outlined text-[13px] text-purple-700">device_thermostat</span>
+              <span>Temperature</span>
+            </span>
+            <span class="text-[9px] text-neutral-400">3 types</span>
+          </div>
+          <div class="p-1 space-y-0.5 text-[10px]">
+            <div class="p-1 hover:bg-surface rounded-xs cursor-pointer flex items-center justify-between group" onclick="allocateSignal('RTD Pt100')">
+              <div>
+                <span class="font-bold text-graphite block">RTD Pt100 (3-wire)</span>
+                <span class="text-neutral-500 text-[9px]">TT-204 Compressor temp</span>
+              </div>
+              <span class="material-symbols-outlined text-[14px] text-neutral-400 group-hover:text-brand">add_circle</span>
+            </div>
+            <div class="p-1 hover:bg-surface rounded-xs cursor-pointer flex items-center justify-between group" onclick="allocateSignal('Thermocouple UTH')">
+              <div>
+                <span class="font-bold text-graphite block">UTH Thermocouple</span>
+                <span class="text-neutral-500 text-[9px]">J/K/T cold junction</span>
+              </div>
+              <span class="material-symbols-outlined text-[14px] text-neutral-400 group-hover:text-brand">add_circle</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Library Tabs: SIGNALS | DEVICES | MY SIGNALS -->
+      <div class="h-7 border-t border-border bg-surface flex items-center justify-around font-mono text-[9.5px] text-neutral-600 shrink-0">
+        <span class="font-bold text-brand cursor-pointer">SIGNALS</span>
+        <span class="text-neutral-300">|</span>
+        <span class="hover:text-graphite cursor-pointer">DEVICES</span>
+        <span class="text-neutral-300">|</span>
+        <span class="hover:text-graphite cursor-pointer">MY SIGNALS</span>
+      </div>
+
+    </aside>
+
+    <!-- ----------------------------------------------------------------------- -->
+    <!-- CENTER WORKSPACE: PHYSICAL DIN RAIL CARRIER RACK & WIRING SCHEMATICS    -->
+    <!-- ----------------------------------------------------------------------- -->
+    <main class="flex-1 h-full bg-[#f8faf8] overflow-y-auto flex flex-col p-3 space-y-3 select-none">
+      
+      <!-- Top Station CAD Dimensioning Bar -->
+      <div class="bg-white border border-border p-3 rounded-xs shadow-2xs space-y-2">
+        
+        <!-- Dimension Line Header -->
+        <div class="flex items-center justify-center relative py-1">
+          <div class="absolute inset-x-8 top-1/2 h-[1px] bg-neutral-400"></div>
+          <div class="absolute left-8 top-1/2 -translate-y-1/2 w-1.5 h-1.5 border-l border-b border-neutral-600 rotate-45"></div>
+          <div class="absolute right-8 top-1/2 -translate-y-1/2 w-1.5 h-1.5 border-r border-t border-neutral-600 rotate-45"></div>
+          <span class="relative z-10 px-2 bg-white font-mono text-[11px] font-bold text-neutral-700">
+            &larr; 320.8 mm (TS35 DIN Mounting Width) &rarr;
+          </span>
+        </div>
+
+        <!-- PHYSICAL DIN RAIL HARDWARE ASSEMBLY RACK -->
+        <div class="relative bg-neutral-100 border border-neutral-300 rounded-xs p-2 overflow-x-auto shadow-inner">
+          
+          <!-- Backing Galvanized Steel DIN Rail TS35/7.5 -->
+          <div class="absolute inset-x-2 top-1/2 -translate-y-1/2 h-8 bg-gradient-to-b from-neutral-300 via-neutral-200 to-neutral-400 border-y border-neutral-400 z-0"></div>
+
+          <!-- Assembled Modules mounted horizontally side-by-side -->
+          <div class="relative z-10 flex items-stretch gap-1 min-w-[640px] h-[190px]">
+            
+            <!-- (1) Head: Bus Coupler Unit (AXL F BK PN TPS) -->
+            <div class="module-slice w-[98px] bg-[#2d3432] text-white border border-neutral-800 rounded-xs flex flex-col justify-between p-1 shadow-md cursor-pointer shrink-0" onclick="selectSliceModule(1, 'Bus Coupler (CIOC Head)', 'AXL F BK PN TPS')">
+              <div class="space-y-0.5">
+                <div class="flex justify-between items-center text-[8px] font-mono text-neutral-400">
+                  <span>PROFINET</span>
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                </div>
+                <div class="h-9 bg-neutral-800 border border-neutral-700 rounded-xs flex flex-col justify-center items-center gap-0.5">
+                  <div class="w-5 h-2.5 bg-neutral-900 border border-neutral-600 rounded-xs"></div>
+                  <span class="text-[7px] text-neutral-400 font-mono">ETH 1 / 2</span>
+                </div>
+              </div>
+              <div class="bg-neutral-900/90 p-1 rounded-xs text-[8px] font-mono text-neutral-300 leading-tight">
+                <span class="font-bold text-teal-300 block">CIOC-01 HEAD</span>
+                <span>DeltaV Coupler</span>
+              </div>
+              <div class="text-center font-mono text-[8.5px] text-neutral-400 font-bold border-t border-neutral-700 pt-0.5">
+                (1)
+              </div>
+            </div>
+
+            <!-- (2) Carrier Baseplate Smart Element (AXL F BP SE4) -->
+            <div class="module-slice w-[82px] bg-[#e4e7e4] border border-neutral-400 rounded-xs flex flex-col justify-between p-1 shadow-sm cursor-pointer shrink-0" onclick="selectSliceModule(2, 'Smart Elements Carrier 1', 'AXL F BP SE4')">
+              <div class="flex justify-between items-center text-[8px] font-mono text-neutral-600">
+                <span class="font-bold">SE4-01</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              </div>
+              <!-- 4 Terminal Columns with Orange Push levers -->
+              <div class="grid grid-cols-2 gap-1 py-1">
+                <div class="bg-amber-500/90 h-16 rounded-xs flex flex-col justify-around items-center p-0.5 text-[7px] text-white font-mono font-bold">
+                  <span>01</span><span>02</span><span>03</span><span>04</span>
+                </div>
+                <div class="bg-amber-500/90 h-16 rounded-xs flex flex-col justify-around items-center p-0.5 text-[7px] text-white font-mono font-bold">
+                  <span>05</span><span>06</span><span>07</span><span>08</span>
+                </div>
+              </div>
+              <div class="text-center font-mono text-[8.5px] text-neutral-500 font-bold border-t border-neutral-300 pt-0.5">
+                (2)
+              </div>
+            </div>
+
+            <!-- (3) Carrier Baseplate Smart Element 2 (Safety Yellow Elements) -->
+            <div class="module-slice w-[82px] bg-[#e4e7e4] border border-neutral-400 rounded-xs flex flex-col justify-between p-1 shadow-sm cursor-pointer shrink-0" onclick="selectSliceModule(3, 'Safety Elements Carrier 2', 'AXL F BP SE4')">
+              <div class="flex justify-between items-center text-[8px] font-mono text-neutral-600">
+                <span class="font-bold text-amber-700">SAFETY</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+              </div>
+              <div class="grid grid-cols-2 gap-1 py-1">
+                <div class="bg-yellow-400 h-16 rounded-xs border border-yellow-600 flex flex-col justify-around items-center p-0.5 text-[7px] text-graphite font-mono font-bold">
+                  <span>S1</span><span>S2</span><span>S3</span><span>S4</span>
+                </div>
+                <div class="bg-yellow-400 h-16 rounded-xs border border-yellow-600 flex flex-col justify-around items-center p-0.5 text-[7px] text-graphite font-mono font-bold">
+                  <span>S5</span><span>S6</span><span>S7</span><span>S8</span>
+                </div>
+              </div>
+              <div class="text-center font-mono text-[8.5px] text-neutral-500 font-bold border-t border-neutral-300 pt-0.5">
+                (3)
+              </div>
+            </div>
+
+            <!-- (4) Temperature UTH Thermocouple Module (AXL F UTH4 1H) -->
+            <div class="module-slice w-[76px] bg-[#434b48] text-white border border-neutral-700 rounded-xs flex flex-col justify-between p-1 shadow-sm cursor-pointer shrink-0" onclick="selectSliceModule(4, 'Thermocouple Module', 'AXL F UTH4 1H')">
+              <div class="flex justify-between items-center text-[8px] font-mono text-purple-300">
+                <span>UTH4</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+              </div>
+              <div class="bg-neutral-800 p-1 rounded-xs space-y-0.5 font-mono text-[7px] text-neutral-300 text-center">
+                <div class="text-purple-300 font-bold">a 0 1 2 3</div>
+                <div class="grid grid-cols-4 gap-0.5 py-1">
+                  <span class="bg-neutral-700 rounded-xs py-0.5">T1</span>
+                  <span class="bg-neutral-700 rounded-xs py-0.5">T2</span>
+                  <span class="bg-neutral-700 rounded-xs py-0.5">T3</span>
+                  <span class="bg-neutral-700 rounded-xs py-0.5">T4</span>
+                </div>
+              </div>
+              <div class="text-center font-mono text-[8.5px] text-neutral-400 font-bold border-t border-neutral-600 pt-0.5">
+                (4)
+              </div>
+            </div>
+
+            <!-- (5) Intrinsic Safety Discrete Output Module (AXL F EX IS DO4) -->
+            <div class="module-slice w-[78px] bg-[#3a4441] text-white border border-neutral-700 rounded-xs flex flex-col justify-between p-1 shadow-sm cursor-pointer shrink-0" onclick="selectSliceModule(5, 'Ex-IS Discrete Output', 'AXL F EX IS DO4 SD')">
+              <div class="flex justify-between items-center text-[8px] font-mono text-red-300">
+                <span>EX-DO4</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+              </div>
+              <div class="bg-red-950/80 border border-red-800/80 p-1 rounded-xs text-center font-mono text-[7px] text-red-200">
+                <span>Ex-ia Zone 1</span>
+                <div class="grid grid-cols-2 gap-0.5 mt-1">
+                  <span class="bg-red-900/60 py-0.5 rounded-xs">CH-01</span>
+                  <span class="bg-red-900/60 py-0.5 rounded-xs">CH-02</span>
+                </div>
+              </div>
+              <div class="text-center font-mono text-[8.5px] text-neutral-400 font-bold border-t border-neutral-600 pt-0.5">
+                (5)
+              </div>
+            </div>
+
+            <!-- (6) Intrinsic Safety NAMUR Discrete Input (AXL F EX IS DI16) -->
+            <div class="module-slice w-[94px] bg-[#1f3747] text-white border border-blue-900 rounded-xs flex flex-col justify-between p-1 shadow-sm cursor-pointer shrink-0" onclick="selectSliceModule(6, 'Ex-IS NAMUR Digital Input', 'AXL F EX IS DI16 NAM')">
+              <div class="flex justify-between items-center text-[8px] font-mono text-blue-300">
+                <span>EX-DI16</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+              </div>
+              <div class="bg-blue-950/90 border border-blue-800 p-1 rounded-xs space-y-0.5">
+                <span class="text-[7px] text-blue-300 font-mono block text-center">a 0 1 2 3 4 5 6 7</span>
+                <div class="grid grid-cols-4 gap-0.5 text-[6px] font-mono text-center">
+                  <span class="bg-blue-900/80 py-0.5 rounded-xs">D01</span>
+                  <span class="bg-blue-900/80 py-0.5 rounded-xs">D02</span>
+                  <span class="bg-blue-900/80 py-0.5 rounded-xs">D03</span>
+                  <span class="bg-blue-900/80 py-0.5 rounded-xs">D04</span>
+                </div>
+              </div>
+              <div class="text-center font-mono text-[8.5px] text-blue-300 font-bold border-t border-blue-800 pt-0.5">
+                (6)
+              </div>
+            </div>
+
+            <!-- (7) AI 4-20mA HART Ex-ia Carrier (AXL F EX IS AI8 HART XC) — Active Hero -->
+            <div class="module-slice active w-[102px] bg-[#1a443a] text-white border-2 border-brand rounded-xs flex flex-col justify-between p-1 shadow-md cursor-pointer shrink-0" onclick="selectSliceModule(7, 'Ex-IS AI 4-20mA HART (PT-101 Carrier)', 'AXL F EX IS AI8 HART XC')">
+              <div class="flex justify-between items-center text-[8px] font-mono text-teal-300">
+                <span class="font-bold">EX-AI8 HART</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              </div>
+              <div class="bg-teal-950/90 border border-teal-700/80 p-1 rounded-xs space-y-0.5">
+                <div class="flex justify-between text-[7.5px] font-mono text-teal-200">
+                  <span>PT-101</span>
+                  <span class="font-bold text-white">CH-05</span>
+                </div>
+                <div class="h-1 bg-teal-800 rounded-full overflow-hidden">
+                  <div class="w-full h-full bg-emerald-400"></div>
+                </div>
+                <span class="text-[6.5px] text-teal-300 font-mono block text-center">Ex-ia IIC Galvanic</span>
+              </div>
+              <div class="text-center font-mono text-[8.5px] text-teal-200 font-bold border-t border-teal-700 pt-0.5">
+                (7) [HERO]
+              </div>
+            </div>
+
+            <!-- Station Graphical Overview Miniature Box (Phoenix Contact Project+ Style) -->
+            <div class="flex flex-col justify-center items-center ml-auto px-2 py-1 bg-white border border-neutral-300 rounded-xs shadow-xs shrink-0">
+              <span class="text-[7.5px] font-mono text-neutral-500 font-bold mb-1">STATION MAP</span>
+              <div class="h-20 w-10 border border-neutral-400 bg-neutral-200 flex flex-col p-0.5 gap-0.5 rounded-xs">
+                <div class="h-2.5 bg-[#2d3432] rounded-xs" title="Coupler (1)"></div>
+                <div class="h-2 bg-amber-500 rounded-xs" title="SE4-01 (2)"></div>
+                <div class="h-2 bg-yellow-400 rounded-xs" title="Safety (3)"></div>
+                <div class="h-2 bg-purple-700 rounded-xs" title="UTH4 (4)"></div>
+                <div class="h-2 bg-red-600 rounded-xs" title="DO4 (5)"></div>
+                <div class="h-2.5 bg-blue-600 rounded-xs" title="DI16 (6)"></div>
+                <div class="h-2.5 bg-teal-600 rounded-xs" title="AI8 HART (7)"></div>
+              </div>
+              <span class="text-[7px] font-mono text-teal-700 font-bold mt-1">321 mm</span>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- SIGNAL ASSIGNMENT CARDS & ELECTRICAL SCHEMATICS (Just like Phoenix Contact Project+) -->
+      <div class="bg-white border border-border p-3 rounded-xs shadow-2xs space-y-2">
+        <div class="flex items-center justify-between border-b border-border pb-1.5">
+          <span class="font-mono text-[11px] font-bold text-graphite flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[15px] text-brand">schema</span>
+            <span>Channel Assignments & Circuit Schematics</span>
+          </span>
+          <span class="font-mono text-[9.5px] text-neutral-500">Total Assigned Channels: <strong>81</strong></span>
+        </div>
+
+        <!-- Grid of Signal Circuit Schematic Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
+          
+          <!-- Card 1: DI PNP (Count: 31) -->
+          <div class="border border-border rounded-xs p-1.5 bg-surface flex flex-col justify-between space-y-1 hover:border-brand transition-colors cursor-pointer" onclick="highlightSchematic('DI PNP')">
+            <div class="flex justify-between items-start">
+              <span class="font-bold font-mono text-[10px] text-graphite">DI PNP</span>
+              <span class="font-mono text-[12px] font-bold text-brand">31</span>
+            </div>
+            <span class="text-[8.5px] text-neutral-500 line-clamp-1">switching sensor</span>
+            <!-- Electrical schematic drawing -->
+            <div class="h-10 bg-white border border-border/80 rounded-xs flex items-center justify-center p-1">
+              <svg class="w-full h-full text-graphite" viewBox="0 0 60 30" fill="none" stroke="currentColor" stroke-width="1.5">
+                <line x1="5" y1="15" x2="20" y2="15"></line>
+                <circle cx="20" cy="15" r="2" fill="currentColor"></circle>
+                <line x1="20" y1="15" x2="38" y2="6"></line>
+                <circle cx="40" cy="15" r="2" fill="currentColor"></circle>
+                <line x1="40" y1="15" x2="55" y2="15"></line>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Card 2: SDI PROFIsafe (Count: 4) -->
+          <div class="border border-amber-300 bg-amber-50/50 rounded-xs p-1.5 flex flex-col justify-between space-y-1 hover:border-amber-500 transition-colors cursor-pointer" onclick="highlightSchematic('SDI')">
+            <div class="flex justify-between items-start">
+              <span class="font-bold font-mono text-[10px] text-amber-800">SDI Safe</span>
+              <span class="font-mono text-[12px] font-bold text-amber-700">4</span>
+            </div>
+            <span class="text-[8.5px] text-neutral-500 line-clamp-1">2-ch safety switch</span>
+            <div class="h-10 bg-white border border-amber-200 rounded-xs flex items-center justify-center p-1">
+              <svg class="w-full h-full text-amber-700" viewBox="0 0 60 30" fill="none" stroke="currentColor" stroke-width="1.5">
+                <line x1="5" y1="10" x2="22" y2="10"></line>
+                <line x1="22" y1="10" x2="38" y2="4"></line>
+                <line x1="40" y1="10" x2="55" y2="10"></line>
+                <line x1="5" y1="20" x2="22" y2="20"></line>
+                <line x1="22" y1="20" x2="38" y2="14"></line>
+                <line x1="40" y1="20" x2="55" y2="20"></line>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Card 3: DO PNP (Count: 21) -->
+          <div class="border border-border rounded-xs p-1.5 bg-surface flex flex-col justify-between space-y-1 hover:border-brand transition-colors cursor-pointer" onclick="highlightSchematic('DO PNP')">
+            <div class="flex justify-between items-start">
+              <span class="font-bold font-mono text-[10px] text-graphite">DO PNP</span>
+              <span class="font-mono text-[12px] font-bold text-brand">21</span>
+            </div>
+            <span class="text-[8.5px] text-neutral-500 line-clamp-1">binary actuator</span>
+            <div class="h-10 bg-white border border-border/80 rounded-xs flex items-center justify-center p-1">
+              <svg class="w-full h-full text-graphite" viewBox="0 0 60 30" fill="none" stroke="currentColor" stroke-width="1.5">
+                <line x1="5" y1="15" x2="22" y2="15"></line>
+                <rect x="22" y="7" width="16" height="16" rx="2"></rect>
+                <line x1="22" y1="7" x2="38" y2="23"></line>
+                <line x1="38" y1="15" x2="55" y2="15"></line>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Card 4: SDO Safety (Count: 4) -->
+          <div class="border border-amber-300 bg-amber-50/50 rounded-xs p-1.5 flex flex-col justify-between space-y-1 hover:border-amber-500 transition-colors cursor-pointer" onclick="highlightSchematic('SDO')">
+            <div class="flex justify-between items-start">
+              <span class="font-bold font-mono text-[10px] text-amber-800">SDO Safe</span>
+              <span class="font-mono text-[12px] font-bold text-amber-700">4</span>
+            </div>
+            <span class="text-[8.5px] text-neutral-500 line-clamp-1">safe contactor</span>
+            <div class="h-10 bg-white border border-amber-200 rounded-xs flex items-center justify-center p-1">
+              <svg class="w-full h-full text-amber-700" viewBox="0 0 60 30" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="30" cy="15" r="9"></circle>
+                <line x1="5" y1="15" x2="21" y2="15"></line>
+                <line x1="39" y1="15" x2="55" y2="15"></line>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Card 5: UTH Temp (Count: 2) -->
+          <div class="border border-border rounded-xs p-1.5 bg-surface flex flex-col justify-between space-y-1 hover:border-purple-600 transition-colors cursor-pointer" onclick="highlightSchematic('UTH')">
+            <div class="flex justify-between items-start">
+              <span class="font-bold font-mono text-[10px] text-purple-900">UTH Temp</span>
+              <span class="font-mono text-[12px] font-bold text-purple-700">2</span>
+            </div>
+            <span class="text-[8.5px] text-neutral-500 line-clamp-1">J/K Thermocouple</span>
+            <div class="h-10 bg-white border border-border/80 rounded-xs flex items-center justify-center p-1">
+              <svg class="w-full h-full text-purple-800" viewBox="0 0 60 30" fill="none" stroke="currentColor" stroke-width="1.5">
+                <line x1="10" y1="8" x2="30" y2="15"></line>
+                <line x1="10" y1="22" x2="30" y2="15"></line>
+                <circle cx="30" cy="15" r="2.5" fill="currentColor"></circle>
+                <line x1="30" y1="15" x2="50" y2="15"></line>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Card 6: DI-EX NAMUR (Count: 15) -->
+          <div class="border border-blue-300 bg-blue-50/50 rounded-xs p-1.5 flex flex-col justify-between space-y-1 hover:border-blue-500 transition-colors cursor-pointer" onclick="highlightSchematic('DI-EX')">
+            <div class="flex justify-between items-start">
+              <span class="font-bold font-mono text-[10px] text-blue-900">DI-EX</span>
+              <span class="font-mono text-[12px] font-bold text-blue-700">15</span>
+            </div>
+            <span class="text-[8.5px] text-neutral-500 line-clamp-1">NAMUR proximity</span>
+            <div class="h-10 bg-white border border-blue-200 rounded-xs flex items-center justify-center p-1">
+              <svg class="w-full h-full text-blue-700" viewBox="0 0 60 30" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="20" y="8" width="20" height="14" rx="1" stroke-dasharray="2 2"></rect>
+                <path d="M26 12 L34 18 M26 18 L34 12"></path>
+                <line x1="5" y1="15" x2="20" y2="15"></line>
+                <line x1="40" y1="15" x2="55" y2="15"></line>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Card 7: DO-EX SD (Count: 4) -->
+          <div class="border border-red-300 bg-red-50/50 rounded-xs p-1.5 flex flex-col justify-between space-y-1 hover:border-red-500 transition-colors cursor-pointer" onclick="highlightSchematic('DO-EX')">
+            <div class="flex justify-between items-start">
+              <span class="font-bold font-mono text-[10px] text-red-900">DO-EX</span>
+              <span class="font-mono text-[12px] font-bold text-red-700">4</span>
+            </div>
+            <span class="text-[8.5px] text-neutral-500 line-clamp-1">Ex valve solenoid</span>
+            <div class="h-10 bg-white border border-red-200 rounded-xs flex items-center justify-center p-1">
+              <svg class="w-full h-full text-red-700" viewBox="0 0 60 30" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polygon points="20,8 40,8 30,22"></polygon>
+                <line x1="5" y1="15" x2="20" y2="15"></line>
+                <line x1="40" y1="15" x2="55" y2="15"></line>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Card 8: AI-EX HART (Count: 7) — Active PT-101 / FT-104B -->
+          <div class="border-2 border-brand bg-teal-50/60 rounded-xs p-1.5 flex flex-col justify-between space-y-1 shadow-xs cursor-pointer" onclick="highlightSchematic('AI-EX')">
+            <div class="flex justify-between items-start">
+              <span class="font-bold font-mono text-[10px] text-brand">AI-EX HART</span>
+              <span class="font-mono text-[12px] font-bold text-brand">7</span>
+            </div>
+            <span class="text-[8.5px] text-neutral-600 line-clamp-1">PT-101 4-20mA loop</span>
+            <div class="h-10 bg-white border border-brand/50 rounded-xs flex items-center justify-center p-1">
+              <svg class="w-full h-full text-brand" viewBox="0 0 60 30" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="30" cy="15" r="9"></circle>
+                <text x="30" y="19" font-size="8" font-family="monospace" text-anchor="middle" fill="currentColor" stroke="none">HART</text>
+                <line x1="5" y1="15" x2="21" y2="15"></line>
+                <line x1="39" y1="15" x2="55" y2="15"></line>
+              </svg>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ----------------------------------------------------------------------- -->
+    <!-- RIGHT SIDEBAR: ARTICLE BOM LIST & STATION PROPERTIES (~22% / 280px)     -->
+    <!-- ----------------------------------------------------------------------- -->
+    <aside class="w-[285px] shrink-0 bg-frame border-l border-border flex flex-col select-none overflow-hidden">
+      
+      <!-- Top Table: Article / BOM Bill of Materials -->
+      <div class="flex-1 flex flex-col border-b border-border overflow-hidden">
+        <div class="h-8 px-2.5 bg-surface border-b border-border flex items-center justify-between shrink-0">
+          <span class="font-mono text-[11px] font-semibold text-graphite flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px] text-brand">receipt_long</span>
+            <span>Article List (BOM)</span>
+          </span>
+          <span class="text-[9.5px] font-mono text-neutral-500">12 Positions</span>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-1 font-mono text-[10px]">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="text-[8.5px] text-neutral-500 border-b border-border uppercase">
+                <th class="pb-1 font-medium w-8">Pos</th>
+                <th class="pb-1 font-medium w-8">Qty</th>
+                <th class="pb-1 font-medium">Article Number / Code</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border/60 text-[9.5px]" id="bom-table-body">
+              <tr class="hover:bg-white cursor-pointer"><td class="py-1 text-neutral-400 font-bold">(1)</td><td class="py-1 font-bold">1</td><td class="py-1 text-graphite font-bold">AXL F BK PN TPS</td></tr>
+              <tr class="hover:bg-white cursor-pointer"><td class="py-1 text-neutral-400 font-bold">(2)</td><td class="py-1 font-bold">2</td><td class="py-1 text-graphite">AXL F BP SE4</td></tr>
+              <tr class="hover:bg-white cursor-pointer"><td class="py-1 text-neutral-400 font-bold">(3)</td><td class="py-1 font-bold">1</td><td class="py-1 text-graphite">AXL F UTH4 1H</td></tr>
+              <tr class="hover:bg-white cursor-pointer"><td class="py-1 text-neutral-400 font-bold">(4)</td><td class="py-1 font-bold">1</td><td class="py-1 text-red-700 font-medium">AXL F EX IS DO4 SD 24-4</td></tr>
+              <tr class="hover:bg-white cursor-pointer"><td class="py-1 text-neutral-400 font-bold">(5)</td><td class="py-1 font-bold">1</td><td class="py-1 text-blue-700 font-medium">AXL F EX IS DI16 NAM XC</td></tr>
+              <tr class="hover:bg-white cursor-pointer bg-teal-50"><td class="py-1 text-brand font-bold">(6)</td><td class="py-1 font-bold text-brand">1</td><td class="py-1 text-brand font-bold">AXL F EX IS AI8 HART XC</td></tr>
+              <tr class="hover:bg-white cursor-pointer"><td class="py-1 text-neutral-400 font-bold">(7)</td><td class="py-1 font-bold">1</td><td class="py-1 text-neutral-600">AXL F/P IO EX PP</td></tr>
+              <tr class="hover:bg-white cursor-pointer"><td class="py-1 text-neutral-400 font-bold">(8)</td><td class="py-1 font-bold">2</td><td class="py-1 text-graphite">AXL SE DO16/1</td></tr>
+              <tr class="hover:bg-white cursor-pointer"><td class="py-1 text-neutral-400 font-bold">(9)</td><td class="py-1 font-bold">2</td><td class="py-1 text-amber-700 font-medium">AXL SE PSDO4/2 2A</td></tr>
+              <tr class="hover:bg-white cursor-pointer"><td class="py-1 text-neutral-400 font-bold">(10)</td><td class="py-1 font-bold">2</td><td class="py-1 text-graphite">AXL SE DI16/1</td></tr>
+              <tr class="hover:bg-white cursor-pointer"><td class="py-1 text-neutral-400 font-bold">(11)</td><td class="py-1 font-bold">1</td><td class="py-1 text-amber-700 font-medium">AXL SE PSDI8/3</td></tr>
+              <tr class="hover:bg-white cursor-pointer"><td class="py-1 text-neutral-400 font-bold">(12)</td><td class="py-1 font-bold">1</td><td class="py-1 text-neutral-500">AXL SE SC End Clamp</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Bottom Panel: Station Technical Properties Table -->
+      <div class="h-[210px] bg-surface flex flex-col shrink-0 overflow-y-auto p-2 font-mono text-[9.5px] space-y-1">
+        <span class="font-bold text-graphite uppercase text-[9px] block border-b border-border pb-0.5">Station Specifications</span>
+        <div class="space-y-1 text-neutral-600">
+          <div class="flex justify-between"><span class="text-neutral-500">Name:</span><span class="font-bold text-graphite">Pre-Assembly Station 2</span></div>
+          <div class="flex justify-between"><span class="text-neutral-500">I/O Type:</span><span class="font-semibold text-brand">Smart Elements / CHARM</span></div>
+          <div class="flex justify-between"><span class="text-neutral-500">Station Head:</span><span class="font-medium text-graphite">Bus Coupler / CIOC</span></div>
+          <div class="flex justify-between"><span class="text-neutral-500">Network:</span><span class="font-mono text-graphite">PROFINET / DeltaV</span></div>
+          <div class="flex justify-between"><span class="text-neutral-500">Ambient Temp:</span><span class="text-graphite">-25 °C .. 60 °C</span></div>
+          <div class="flex justify-between"><span class="text-neutral-500">Mounting Width:</span><span class="font-bold text-graphite">321 mm</span></div>
+          <div class="flex justify-between"><span class="text-neutral-500">Weight:</span><span class="text-graphite">1.04 kg</span></div>
+          <div class="flex justify-between"><span class="text-neutral-500">Supply Logic:</span><span class="font-semibold text-emerald-700">0.296 A</span></div>
+          <div class="flex justify-between"><span class="text-neutral-500">Process Data:</span><span class="text-graphite">80 Byte IN / 32 Byte OUT</span></div>
+          <div class="pt-2 border-t border-border/80 mt-1">
+            <a href="../3d_engineering_simulator_industrial_cabinet_cad_1/code.html" class="w-full h-7 bg-brand hover:bg-brand-dark text-white rounded-xs font-mono font-semibold text-[10px] flex items-center justify-center gap-1.5 transition-colors shadow-xs" title="Return to Screen 1: 3D Cabinet Simulator">
+              <span class="material-symbols-outlined text-[13px]">view_in_ar</span>
+              <span>&larr; Return to Screen 1: 3D Cabinet</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- SCRIPT -->
+  <script>
+    function switchStation(st) {
+      document.querySelectorAll('.station-tab').forEach(t => t.classList.remove('active', 'bg-white', 'border', 'border-border', 'text-brand', 'font-bold'));
+      event.target.classList.add('active', 'bg-white', 'border', 'border-border', 'text-brand', 'font-bold');
+      alert(`Switched active allocation station to: ${st}`);
+    }
+
+    function selectSliceModule(pos, name, code) {
+      alert(`Selected Module Pos (${pos}): ${name}\nArticle Catalog: ${code}\nChecking terminal pin assignments & thermal budget.`);
+    }
+
+    function highlightSchematic(type) {
+      alert(`Inspecting wiring schematic and terminal loop for signal family: ${type}\nVerified Intrinsic Safety galvanic isolation compliance.`);
+    }
+
+    function allocateSignal(sigName) {
+      alert(`Allocating ${sigName} to next available slot in Station 2 carrier rack.\nConstraint solver verified 0 contradictions.`);
+    }
+
+    function runAutoAllocation() {
+      alert('Running Google OR-Tools CP-SAT Solver:\n• 81 signals analyzed against IEC 61131-2 rules\n• 100% allocation completed in 134ms\n• Physical wiring drift minimal (0.008m/ch).');
+    }
+  </script>
+
+</body>
+</html>
