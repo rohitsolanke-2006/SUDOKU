@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IO SIGNAL SUDOKU — Industrial I/O Allocation & 3D Digital Twin</title>
+
+  <!-- Typography & Industrial CAD Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#247c70',
+            'brand-dark': '#1a5f56',
+            'brand-light': '#38a394',
+            valid: '#2e7d32',
+            'valid-light': '#e8f5e9',
+            warn: '#c58a2b',
+            'warn-light': '#fef7e0',
+            error: '#b94a48',
+            'error-light': '#fdf2f2',
+            graphite: '#1f2423',
+            'graphite-dark': '#161a19',
+            'graphite-muted': '#586360',
+            frame: '#eaedea',
+            surface: '#f4f6f4',
+            'surface-dark': '#131817',
+            border: '#c8ceca',
+            'border-light': '#dde1dd',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Three.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    body {
+      user-select: none;
+      -webkit-user-select: none;
+      overscroll-behavior: none;
+    }
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #b5beb9;
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #eaedea;
+    }
+    .tool-btn.active {
+      background-color: #247c70 !important;
+      color: #ffffff !important;
+      border-color: #1a5f56 !important;
+    }
+    .tool-btn.active .material-symbols-outlined {
+      color: #ffffff !important;
+    }
+    .scenario-btn.active {
+      background-color: #247c70 !important;
+      color: #ffffff !important;
+      border-color: #1a5f56 !important;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .cad-grid-pattern {
+      background-size: 20px 20px;
+      background-image: 
+        linear-gradient(to right, rgba(200, 206, 202, 0.4) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(200, 206, 202, 0.4) 1px, transparent 1px);
+    }
+  </style>
+</head>
+
+<body class="h-full bg-surface text-graphite font-sans text-xs antialiased flex flex-col overflow-hidden">
+
+  <!-- ========================================================================= -->
+  <!-- TOP APPLICATION HEADER (44px, Dark Graphite Industrial Shell)             -->
+  <!-- ========================================================================= -->
+  <header class="h-[44px] bg-graphite-dark text-neutral-200 border-b border-neutral-800 px-3 flex items-center justify-between shrink-0 z-40 select-none">
+    <div class="flex items-center gap-3">
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-2 cursor-pointer" onclick="switchView('landing')">
+        <div class="w-6 h-6 bg-brand flex items-center justify-center rounded">
+          <span class="material-symbols-outlined text-[16px] text-white">developer_board</span>
+        </div>
+        <span class="font-mono font-bold tracking-tight text-sm uppercase text-white">IO SIGNAL SUDOKU</span>
+      </div>
+
+      <div class="h-4 w-[1px] bg-neutral-700"></div>
+
+      <!-- Persistent Demo Lab Scenario Selector -->
+      <div class="flex items-center gap-1 bg-neutral-900 border border-neutral-700 px-2 py-0.5 rounded">
+        <span class="text-[10px] text-brand-light font-mono uppercase font-bold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[13px]">science</span> DEMO LAB:
+        </span>
+        <button data-load-scenario="SCENARIO_A" class="scenario-btn active px-2 py-0.5 rounded text-[10px] font-mono font-semibold transition-colors bg-brand text-white" title="Scenario A: Clean Allocation (Rev A)">A: Clean</button>
+        <button data-load-scenario="SCENARIO_B" class="scenario-btn px-2 py-0.5 rounded text-[10px] font-mono font-semibold transition-colors bg-neutral-800 text-neutral-300 hover:bg-neutral-700" title="Scenario B: Constraint Conflict Audit">B: Conflict</button>
+        <button data-load-scenario="SCENARIO_C" class="scenario-btn px-2 py-0.5 rounded text-[10px] font-mono font-semibold transition-colors bg-neutral-800 text-neutral-300 hover:bg-neutral-700" title="Scenario C: Revision Churn Minimizer (Rev B ECO)">C: Revision</button>
+      </div>
+
+      <div class="h-4 w-[1px] bg-neutral-700 hidden md:block"></div>
+
+      <!-- Parity & Engine Status Indicator -->
+      <div class="items-center gap-2 font-mono text-[11px] hidden lg:flex" id="badge-rules-validated">
+        <span class="material-symbols-outlined text-[15px] text-valid">verified</span>
+        <span class="text-valid font-semibold">14/14 Rules Validated</span>
+      </div>
+      <div class="items-center gap-1.5 text-neutral-400 font-mono text-[10px] hidden xl:flex">
+        <span class="w-2 h-2 rounded-full bg-valid animate-pulse"></span>
+        <span>Google OR-Tools CP-SAT v9.10 [Online]</span>
+      </div>
+    </div>
+
+    <!-- Right Utility Controls -->
+    <div class="flex items-center gap-2">
+      <!-- Active Revision Context Dropdown -->
+      <div class="flex items-center gap-1.5 bg-neutral-900 border border-neutral-700 rounded px-1.5 py-0.5">
+        <span class="text-[10px] text-neutral-400 uppercase font-mono">REV:</span>
+        <select id="revision-selector" class="bg-transparent text-brand-light font-mono font-bold text-xs focus:ring-0 focus:outline-none cursor-pointer">
+          <option value="REV_A" class="bg-neutral-900 text-white">REV A [45 loops]</option>
+          <option value="REV_B" class="bg-neutral-900 text-white">REV B [49 loops]</option>
+        </select>
+      </div>
+
+      <button id="btn-reset-demo" class="px-2 py-1 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 rounded text-[11px] font-mono flex items-center gap-1" title="Reset Demo Data">
+        <span class="material-symbols-outlined text-[13px]">restart_alt</span> Reset
+      </button>
+
+      <button class="btn-trigger-solve h-7 px-3 bg-brand hover:bg-brand-dark text-white rounded font-mono font-semibold flex items-center gap-1.5 shadow-sm transition-colors text-[11px]">
+        <span class="material-symbols-outlined text-[14px]">play_circle</span> Auto-Solve
+      </button>
+
+      <div class="h-4 w-[1px] bg-neutral-700"></div>
+
+      <div class="flex items-center gap-1.5 pl-1" title="Emerson Certified Systems Engineer">
+        <div class="w-6 h-6 rounded bg-neutral-700 flex items-center justify-center font-bold text-white text-[11px]">
+          EM
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- NAVIGATION TOOLBAR (~32px, Surface Frame Strip)                           -->
+  <!-- ========================================================================= -->
+  <nav class="h-[32px] bg-frame border-b border-border px-3 flex items-center justify-between shrink-0 z-30 select-none">
+    <div class="flex items-center gap-1">
+      <button data-view-nav="landing" class="px-2.5 py-1 text-xs font-semibold rounded transition-colors text-graphite-muted hover:bg-surface flex items-center gap-1">
+        <span class="material-symbols-outlined text-[15px]">home</span> Landing
+      </button>
+      <button data-view-nav="dashboard" class="px-2.5 py-1 text-xs font-semibold rounded transition-colors text-graphite-muted hover:bg-surface flex items-center gap-1">
+        <span class="material-symbols-outlined text-[15px]">dashboard</span> Dashboard
+      </button>
+      <button data-view-nav="workbench" class="px-2.5 py-1 text-xs font-semibold rounded transition-colors text-graphite-muted hover:bg-surface flex items-center gap-1">
+        <span class="material-symbols-outlined text-[15px]">table_rows</span> Signal Matrix
+      </button>
+      <button data-view-nav="twin3d" class="px-2.5 py-1 text-xs font-semibold rounded transition-colors text-graphite-muted hover:bg-surface flex items-center gap-1">
+        <span class="material-symbols-outlined text-[15px]">view_in_ar</span> 3D Digital Twin
+      </button>
+      <button data-view-nav="revisions" class="px-2.5 py-1 text-xs font-semibold rounded transition-colors text-graphite-muted hover:bg-surface flex items-center gap-1">
+        <span class="material-symbols-outlined text-[15px]">compare_arrows</span> Churn Minimizer
+      </button>
+      <button data-view-nav="diagnostics" class="px-2.5 py-1 text-xs font-semibold rounded transition-colors text-graphite-muted hover:bg-surface flex items-center gap-1">
+        <span class="material-symbols-outlined text-[15px]">fact_check</span> Diagnostics & TQs
+      </button>
+      <button data-view-nav="rules" class="px-2.5 py-1 text-xs font-semibold rounded transition-colors text-graphite-muted hover:bg-surface flex items-center gap-1">
+        <span class="material-symbols-outlined text-[15px]">gavel</span> Engineering Rules
+      </button>
+      <button data-view-nav="import" class="px-2.5 py-1 text-xs font-semibold rounded transition-colors text-graphite-muted hover:bg-surface flex items-center gap-1">
+        <span class="material-symbols-outlined text-[15px]">file_upload</span> Import & Validate
+      </button>
+      <button data-view-nav="reports" class="px-2.5 py-1 text-xs font-semibold rounded transition-colors text-graphite-muted hover:bg-surface flex items-center gap-1">
+        <span class="material-symbols-outlined text-[15px]">description</span> Reports & Export
+      </button>
+    </div>
+
+    <div class="flex items-center gap-3 text-graphite-muted font-mono text-[11px]">
+      <div>Enclosure: <strong class="text-graphite">CAB-01 (Rittal TS8)</strong></div>
+      <div>Allocated: <strong class="text-brand kpi-allocated-signals">45 / 45</strong></div>
+      <div>Capacity: <strong class="text-graphite kpi-hardware-capacity">64 CHARMs</strong></div>
+    </div>
+  </nav>
+
+  <!-- ========================================================================= -->
+  <!-- PERSISTENT DEMO MISSION BANNER (Guidance & Direct Scenario Downloads)     -->
+  <!-- ========================================================================= -->
+  <div id="scenario-mission-banner" class="bg-gradient-to-r from-neutral-900 via-neutral-800 to-neutral-900 text-neutral-200 border-b border-neutral-700 px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 shrink-0 z-20 text-xs select-none">
+    <div class="flex items-center gap-2.5">
+      <span id="scenario-badge" class="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-valid text-white tracking-wide">SCENARIO A — CLEAN ALLOCATION</span>
+      <span id="scenario-desc" class="text-neutral-300 text-[11px]">Standard feasible run: 45 loops across 4 baseplates. Enforces type compatibility, 1-channel capacity, and Ex-ia barrier segregation with 0 hard violations.</span>
+    </div>
+    <div class="flex items-center gap-2 font-mono text-[11px]">
+      <a id="btn-download-scenario-input" href="/api/scenarios/download-input/SCENARIO_A" class="px-2 py-0.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-600 rounded flex items-center gap-1" title="Download Excel input file with Scenario README">
+        <span class="material-symbols-outlined text-[13px] text-brand-light">download</span> Input Register (.xlsx)
+      </a>
+      <a href="/api/export/excel" class="px-2 py-0.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-600 rounded flex items-center gap-1" title="Download audited allocation output schedule">
+        <span class="material-symbols-outlined text-[13px] text-green-400">table_chart</span> Audited Output (.xlsx)
+      </a>
+      <button class="btn-trigger-solve px-2.5 py-0.5 bg-brand hover:bg-brand-dark text-white rounded font-bold flex items-center gap-1 shadow">
+        <span class="material-symbols-outlined text-[13px]">play_circle</span> Run Optimization
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN WORKSPACE CONTAINER                                                  -->
+  <!-- ========================================================================= -->
+  <main class="flex-1 relative overflow-hidden bg-surface">
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- VIEW A: LANDING PAGE                                                  -->
+    <!-- --------------------------------------------------------------------- -->
+    <section id="view-landing" class="view-section h-full overflow-y-auto cad-grid-pattern p-6 lg:p-12">
+      <div class="max-w-5xl mx-auto space-y-8">
+        
+        <!-- Hero Header -->
+        <div class="bg-white border border-border p-8 rounded shadow-sm relative overflow-hidden">
+          <div class="absolute -right-12 -top-12 w-64 h-64 bg-brand/5 rounded-full pointer-events-none"></div>
+          <div class="flex items-center gap-2 text-brand font-mono font-bold uppercase tracking-wider text-xs mb-2">
+            <span class="material-symbols-outlined text-[16px]">precision_manufacturing</span>
+            Emerson DeltaV Marshaling Optimization Platform • VIT Code_Apex 3.0
+          </div>
+          <h1 class="text-2xl lg:text-3xl font-bold text-graphite mb-3 tracking-tight">
+            IO SIGNAL SUDOKU — Industrial I/O Allocation & 3D Digital Twin
+          </h1>
+          <p class="text-sm text-graphite-muted max-w-2xl leading-relaxed mb-6">
+            Solves multi-dimensional marshaling cabinet allocations in milliseconds. Enforces strict electrical segregation, intrinsic safety (Ex-ia), and thermal constraints using Google OR-Tools CP-SAT while minimizing rewiring churn across engineering revisions.
+          </p>
+          <div class="flex flex-wrap items-center gap-3">
+            <button onclick="switchView('workbench')" class="h-9 px-4 bg-brand hover:bg-brand-dark text-white rounded font-mono font-semibold flex items-center gap-2 shadow">
+              <span class="material-symbols-outlined text-[16px]">launch</span> Open Allocation Workbench
+            </button>
+            <button onclick="switchView('twin3d')" class="h-9 px-4 bg-white border border-border hover:bg-frame text-graphite rounded font-mono font-semibold flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">view_in_ar</span> Launch 3D Digital Twin
+            </button>
+            <button onclick="loadScenario('SCENARIO_A')" class="h-9 px-4 bg-white border border-border hover:bg-frame text-brand font-mono font-semibold flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">play_circle</span> Load Clean Scenario A
+            </button>
+          </div>
+        </div>
+
+        <!-- 3 Feature Pillars -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white border border-border p-5 rounded">
+            <div class="w-8 h-8 rounded bg-brand/10 text-brand flex items-center justify-center mb-3">
+              <span class="material-symbols-outlined text-[20px]">psychology</span>
+            </div>
+            <h3 class="font-bold text-sm text-graphite mb-1">Constraint Optimization</h3>
+            <p class="text-xs text-graphite-muted leading-relaxed">
+              Google OR-Tools CP-SAT engine enforces channel limits, signal type compatibility, Ex-ia galvanic barrier isolation, and thermal distribution in under 30ms.
+            </p>
+          </div>
+
+          <div class="bg-white border border-border p-5 rounded">
+            <div class="w-8 h-8 rounded bg-brand/10 text-brand flex items-center justify-center mb-3">
+              <span class="material-symbols-outlined text-[20px]">view_in_ar</span>
+            </div>
+            <h3 class="font-bold text-sm text-graphite mb-1">Substation 3D Digital Twin</h3>
+            <p class="text-xs text-graphite-muted leading-relaxed">
+              Industrial control room with open Rittal TS8 cabinet, DeltaV CIOC controllers, 4 baseplates, and 64 CHARM slots. 2-way synchronized raycasting & wire tracing.
+            </p>
+          </div>
+
+          <div class="bg-white border border-border p-5 rounded">
+            <div class="w-8 h-8 rounded bg-brand/10 text-brand flex items-center justify-center mb-3">
+              <span class="material-symbols-outlined text-[20px]">compare_arrows</span>
+            </div>
+            <h3 class="font-bold text-sm text-graphite mb-1">Revision Churn Minimizer</h3>
+            <p class="text-xs text-graphite-muted leading-relaxed">
+              Preserve valid existing pin terminations across engineering change orders (Rev A vs Rev B) with L1 pin retention, saving up to 64.5 rewiring man-hours.
+            </p>
+          </div>
+        </div>
+
+        <!-- Demo Lab Scenarios Guide Card -->
+        <div class="bg-white border border-border p-6 rounded space-y-3">
+          <div class="flex items-center gap-2 text-graphite font-bold text-sm">
+            <span class="material-symbols-outlined text-brand">science</span>
+            Hackathon & Project Guide Demonstration Scenarios
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+            <div class="p-3 bg-frame rounded border border-border flex flex-col justify-between gap-2">
+              <div>
+                <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-valid-light text-valid font-bold">SCENARIO A</span>
+                <div class="font-bold text-xs text-graphite mt-1">Clean Allocation Baseline</div>
+                <div class="text-[11px] text-graphite-muted">45 loops. Solves with 100% feasibility. Shows 3D CHARMs in green and blue.</div>
+              </div>
+              <button onclick="loadScenario('SCENARIO_A')" class="py-1 px-2 bg-brand text-white text-[11px] font-mono rounded font-semibold text-center hover:bg-brand-dark">
+                Load & Run
+              </button>
+            </div>
+
+            <div class="p-3 bg-frame rounded border border-border flex flex-col justify-between gap-2">
+              <div>
+                <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-error-light text-error font-bold">SCENARIO B</span>
+                <div class="font-bold text-xs text-graphite mt-1">Constraint Conflict Audit</div>
+                <div class="text-[11px] text-graphite-muted">Hazardous Zone 0 loop locked to non-IS slot. Demonstrates CP-SAT infeasibility & TQ issue creation.</div>
+              </div>
+              <button onclick="loadScenario('SCENARIO_B')" class="py-1 px-2 bg-neutral-800 text-white text-[11px] font-mono rounded font-semibold text-center hover:bg-neutral-700">
+                Load & Audit
+              </button>
+            </div>
+
+            <div class="p-3 bg-frame rounded border border-border flex flex-col justify-between gap-2">
+              <div>
+                <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-blue-50 text-brand font-bold">SCENARIO C</span>
+                <div class="font-bold text-xs text-graphite mt-1">Revision Churn Minimizer</div>
+                <div class="text-[11px] text-graphite-muted">Rev A vs Rev B ECO (+5 additions, 1 IS upgrade). Retains 97.7% pins and saves rewiring hours.</div>
+              </div>
+              <button onclick="loadScenario('SCENARIO_C')" class="py-1 px-2 bg-brand text-white text-[11px] font-mono rounded font-semibold text-center hover:bg-brand-dark">
+                Load & Simulate
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- VIEW B: PROJECT DASHBOARD                                             -->
+    <!-- --------------------------------------------------------------------- -->
+    <section id="view-dashboard" class="view-section hidden h-full overflow-y-auto p-6 space-y-6">
+      <div class="max-w-6xl mx-auto space-y-6">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-bold text-graphite">Project Control Center</h2>
+            <p class="text-xs text-graphite-muted font-mono">Emerson DeltaV Marshaling Cabinet CAB-01 Telemetry</p>
+          </div>
+          <button class="btn-trigger-solve px-3 py-1.5 bg-brand hover:bg-brand-dark text-white rounded font-mono font-semibold flex items-center gap-1.5 text-xs">
+            <span class="material-symbols-outlined text-[14px]">play_circle</span> Rerun Optimization
+          </button>
+        </div>
+
+        <!-- KPI Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-3" id="dashboard-metrics-grid">
+          <div class="bg-white border border-border p-3 rounded">
+            <div class="text-[10px] text-graphite-muted font-mono uppercase">Total Signals</div>
+            <div class="text-xl font-bold font-mono text-graphite mt-1" id="dash-stat-signals">45</div>
+          </div>
+          <div class="bg-white border border-border p-3 rounded">
+            <div class="text-[10px] text-graphite-muted font-mono uppercase">Allocated Loops</div>
+            <div class="text-xl font-bold font-mono text-valid mt-1" id="dash-stat-allocated">45</div>
+          </div>
+          <div class="bg-white border border-border p-3 rounded">
+            <div class="text-[10px] text-graphite-muted font-mono uppercase">Unallocated</div>
+            <div class="text-xl font-bold font-mono text-error mt-1" id="dash-stat-unallocated">0</div>
+          </div>
+          <div class="bg-white border border-border p-3 rounded">
+            <div class="text-[10px] text-graphite-muted font-mono uppercase">Available Slots</div>
+            <div class="text-xl font-bold font-mono text-brand mt-1" id="dash-stat-available-hw">11</div>
+          </div>
+          <div class="bg-white border border-border p-3 rounded">
+            <div class="text-[10px] text-graphite-muted font-mono uppercase">Spare Reserves</div>
+            <div class="text-xl font-bold font-mono text-graphite-muted mt-1" id="dash-stat-reserved-hw">8</div>
+          </div>
+          <div class="bg-white border border-border p-3 rounded">
+            <div class="text-[10px] text-graphite-muted font-mono uppercase">Active TQs</div>
+            <div class="text-xl font-bold font-mono text-warn mt-1" id="dash-stat-tqs">2</div>
+          </div>
+        </div>
+
+        <!-- Activity Feed / Independent Parity Findings -->
+        <div class="bg-white border border-border p-5 rounded space-y-3">
+          <div class="flex items-center justify-between border-b border-border pb-2">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px] text-brand">verified</span>
+              <h3 class="font-mono font-bold text-xs uppercase text-graphite">Independent Constraint Parity Findings</h3>
+            </div>
+            <span class="text-[11px] font-mono text-graphite-muted">IEC 61131-2 / IEC 60079-11 Standard Checks</span>
+          </div>
+          <div id="dashboard-activity-feed" class="space-y-2">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Baseplate Layout Quick Overview -->
+        <div class="bg-white border border-border p-5 rounded space-y-4">
+          <h3 class="font-mono font-bold text-xs uppercase text-graphite">Cabinet CAB-01 Baseplate Occupancy Breakdown</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-3 bg-frame rounded border border-border space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-mono font-bold text-graphite text-xs">BP-01: AI 4-20mA HART (Rail 1 Left)</span>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-valid-light text-valid font-bold">12 / 16 Slots</span>
+              </div>
+              <div class="w-full bg-border h-2 rounded overflow-hidden">
+                <div class="bg-valid h-full" style="width: 75%"></div>
+              </div>
+              <div class="text-[11px] text-graphite-muted font-mono">Standard 2-wire transmitters • 4 Expansion Spares Available</div>
+            </div>
+
+            <div class="p-3 bg-frame rounded border border-border space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-mono font-bold text-graphite text-xs">BP-02: HART / IS Barrier [Ex-ia] (Rail 1 Right)</span>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-bold">10 / 16 Slots</span>
+              </div>
+              <div class="w-full bg-border h-2 rounded overflow-hidden">
+                <div class="bg-blue-600 h-full" style="width: 62.5%"></div>
+              </div>
+              <div class="text-[11px] text-graphite-muted font-mono">Galvanic isolation barrier for Zone 0/1 hazardous areas</div>
+            </div>
+
+            <div class="p-3 bg-frame rounded border border-border space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-mono font-bold text-graphite text-xs">BP-03: RTD / TC Temperature [mV] (Rail 2 Left)</span>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">11 / 16 Slots</span>
+              </div>
+              <div class="w-full bg-border h-2 rounded overflow-hidden">
+                <div class="bg-amber-600 h-full" style="width: 68.75%"></div>
+              </div>
+              <div class="text-[11px] text-graphite-muted font-mono">Low-voltage millivolt signals isolated from 24V discrete wiring</div>
+            </div>
+
+            <div class="p-3 bg-frame rounded border border-border space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-mono font-bold text-graphite text-xs">BP-04: DI / DO 24VDC Discrete (Rail 2 Right)</span>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 font-bold">12 / 16 Slots</span>
+              </div>
+              <div class="w-full bg-border h-2 rounded overflow-hidden">
+                <div class="bg-teal-600 h-full" style="width: 75%"></div>
+              </div>
+              <div class="text-[11px] text-graphite-muted font-mono">24V discrete alarm switches, limit contacts & solenoid valves</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- VIEW C: SIGNAL ALLOCATION WORKBENCH                                   -->
+    <!-- --------------------------------------------------------------------- -->
+    <section id="view-workbench" class="view-section hidden h-full flex flex-col">
+      <!-- Filter Bar -->
+      <div class="h-10 bg-frame border-b border-border px-3 flex items-center justify-between gap-3 shrink-0">
+        <div class="flex items-center gap-2 flex-1">
+          <div class="relative w-64">
+            <span class="material-symbols-outlined absolute left-2 top-2 text-[15px] text-graphite-muted">search</span>
+            <input id="signals-search-input" type="text" placeholder="Search Tag, Desc, Cable..." class="w-full pl-7 pr-2 py-1 text-xs border border-border rounded bg-white text-graphite focus:outline-none focus:border-brand">
+          </div>
+
+          <select id="signals-type-filter" class="px-2 py-1 text-xs border border-border rounded bg-white text-graphite font-mono">
+            <option value="ALL">All Signal Types</option>
+            <option value="AI_HART">AI 4-20mA HART</option>
+            <option value="IS_AI_HART">IS AI 4-20mA HART (Ex-ia)</option>
+            <option value="AO_HART">AO Control Valve HART</option>
+            <option value="RTD_PT100">RTD Pt100 Temperature</option>
+            <option value="TC_TYPE_K">Thermocouple Type K</option>
+            <option value="DI_24V">Discrete Input 24VDC</option>
+            <option value="DO_24V">Discrete Output 24VDC</option>
+            <option value="IS_DI_NAMUR">IS DI NAMUR (Ex-ia)</option>
+          </select>
+
+          <select id="signals-status-filter" class="px-2 py-1 text-xs border border-border rounded bg-white text-graphite font-mono">
+            <option value="ALL">All Statuses</option>
+            <option value="ALLOCATED">Allocated</option>
+            <option value="UNALLOCATED">Unallocated</option>
+            <option value="CONFLICT">Conflict</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="switchView('twin3d')" class="px-2.5 py-1 bg-white border border-border hover:bg-frame text-graphite rounded text-xs font-mono flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">view_in_ar</span> View in 3D Cabinet
+          </button>
+          <button class="btn-trigger-solve px-3 py-1 bg-brand hover:bg-brand-dark text-white rounded text-xs font-mono font-semibold flex items-center gap-1 shadow">
+            <span class="material-symbols-outlined text-[14px]">play_circle</span> Auto-Solve
+          </button>
+        </div>
+      </div>
+
+      <!-- Signals Table & Side Inspector -->
+      <div class="flex-1 flex overflow-hidden">
+        <!-- Table Area -->
+        <div class="flex-1 overflow-y-auto">
+          <table class="w-full border-collapse text-left">
+            <thead class="bg-surface sticky top-0 z-10 border-b border-border text-[11px] font-mono text-graphite-muted uppercase">
+              <tr>
+                <th class="p-2">Signal Tag</th>
+                <th class="p-2">Description</th>
+                <th class="p-2">Type</th>
+                <th class="p-2">Voltage</th>
+                <th class="p-2">Multicore Trunk</th>
+                <th class="p-2">Assigned Position</th>
+                <th class="p-2">Parity Status</th>
+                <th class="p-2 text-center">3D Trace</th>
+                <th class="p-2 text-right">Inspect</th>
+              </tr>
+            </thead>
+            <tbody id="signals-table-body" class="divide-y divide-border-light bg-white">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Side Inspector Panel (Right Drawer) -->
+        <div id="inspector-panel" class="w-80 border-l border-border bg-white p-4 flex flex-col gap-3 overflow-y-auto hidden">
+          <div class="flex items-center justify-between border-b border-border pb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[18px] text-brand">fact_check</span>
+              <span class="font-bold text-xs uppercase tracking-wider text-graphite">Decision Inspector</span>
+            </div>
+            <button onclick="document.getElementById('inspector-panel').classList.add('hidden')" class="text-graphite-muted hover:text-graphite">
+              <span class="material-symbols-outlined text-[16px]">close</span>
+            </button>
+          </div>
+
+          <div>
+            <div class="text-[10px] font-mono text-graphite-muted uppercase">Inspected Signal / Slot</div>
+            <div class="text-sm font-bold font-mono text-graphite" id="inspect-signal-tag">-</div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="text-[11px] font-mono text-graphite-muted">Solver Outcome:</div>
+            <div id="inspect-outcome" class="px-2 py-0.5 rounded font-mono font-bold text-xs bg-valid-light text-valid">SUCCESS</div>
+          </div>
+
+          <div>
+            <div class="text-[10px] font-mono text-graphite-muted uppercase mb-1">Physical Position Assigned</div>
+            <div id="inspect-assigned-pos" class="p-2 bg-frame rounded font-mono font-bold text-brand text-xs">BP-01-CH-01</div>
+          </div>
+
+          <div>
+            <div class="text-[10px] font-mono text-graphite-muted uppercase mb-1">Constraint Rule Evidence</div>
+            <ul id="inspect-evidence-list" class="space-y-1">
+              <!-- Rendered dynamically -->
+            </ul>
+          </div>
+
+          <div id="inspect-remedy-box" class="p-2 bg-warn-light border border-warn/30 rounded text-xs text-graphite hidden">
+            <div class="font-semibold text-warn mb-0.5">Recommended Action:</div>
+            <div id="inspect-remedy-text" class="text-[11px]"></div>
+          </div>
+
+          <div class="pt-2 border-t border-border">
+            <div class="text-[10px] font-mono text-graphite-muted uppercase mb-1">Candidate Slot Rejections</div>
+            <div class="max-h-48 overflow-y-auto border border-border rounded">
+              <table class="w-full text-left">
+                <thead class="bg-surface text-[10px] font-mono border-b border-border text-graphite-muted">
+                  <tr>
+                    <th class="p-1">Slot</th>
+                    <th class="p-1">Reason</th>
+                    <th class="p-1">Details</th>
+                  </tr>
+                </thead>
+                <tbody id="inspect-rejections-table">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- VIEW D: 3D DIGITAL TWIN                                               -->
+    <!-- --------------------------------------------------------------------- -->
+    <section id="view-twin3d" class="view-section hidden h-full flex flex-col relative">
+      <!-- 3D Toolbar Strip -->
+      <div class="h-9 bg-graphite-dark text-neutral-300 border-b border-neutral-800 px-3 flex items-center justify-between z-20 shrink-0">
+        <!-- Camera Presets -->
+        <div class="flex items-center gap-1 text-[11px] font-mono">
+          <span class="text-neutral-400 uppercase mr-1">Views:</span>
+          <button data-cam-preset="ISO" class="tool-btn active px-2 py-0.5 border border-neutral-700 bg-neutral-800 rounded hover:bg-neutral-700">3/4 ISO</button>
+          <button data-cam-preset="FRONT" class="tool-btn px-2 py-0.5 border border-neutral-700 bg-neutral-800 rounded hover:bg-neutral-700">Front</button>
+          <button data-cam-preset="FIT" class="tool-btn px-2 py-0.5 border border-neutral-700 bg-neutral-800 rounded hover:bg-neutral-700">Fit</button>
+          <button data-cam-preset="RESET" class="tool-btn px-2 py-0.5 border border-neutral-700 bg-neutral-800 rounded hover:bg-neutral-700">Reset</button>
+          <button data-cam-preset="CIOC" class="tool-btn px-2 py-0.5 border border-neutral-700 bg-neutral-800 rounded hover:bg-neutral-700">CIOC</button>
+          <button data-cam-preset="BP-01" class="tool-btn px-2 py-0.5 border border-neutral-700 bg-neutral-800 rounded hover:bg-neutral-700">BP-01 (AI)</button>
+          <button data-cam-preset="BP-02" class="tool-btn px-2 py-0.5 border border-neutral-700 bg-neutral-800 rounded hover:bg-neutral-700">BP-02 (IS)</button>
+          <button data-cam-preset="BP-03" class="tool-btn px-2 py-0.5 border border-neutral-700 bg-neutral-800 rounded hover:bg-neutral-700">BP-03 (Temp)</button>
+          <button data-cam-preset="BP-04" class="tool-btn px-2 py-0.5 border border-neutral-700 bg-neutral-800 rounded hover:bg-neutral-700">BP-04 (DI/DO)</button>
+        </div>
+
+        <!-- Status Filter Toggles -->
+        <div class="flex items-center gap-1 text-[11px] font-mono">
+          <span class="text-neutral-400 uppercase mr-1">Filter:</span>
+          <button data-3d-filter="ALL" class="tool-btn active px-2 py-0.5 border border-neutral-700 bg-neutral-800 rounded">All</button>
+          <button data-3d-filter="ALLOCATED" class="tool-btn px-2 py-0.5 border border-neutral-700 bg-neutral-800 rounded text-green-400">Allocated</button>
+          <button data-3d-filter="AVAILABLE" class="tool-btn px-2 py-0.5 border border-neutral-700 bg-neutral-800 rounded text-neutral-400">Spare</button>
+          <button data-3d-filter="WARNING" class="tool-btn px-2 py-0.5 border border-neutral-700 bg-neutral-800 rounded text-yellow-400">Warning</button>
+          <button data-3d-filter="CONFLICT" class="tool-btn px-2 py-0.5 border border-neutral-700 bg-neutral-800 rounded text-red-400">Conflict</button>
+        </div>
+      </div>
+
+      <!-- 3D Canvas Viewport Container -->
+      <div id="threejs-cad-viewport" class="flex-1 w-full h-full relative">
+        
+        <!-- Interactive Hardware Connection Card (Top-Right Overlay) -->
+        <div id="cad-3d-connection-card" class="absolute top-4 right-4 z-20 w-80 bg-neutral-900/95 backdrop-blur border border-neutral-700 text-neutral-200 rounded shadow-2xl p-3.5 space-y-2.5 font-sans hidden">
+          <div class="flex items-center justify-between border-b border-neutral-700 pb-2">
+            <div class="flex items-center gap-1.5 font-mono text-xs">
+              <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+              <span class="font-bold text-white uppercase tracking-wider">HARDWARE CONNECTION</span>
+            </div>
+            <button onclick="document.getElementById('cad-3d-connection-card').classList.add('hidden')" class="text-neutral-400 hover:text-white">
+              <span class="material-symbols-outlined text-[16px]">close</span>
+            </button>
+          </div>
+
+          <div class="space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] text-neutral-400 font-mono uppercase">Signal Tag</span>
+              <span id="cad-card-tag" class="font-mono font-bold text-sm text-cyan-300">PT-105-IS</span>
+            </div>
+            <div id="cad-card-desc" class="text-[11px] text-neutral-300 leading-snug">Reactor Flare Header Pressure [Zone 0 Ex-ia]</div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-[11px] font-mono bg-neutral-800/80 p-2 rounded border border-neutral-700/60">
+            <div>
+              <div class="text-[9px] text-neutral-400 uppercase">Hardware Slot</div>
+              <div id="cad-card-pos" class="font-bold text-brand-light">BP-02-CH-01</div>
+            </div>
+            <div>
+              <div class="text-[9px] text-neutral-400 uppercase">Signal Type</div>
+              <div id="cad-card-type" class="font-bold text-white">IS_AI_HART</div>
+            </div>
+            <div>
+              <div class="text-[9px] text-neutral-400 uppercase">Baseplate</div>
+              <div id="cad-card-bp" class="text-neutral-300">HART / IS Barrier</div>
+            </div>
+            <div>
+              <div class="text-[9px] text-neutral-400 uppercase">Terminal Block</div>
+              <div id="cad-card-tb" class="text-neutral-300">TB-BP02 Term 1/2</div>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <div class="text-[10px] text-neutral-400 font-mono uppercase">Compatibility & Rule Verification</div>
+            <div id="cad-card-status" class="p-2 rounded text-[11px] font-mono flex items-start gap-1.5 bg-valid/20 border border-valid/40 text-valid-light">
+              <span class="material-symbols-outlined text-[15px] text-valid shrink-0">verified</span>
+              <span id="cad-card-status-text">Fully Compatible (IEC 60079-11 Ex-ia Certified)</span>
+            </div>
+          </div>
+
+          <div id="cad-card-cable" class="text-[11px] font-mono text-neutral-400 flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[14px] text-cyan-400">cable</span>
+            <span>Trunk: <strong id="cad-card-cable-id" class="text-neutral-200">CBL-201A</strong> (Pair <span id="cad-card-pair">1</span>)</span>
+          </div>
+
+          <div class="flex items-center gap-2 pt-1 border-t border-neutral-800">
+            <button id="btn-card-view-matrix" class="flex-1 py-1 bg-brand hover:bg-brand-dark text-white rounded text-[11px] font-mono font-semibold flex items-center justify-center gap-1">
+              <span class="material-symbols-outlined text-[13px]">table_rows</span> View in Matrix
+            </button>
+            <button id="btn-card-inspect-rejections" class="py-1 px-2.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 rounded text-[11px] font-mono flex items-center gap-1">
+              <span class="material-symbols-outlined text-[13px]">fact_check</span> Rejections
+            </button>
+          </div>
+        </div>
+
+        <!-- Floating HUD Overlay: Selected Object Spec (Bottom-Left) -->
+        <div class="absolute bottom-4 left-4 z-10 bg-neutral-900/90 backdrop-blur border border-neutral-700 p-3 rounded text-neutral-200 text-xs font-mono space-y-1 shadow-lg pointer-events-none">
+          <div class="text-[10px] text-neutral-400 uppercase">3D CAD INSPECTOR HUD</div>
+          <div class="font-bold text-white flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            Click any CHARM module to trace physical wiring & channel schedule
+          </div>
+          <div class="text-[11px] text-neutral-400">Controls: Left Click: Orbit • Right Click: Pan • Scroll: Zoom</div>
+        </div>
+
+        <!-- Accessible Status Legend (Bottom-Right) -->
+        <div class="absolute bottom-4 right-4 z-10 bg-neutral-900/90 backdrop-blur border border-neutral-700 p-2.5 rounded text-neutral-300 text-[11px] font-mono space-y-1.5 pointer-events-none shadow-xl">
+          <div class="text-[10px] text-neutral-400 uppercase font-bold tracking-wider">HARDWARE & WIRING LEGEND</div>
+          <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-[#2e7d32]"></span> <span>✓ [ALLOCATED] Standard (IEC 61131-2)</span></div>
+          <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-[#1565c0]"></span> <span>🛡️ [IS BARRIER] Ex-ia Zone 0/1 (IEC 60079-11)</span></div>
+          <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-[#00bcd4]"></span> <span>⚡ [SELECTED] Active Wire Route Trace</span></div>
+          <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-[#546e7a]"></span> <span>⚪ [SPARE] 20% Expansion Reserve</span></div>
+          <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-[#b94a48]"></span> <span>⚠️ [CONFLICT] Electrical / IS Clash</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- VIEW E: REVISION COMPARISON & CHURN MINIMIZER                         -->
+    <!-- --------------------------------------------------------------------- -->
+    <section id="view-revisions" class="view-section hidden h-full overflow-y-auto p-6 space-y-6">
+      <div class="max-w-6xl mx-auto space-y-6">
+        
+        <!-- Header Strip -->
+        <div class="bg-white border border-border p-4 rounded flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2 py-0.5 rounded font-mono font-bold text-xs bg-frame text-graphite border border-border">REV A (Baseline)</span>
+              <span class="material-symbols-outlined text-[16px] text-brand">arrow_forward</span>
+              <span class="px-2 py-0.5 rounded font-mono font-bold text-xs bg-blue-50 text-brand border border-blue-200">REV B (Draft ECO)</span>
+            </div>
+            <p class="text-xs text-graphite-muted font-mono">Differential Churn Optimizer: Minimize field terminal rewires while honoring revised engineering constraints.</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button id="btn-run-what-if" class="px-3 py-1.5 bg-brand hover:bg-brand-dark text-white rounded font-mono font-semibold text-xs flex items-center gap-1.5 shadow">
+              <span class="material-symbols-outlined text-[14px]">play_circle</span> Run Churn Minimizer
+            </button>
+            <button id="btn-accept-baseline" class="px-3 py-1.5 bg-valid hover:bg-valid/90 text-white rounded font-mono font-semibold text-xs flex items-center gap-1.5 shadow">
+              <span class="material-symbols-outlined text-[14px]">verified</span> Accept Rev B Baseline
+            </button>
+          </div>
+        </div>
+
+        <!-- Churn Telemetry KPIs -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div class="bg-white border border-border p-3 rounded">
+            <div class="text-[10px] text-graphite-muted font-mono uppercase">Churn Index</div>
+            <div class="text-xl font-bold font-mono text-valid mt-1" id="diff-churn-index">0.023</div>
+          </div>
+          <div class="bg-white border border-border p-3 rounded">
+            <div class="text-[10px] text-graphite-muted font-mono uppercase">Static Retained</div>
+            <div class="text-xl font-bold font-mono text-graphite mt-1" id="diff-retained-pct">97.7%</div>
+          </div>
+          <div class="bg-white border border-border p-3 rounded">
+            <div class="text-[10px] text-graphite-muted font-mono uppercase">Physical Rewires</div>
+            <div class="text-xl font-bold font-mono text-warn mt-1" id="diff-rewires-count">1 Pin</div>
+          </div>
+          <div class="bg-white border border-border p-3 rounded">
+            <div class="text-[10px] text-graphite-muted font-mono uppercase">New Additions</div>
+            <div class="text-xl font-bold font-mono text-brand mt-1" id="diff-additions-count">+5 ch</div>
+          </div>
+          <div class="bg-white border border-border p-3 rounded">
+            <div class="text-[10px] text-graphite-muted font-mono uppercase">Labor Saved</div>
+            <div class="text-xl font-bold font-mono text-valid mt-1" id="diff-labor-saved">+64.5 h</div>
+          </div>
+        </div>
+
+        <!-- Revisions Diff Table -->
+        <div class="bg-white border border-border rounded overflow-hidden">
+          <div class="p-3 border-b border-border font-mono font-bold text-xs uppercase text-graphite flex items-center justify-between">
+            <span>Engineering Differential Change Log</span>
+            <span class="text-[11px] text-graphite-muted lowercase">auto-computed by revision engine</span>
+          </div>
+          <table class="w-full text-left">
+            <thead class="bg-surface text-[11px] font-mono border-b border-border text-graphite-muted uppercase">
+              <tr>
+                <th class="p-2">Change Type</th>
+                <th class="p-2">Signal Tag</th>
+                <th class="p-2">Description & Changes</th>
+                <th class="p-2">Allocation Result</th>
+              </tr>
+            </thead>
+            <tbody id="revisions-diff-table" class="divide-y divide-border-light">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- VIEW F: DIAGNOSTICS & TECHNICAL QUERIES                               -->
+    <!-- --------------------------------------------------------------------- -->
+    <section id="view-diagnostics" class="view-section hidden h-full overflow-y-auto p-6 space-y-6">
+      <div class="max-w-5xl mx-auto space-y-6">
+        <div>
+          <h2 class="text-lg font-bold text-graphite">Technical Queries & Diagnostic Resolution Hub</h2>
+          <p class="text-xs text-graphite-muted font-mono">Formal engineering issue tracker for I/O conflicts, SIL verifications, and hazardous area approvals</p>
+        </div>
+
+        <div id="tqs-list-container" class="space-y-4">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- VIEW G: ENGINEERING RULES CONFIGURATION                               -->
+    <!-- --------------------------------------------------------------------- -->
+    <section id="view-rules" class="view-section hidden h-full overflow-y-auto p-6 space-y-6">
+      <div class="max-w-4xl mx-auto space-y-6">
+        <div>
+          <h2 class="text-lg font-bold text-graphite">Configurable Engineering Rules & Constraints</h2>
+          <p class="text-xs text-graphite-muted font-mono">Adjust optimization weights and enable/disable constraint checks</p>
+        </div>
+
+        <div id="rules-list-container" class="space-y-3">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- VIEW H: IMPORT & DATA VALIDATION                                      -->
+    <!-- --------------------------------------------------------------------- -->
+    <section id="view-import" class="view-section hidden h-full overflow-y-auto p-6 space-y-6">
+      <div class="max-w-3xl mx-auto space-y-6">
+        <div>
+          <h2 class="text-lg font-bold text-graphite">Import Industrial Signal Schedule</h2>
+          <p class="text-xs text-graphite-muted font-mono">Upload CSV or Microsoft Excel spreadsheets with plant instrumentation lists</p>
+        </div>
+
+        <!-- File Upload Area -->
+        <div class="border-2 border-dashed border-border bg-white p-8 rounded text-center flex flex-col items-center justify-center gap-3">
+          <span class="material-symbols-outlined text-[42px] text-brand">upload_file</span>
+          <div class="text-xs text-graphite font-semibold">Drag & drop your engineering signal list here or click to browse</div>
+          <p class="text-[11px] text-graphite-muted">Supported formats: .CSV, .XLSX (Mandatory columns: tag, signal_type)</p>
+          <input type="file" id="signals-file-input" accept=".csv,.xlsx,.xls" class="hidden">
+          <button onclick="document.getElementById('signals-file-input').click()" class="px-4 py-1.5 bg-brand hover:bg-brand-dark text-white rounded font-mono font-semibold text-xs shadow">
+            Select I/O Schedule File
+          </button>
+        </div>
+
+        <!-- Errors Box -->
+        <div id="import-errors-display" class="p-4 bg-error-light border border-error/30 rounded space-y-1 hidden">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Download Sample Input Files Card -->
+        <div class="bg-white border border-border p-5 rounded space-y-3">
+          <h3 class="font-bold text-xs text-graphite uppercase tracking-wider">Download Standard Sample Input Files (.XLSX)</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <a href="/api/scenarios/download-input/SCENARIO_A" class="p-3 border border-border hover:border-brand rounded flex flex-col justify-between gap-2 bg-frame/50 transition-colors">
+              <div>
+                <div class="font-mono font-bold text-xs text-graphite">Scenario A Input</div>
+                <div class="text-[11px] text-graphite-muted">Clean baseline schedule (45 loops, 100% allocatable)</div>
+              </div>
+              <span class="text-brand font-mono font-semibold text-[11px] flex items-center gap-1">
+                <span class="material-symbols-outlined text-[13px]">download</span> Download .xlsx
+              </span>
+            </a>
+
+            <a href="/api/scenarios/download-input/SCENARIO_B" class="p-3 border border-border hover:border-brand rounded flex flex-col justify-between gap-2 bg-frame/50 transition-colors">
+              <div>
+                <div class="font-mono font-bold text-xs text-graphite">Scenario B Input</div>
+                <div class="text-[11px] text-graphite-muted">Conflict schedule (Zone 0 loop on non-IS slot)</div>
+              </div>
+              <span class="text-error font-mono font-semibold text-[11px] flex items-center gap-1">
+                <span class="material-symbols-outlined text-[13px]">download</span> Download .xlsx
+              </span>
+            </a>
+
+            <a href="/api/scenarios/download-input/SCENARIO_C" class="p-3 border border-border hover:border-brand rounded flex flex-col justify-between gap-2 bg-frame/50 transition-colors">
+              <div>
+                <div class="font-mono font-bold text-xs text-graphite">Scenario C Input</div>
+                <div class="text-[11px] text-graphite-muted">Rev B ECO schedule (49 loops, Ex-ia upgrade)</div>
+              </div>
+              <span class="text-brand font-mono font-semibold text-[11px] flex items-center gap-1">
+                <span class="material-symbols-outlined text-[13px]">download</span> Download .xlsx
+              </span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- VIEW I: REPORTS & EXPORT                                              -->
+    <!-- --------------------------------------------------------------------- -->
+    <section id="view-reports" class="view-section hidden h-full overflow-y-auto p-6 space-y-6">
+      <div class="max-w-4xl mx-auto space-y-6">
+        <div>
+          <h2 class="text-lg font-bold text-graphite">Engineering Reports & Schedule Exports</h2>
+          <p class="text-xs text-graphite-muted font-mono">Download audited allocation schedules, wiring certificates, and technical queries</p>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <a href="/api/export/csv" download class="p-4 bg-white border border-border rounded hover:border-brand flex items-center gap-3 transition-colors shadow-sm">
+            <span class="material-symbols-outlined text-[32px] text-brand">csv</span>
+            <div>
+              <div class="font-bold text-xs text-graphite">Export Allocation Schedule (.CSV)</div>
+              <div class="text-[11px] text-graphite-muted">Flat CSV table suitable for CAD and instrumentation import.</div>
+            </div>
+          </a>
+
+          <a href="/api/export/excel" download class="p-4 bg-white border border-border rounded hover:border-brand flex items-center gap-3 transition-colors shadow-sm">
+            <span class="material-symbols-outlined text-[32px] text-green-700">table_view</span>
+            <div>
+              <div class="font-bold text-xs text-graphite">Export Multi-Sheet Engineering Workbook (.XLSX)</div>
+              <div class="text-[11px] text-graphite-muted">Includes Signal Allocation, Hardware Utilization, and TQs sheets.</div>
+            </div>
+          </a>
+        </div>
+
+        <!-- Sample Input Registers Download Card -->
+        <div class="bg-white border border-border p-5 rounded space-y-3">
+          <h3 class="font-mono font-bold text-xs uppercase text-graphite flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-brand text-[16px]">file_download</span>
+            Downloadable Scenario Input Registers (Excel .XLSX)
+          </h3>
+          <p class="text-xs text-graphite-muted">Use these pre-formatted sample input workbooks to test custom imports or demo the solver with known cases.</p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <a href="/api/scenarios/download-input/SCENARIO_A" class="p-3 bg-frame rounded border border-border hover:border-brand block">
+              <div class="font-mono font-bold text-xs text-graphite">Scenario A Register</div>
+              <div class="text-[10px] text-graphite-muted mt-1">45 Valid Loops • Ready to Allocate</div>
+              <div class="text-[11px] text-brand font-mono font-semibold mt-2 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[13px]">download</span> Download .xlsx
+              </div>
+            </a>
+            <a href="/api/scenarios/download-input/SCENARIO_B" class="p-3 bg-frame rounded border border-border hover:border-brand block">
+              <div class="font-mono font-bold text-xs text-graphite">Scenario B Register</div>
+              <div class="text-[10px] text-graphite-muted mt-1">46 Loops • Contains Zone 0 Clash</div>
+              <div class="text-[11px] text-error font-mono font-semibold mt-2 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[13px]">download</span> Download .xlsx
+              </div>
+            </a>
+            <a href="/api/scenarios/download-input/SCENARIO_C" class="p-3 bg-frame rounded border border-border hover:border-brand block">
+              <div class="font-mono font-bold text-xs text-graphite">Scenario C Register</div>
+              <div class="text-[10px] text-graphite-muted mt-1">49 Loops • Revision B ECO Register</div>
+              <div class="text-[11px] text-brand font-mono font-semibold mt-2 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[13px]">download</span> Download .xlsx
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Specification Summary Card -->
+        <div class="bg-white border border-border p-6 rounded space-y-4">
+          <div class="border-b border-border pb-3 flex items-center justify-between">
+            <h3 class="font-mono font-bold text-xs text-graphite uppercase">Marshaling Enclosure Allocation Certificate</h3>
+            <span class="text-[10px] font-mono text-graphite-muted">DOC-DELTA-CAB01-REV-A</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 text-xs font-mono">
+            <div>Project: <strong id="report-proj-name" class="text-graphite">Plant Expansion Unit A</strong></div>
+            <div>Revision: <strong id="report-active-rev" class="text-brand">REV_A</strong></div>
+            <div>Generated: <strong id="report-timestamp" class="text-graphite">—</strong></div>
+            <div>Enclosure: <strong class="text-graphite">Rittal TS8 / DeltaV CAB-01</strong></div>
+            <div>Total Loops: <strong id="report-total-signals" class="text-graphite">45</strong></div>
+            <div>Allocated Loops: <strong id="report-allocated-signals" class="text-valid">45</strong></div>
+            <div>Hard Violations: <strong id="report-violations-count" class="text-valid">0 (Passed)</strong></div>
+            <div>Soft Warnings: <strong id="report-warnings-count" class="text-warn">0</strong></div>
+          </div>
+
+          <div class="p-3 bg-frame rounded text-[11px] font-mono text-graphite-muted">
+            All instrument loop allocations have been independently validated against Emerson DeltaV Electronic Marshaling Guidelines, IEC 60079-11 Intrinsic Safety regulations, and IEEE 518 electrical noise segregation standards.
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Application Controller Scripts -->
+  <script src="/static/js/three_cabinet.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
