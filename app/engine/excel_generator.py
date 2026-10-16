@@ -145,3 +145,80 @@ def build_scenario_input_workbook(scenario_id: str, signals: List[SignalModel], 
     wb.save(buf)
     buf.seek(0)
     return buf
+
+def get_sample_workbook_by_name(filename: str) -> io.BytesIO:
+    """
+    Returns an Excel BytesIO stream for the 5 official scenario sample workbooks:
+    - Scenario_A_Clean_Input.xlsx
+    - Scenario_B_Warnings_Input.xlsx
+    - Scenario_C_Conflict_Input.xlsx
+    - Scenario_D_Revision_Baseline.xlsx
+    - Scenario_D_Revision_Change.xlsx
+    """
+    from app.engine.demo_data import (
+        get_scenario_a_signals,
+        get_scenario_b_warning_signals,
+        get_scenario_c_conflict_signals,
+        get_scenario_d_signals
+    )
+
+    clean_name = filename.strip()
+    if clean_name in ("Scenario_A_Clean_Input.xlsx", "SCENARIO_A"):
+        return build_scenario_input_workbook(
+            scenario_id="SCENARIO_A",
+            signals=get_scenario_a_signals(),
+            scenario_title="Scenario A: Clean Allocation Baseline",
+            scenario_description="Standard baseline instrumentation register (45 loops). Demonstrates optimal allocation with 0 violations and 100% feasibility under Google OR-Tools CP-SAT."
+        )
+    elif clean_name in ("Scenario_B_Warnings_Input.xlsx", "SCENARIO_B"):
+        return build_scenario_input_workbook(
+            scenario_id="SCENARIO_B",
+            signals=get_scenario_b_warning_signals(),
+            scenario_title="Scenario B: Advisory Warnings (0 Violations)",
+            scenario_description="Advisory warnings fixture (45 loops). Satisfies all mandatory constraints (100% valid), but triggers genuine RULE-SOFT-02 (multicore cable pair split) and RULE-HARD-05 (expansion reserve slot utilized)."
+        )
+    elif clean_name in ("Scenario_C_Conflict_Input.xlsx", "SCENARIO_C"):
+        return build_scenario_input_workbook(
+            scenario_id="SCENARIO_C",
+            signals=get_scenario_c_conflict_signals(),
+            scenario_title="Scenario C: Engineering Constraint Conflict",
+            scenario_description="Safety conflict fixture (46 loops). Hazardous Zone 0 Ex-ia transmitter PT-FLARE-IS is locked to standard non-IS baseplate BP-01, triggering CP-SAT infeasibility and IEC 60079-11 physical barrier violation."
+        )
+    elif clean_name in ("Scenario_D_Revision_Baseline.xlsx", "SCENARIO_D_BASELINE"):
+        return build_scenario_input_workbook(
+            scenario_id="SCENARIO_D",
+            signals=get_scenario_a_signals(),
+            scenario_title="Scenario D: Revision Baseline (Rev A)",
+            scenario_description="Approved baseline allocation (45 loops) for DeltaV cabinet CAB-01 prior to engineering change order ECO-482."
+        )
+    elif clean_name in ("Scenario_D_Revision_Change.xlsx", "SCENARIO_D", "SCENARIO_D_CHANGE"):
+        return build_scenario_input_workbook(
+            scenario_id="SCENARIO_D",
+            signals=get_scenario_d_signals(),
+            scenario_title="Scenario D: Revision Change Order (Rev B ECO)",
+            scenario_description="Revised instrumentation register (49 loops: +5 additions, -1 deletion, PT-102 upgraded to Ex-ia). Minimal-Repair planner minimizes field rewire churn."
+        )
+    else:
+        raise ValueError(f"Unknown sample workbook filename: {filename}")
+
+def generate_all_sample_files(output_dir: str = "app/static/samples") -> Dict[str, str]:
+    """Generates and writes all 5 sample Excel workbooks to static storage."""
+    from pathlib import Path
+    out_path = Path(output_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+
+    filenames = [
+        "Scenario_A_Clean_Input.xlsx",
+        "Scenario_B_Warnings_Input.xlsx",
+        "Scenario_C_Conflict_Input.xlsx",
+        "Scenario_D_Revision_Baseline.xlsx",
+        "Scenario_D_Revision_Change.xlsx"
+    ]
+    created = {}
+    for fn in filenames:
+        buf = get_sample_workbook_by_name(fn)
+        file_dest = out_path / fn
+        with open(file_dest, "wb") as f:
+            f.write(buf.getvalue())
+        created[fn] = str(file_dest)
+    return created

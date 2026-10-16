@@ -136,6 +136,80 @@ class ProjectModel(BaseModel):
     name: str
     client: str = "Emerson Process Management"
     active_revision: str = "REV_A"
+    active_scenario: str = "SCENARIO_A"
     description: str = ""
     created_at: str = ""
     updated_at: str = ""
+
+# -----------------------------------------------------------------------------
+# Engineering Change Intelligence Engine Models
+# Tagline: "Don't just find a conflict. Find the smallest safe fix."
+# -----------------------------------------------------------------------------
+
+class ConflictDNASignal(BaseModel):
+    signal_id: str
+    signal_tag: str
+    assigned_position_id: Optional[str] = None
+    signal_type: str
+    is_intrinsic_safety: bool = False
+    violation_type: str = "CONFIRMED_VIOLATION"  # CONFIRMED_VIOLATION, POSSIBLE_CAUSE, UNISOLATED_INFEASIBILITY
+    rule_id: str
+    rule_name: str
+    severity: str = "CRITICAL"  # CRITICAL, ERROR, WARNING
+    root_cause_explanation: str
+    evidence_data: List[str] = Field(default_factory=list)
+    practical_remedy: str
+    candidate_rejections_sample: List[CandidateRejectionReason] = Field(default_factory=list)
+
+class ConflictDNAReport(BaseModel):
+    total_conflicts: int
+    confirmed_violations: List[ConflictDNASignal] = Field(default_factory=list)
+    possible_causes: List[ConflictDNASignal] = Field(default_factory=list)
+    solver_status: str  # OPTIMAL, INFEASIBLE, TIMEOUT, FEASIBLE
+    summary_narrative: str
+    can_auto_repair: bool = True
+
+class RepairCandidate(BaseModel):
+    candidate_id: str  # e.g., "REPAIR-OPT-01"
+    title: str  # e.g., "Minimal Move (1 Signal Reallocated)"
+    strategy: str  # "LEAST_CHURN", "BALANCED_MULTICORE", "SPARE_CONSERVATIVE"
+    solver_status: str  # "OPTIMAL", "FEASIBLE", "BEST_FOUND", "TIMEOUT"
+    is_optimal: bool = True
+    churn_cost: float = 0.0
+    moved_signals_count: int = 0
+    moved_signals: List[Dict[str, Any]] = Field(default_factory=list)  # {signal_id, tag, from_pos, to_pos, reason}
+    retained_signals_count: int = 0
+    retained_pct: float = 100.0
+    trade_offs: List[str] = Field(default_factory=list)
+    validation_report: ValidationReport
+    is_valid: bool = True
+    assignments: Dict[str, str] = Field(default_factory=dict)
+
+class RepairPlanResponse(BaseModel):
+    scenario_id: Optional[str] = None
+    active_revision: str
+    total_conflicts_analyzed: int
+    candidates: List[RepairCandidate] = Field(default_factory=list)
+    recommendation: str
+    solve_time_ms: float
+
+class SimulationPreview(BaseModel):
+    proposal_id: str
+    candidate_id: str
+    baseline_revision: str
+    proposed_revision: str
+    existing_assignments_changed: int
+    signals_added: int
+    signals_modified: int
+    retained_count: int
+    retained_pct: float
+    estimated_labor_saved_hours: float
+    validation: ValidationReport
+    can_accept: bool
+    capacity_summary: Dict[str, Any] = Field(default_factory=dict)
+    changes: List[Dict[str, Any]] = Field(default_factory=list)
+
+class AcceptRepairRequest(BaseModel):
+    proposal_id: str
+    confirm: bool = True
+

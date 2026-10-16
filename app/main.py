@@ -1,11 +1,21 @@
 import os
+import sys
 from pathlib import Path
+
+# Ensure Google OR-Tools native libraries are initialized on Windows
+try:
+    import ortools
+    from ortools.sat.python import cp_model
+except Exception as e:
+    pass
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from app.api.routes import router as api_router
+
 
 app = FastAPI(
     title="IO SIGNAL SUDOKU — Industrial I/O Allocation & 3D Digital Twin",

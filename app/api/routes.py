@@ -15,7 +15,12 @@ from app.models.schemas import (
     DecisionExplanation,
     RevisionDiff,
     TechnicalQuery,
-    ProjectModel
+    ProjectModel,
+    ConflictDNAReport,
+    ConflictDNASignal,
+    RepairPlanResponse,
+    SimulationPreview,
+    AcceptRepairRequest
 )
 from app.db.store import db
 from app.engine.solver import CPSATSolver
@@ -23,8 +28,12 @@ from app.engine.validator import IndependentValidator
 from app.engine.diagnostics import DiagnosticsEngine
 from app.engine.revision import RevisionEngine
 from app.engine.excel_generator import build_scenario_input_workbook
+from app.engine.conflict_dna import ConflictDNAEngine
+from app.engine.repair_planner import MinimalRepairPlanner
+from app.engine.simulator import WhatIfSimulator
 
 router = APIRouter(prefix="/api")
+
 
 # 1. Project & System State Endpoints
 @router.get("/project", response_model=ProjectModel)
@@ -244,6 +253,7 @@ async def import_signals_file(file: UploadFile = File(...)):
 
     valid_types = {"AI_HART", "AO_HART", "DI_24V", "DO_24V", "RTD_PT100", "TC_TYPE_K", "IS_AI_HART", "IS_DI_NAMUR"}
 
+    seen_tags = set()
     for idx, row in df.iterrows():
         tag = str(row.get("tag", "")).strip()
         st = str(row.get("signal_type", "")).strip()
@@ -251,6 +261,11 @@ async def import_signals_file(file: UploadFile = File(...)):
         if not tag:
             errors.append({"row": idx + 2, "field": "tag", "error": "Signal Tag cannot be empty"})
             continue
+        if tag in seen_tags:
+            errors.append({"row": idx + 2, "field": "tag", "error": f"Duplicate signal tag '{tag}' detected in register."})
+            continue
+        seen_tags.add(tag)
+
         if st not in valid_types:
             errors.append({"row": idx + 2, "field": "signal_type", "error": f"Invalid type '{st}'. Expected one of: {valid_types}"})
             continue
@@ -434,22 +449,27 @@ def load_scenario(payload: Dict[str, str]):
 def download_scenario_input(scenario_id: str):
     from app.engine.demo_data import (
         SCENARIOS_CATALOG,
-        get_demo_signals_rev_a,
-        get_scenario_b_signals,
-        get_demo_signals_rev_b
+        get_scenario_a_signals,
+        get_scenario_b_warning_signals,
+        get_scenario_c_conflict_signals,
+        get_scenario_d_signals
     )
+    from app.engine.excel_generator import build_scenario_input_workbook
+
     sc = SCENARIOS_CATALOG.get(scenario_id)
     if not sc:
         raise HTTPException(status_code=404, detail=f"Scenario '{scenario_id}' not found.")
 
     if scenario_id == "SCENARIO_A":
-        sigs = get_demo_signals_rev_a()
+        sigs = get_scenario_a_signals()
     elif scenario_id == "SCENARIO_B":
-        sigs = get_scenario_b_signals()
+        sigs = get_scenario_b_warning_signals()
     elif scenario_id == "SCENARIO_C":
-        sigs = get_demo_signals_rev_b()
+        sigs = get_scenario_c_conflict_signals()
+    elif scenario_id == "SCENARIO_D":
+        sigs = get_scenario_d_signals()
     else:
-        sigs = get_demo_signals_rev_a()
+        sigs = get_scenario_a_signals()
 
     buf = build_scenario_input_workbook(
         scenario_id=scenario_id,
@@ -463,4 +483,139 @@ def download_scenario_input(scenario_id: str):
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f"attachment; filename=IO_Sudoku_Input_{scenario_id}.xlsx"}
     )
+
+@router.get("/scenarios/download-sample/{filename}")
+def download_sample_file(filename: str):
+    from app.engine.excel_generator import get_sample_workbook_by_name
+    try:
+        buf = get_sample_workbook_by_name(filename)
+        return StreamingResponse(
+            buf,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+# -----------------------------------------------------------------------------
+# 13. Engineering Change Intelligence Engine Endpoints
+# Tagline: "Don't just find a conflict. Find the smallest safe fix."
+# -----------------------------------------------------------------------------
+
+@router.get("/intelligence/conflict-dna", response_model=ConflictDNAReport)
+def get_conflict_dna(revision: Optional[str] = None):
+    """
+    Conflict DNA — Explain why an allocation failed using verified validation
+    findings and solver constraint analysis.
+    """
+    signals = db.get_signals(revision)
+    positions = db.get_hardware()
+    rules = db.get_rules()
+
+    solver_status = None
+    if db.last_solve_response:
+        solver_status = db.last_solve_response.status
+
+    return ConflictDNAEngine.analyze(
+        signals=signals,
+        positions=positions,
+        rules=rules,
+        solver_status=solver_status
+    )
+
+@router.get("/intelligence/conflict-dna/{signal_id}", response_model=ConflictDNASignal)
+def get_signal_conflict_dna(signal_id: str, revision: Optional[str] = None):
+    report = get_conflict_dna(revision)
+    for c in report.confirmed_violations:
+        if c.signal_id == signal_id:
+            return c
+    for p in report.possible_causes:
+        if p.signal_id == signal_id:
+            return p
+    raise HTTPException(status_code=404, detail=f"No Conflict DNA entry found for signal '{signal_id}'.")
+
+@router.post("/intelligence/repair-plan", response_model=RepairPlanResponse)
+def generate_repair_plan(payload: Dict[str, Any] = None):
+    """
+    Minimal-Repair Planner — Generate and rank feasible repair alternatives
+    while strictly enforcing mandatory safety constraints and minimizing
+    unnecessary physical field terminal rewires.
+    """
+    revision = (payload or {}).get("revision")
+    signals = db.get_signals(revision)
+    positions = db.get_hardware()
+    rules = db.get_rules()
+
+    plan = MinimalRepairPlanner.plan_repairs(
+        signals=signals,
+        positions=positions,
+        rules=rules,
+        max_candidates=3
+    )
+    return plan
+
+@router.post("/intelligence/simulate", response_model=SimulationPreview)
+def simulate_repair_proposal(payload: Dict[str, Any]):
+    """
+    What-If Impact Simulator — Preview a proposed repair, compare with current
+    approved allocation, and validate the result before the user accepts it.
+    Strictly NON-MUTATING to approved baseline.
+    """
+    candidate_id = payload.get("candidate_id")
+    if not candidate_id:
+        raise HTTPException(status_code=400, detail="Missing candidate_id in payload.")
+
+    revision = payload.get("revision")
+    signals = db.get_signals(revision)
+    positions = db.get_hardware()
+    rules = db.get_rules()
+
+    # Generate plan candidates to locate requested candidate
+    plan = MinimalRepairPlanner.plan_repairs(signals=signals, positions=positions, rules=rules)
+    candidate = next((c for c in plan.candidates if c.candidate_id == candidate_id), None)
+    if not candidate:
+        raise HTTPException(status_code=404, detail=f"Repair candidate '{candidate_id}' not found.")
+
+    preview, proposed_signals = WhatIfSimulator.preview_repair(
+        candidate=candidate,
+        baseline_signals=signals,
+        positions=positions,
+        rules=rules,
+        baseline_revision=revision or db.project.active_revision
+    )
+
+    # Store in DataStore proposal session
+    db.set_active_proposal(preview, proposed_signals)
+    return preview
+
+@router.get("/intelligence/current-proposal", response_model=Optional[SimulationPreview])
+def get_current_proposal():
+    prop = db.get_active_proposal()
+    if not prop:
+        return None
+    return prop["preview"]
+
+@router.post("/intelligence/accept-repair")
+def accept_repair_proposal(payload: AcceptRepairRequest):
+    """
+    Accept proposed repair: strictly gated on passing validation and explicit
+    user confirmation. Updates approved baseline revision.
+    """
+    if not payload.confirm:
+        raise HTTPException(status_code=400, detail="User confirmation required to accept proposal.")
+
+    try:
+        result = db.commit_active_proposal(payload.proposal_id)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+@router.post("/intelligence/cancel-repair")
+def cancel_repair_proposal():
+    """
+    Cancel repair proposal: cleans up proposal without mutating baseline.
+    """
+    db.clear_active_proposal()
+    return {"status": "SUCCESS", "message": "Repair proposal discarded. Baseline remains unchanged."}
+
 

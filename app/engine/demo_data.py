@@ -493,17 +493,65 @@ def get_demo_tqs() -> List[TechnicalQuery]:
         )
     ]
 
-def get_scenario_b_signals() -> List[SignalModel]:
+def get_scenario_a_signals() -> List[SignalModel]:
+    """Scenario A: Clean Allocation Baseline (45 loops, 0 violations, 100% valid)."""
+    return get_demo_signals_rev_a()
+
+def get_scenario_b_warning_signals() -> List[SignalModel]:
     """
-    Scenario B: Controlled Engineering Constraint Conflict.
+    Scenario B: Advisory Warnings Without Hard Conflict.
+    Deterministic fixture producing genuine advisory warnings under existing rules:
+    - RULE-SOFT-02: Multicore cable trunk CBL-102A pair split across BP-01 and BP-02.
+    - RULE-HARD-05: Signal PT-104 allocated to reserved expansion spare slot BP-01-CH-15.
+    All mandatory constraints (compatibility, channel limits, IS barrier) are 100% satisfied.
+    Result: hard_violations_count = 0, soft_warnings_count = 2, is_valid = True.
+    """
+    signals = [s.model_copy() for s in get_demo_signals_rev_a()]
+    for s in signals:
+        if s.tag == "FT-302":
+            # Reassign FT-302 (CBL-102A) to BP-02-CH-12 (compatible AI_HART slot on BP-02)
+            # This splits multicore CBL-102A across BP-01 and BP-02 -> triggers RULE-SOFT-02 warning
+            s.assigned_position_id = "BP-02-CH-12"
+            s.status = "ALLOCATED"
+        elif s.tag == "PT-104":
+            # Reassign PT-104 to BP-01-CH-15 (reserved expansion spare channel)
+            # This triggers RULE-HARD-05 advisory warning
+            s.assigned_position_id = "BP-01-CH-15"
+            s.status = "ALLOCATED"
+            s.locked = False
+    return signals
+
+def get_scenario_b_warning_tqs() -> List[TechnicalQuery]:
+    tqs = get_demo_tqs()
+    tqs.insert(0, TechnicalQuery(
+        id="TQ-WARN-01",
+        title="Multicore Cable CBL-102A Split & Expansion Spare Slot Advisory",
+        signal_id="SIG-FT-302",
+        position_id="BP-02-CH-12",
+        category="ROUTING_ADVISORY",
+        severity="WARNING",
+        status="UNDER_REVIEW",
+        assignee="Lead I&C Field Engineer",
+        description="Engineering Notice: Multicore trunk cable CBL-102A has pair 2 (FT-302) routed to BP-02 while pairs 1, 3, 4 are on BP-01. Furthermore, PT-104 utilizes expansion spare slot BP-01-CH-15. Mandatory constraints pass (0 hard errors), but wire dressing and 20% plant expansion reserve should be verified.",
+        suggested_resolution="Consolidate CBL-102A pairs onto BP-01 during final cable dressing; verify spare margin on adjacent baseplates.",
+        created_at="2026-10-16T11:00:00Z",
+        updated_at="2026-10-16T11:00:00Z",
+        comments=[
+            {"author": "System Auditor", "timestamp": "2026-10-16T11:00:00Z", "text": "Advisory parity check flagged RULE-SOFT-02 and RULE-HARD-05."}
+        ]
+    ))
+    return tqs
+
+def get_scenario_c_conflict_signals() -> List[SignalModel]:
+    """
+    Scenario C: Controlled Engineering Constraint Conflict.
     Includes an intentional Intrinsic Safety violation:
     Hazardous Zone 0 loop PT-FLARE-IS is locked to standard non-IS slot BP-01-CH-01.
     Because BP-01 lacks galvanic isolation, the solver detects INFEASIBILITY
-    and diagnostics isolates RULE-HARD-03 (IEC 60079-11) as the exact culprit.
+    and validator isolates RULE-HARD-03 (IEC 60079-11) as the exact culprit.
+    Result: hard_violations_count = 1, is_valid = False.
     """
-    signals = get_demo_signals_rev_a()
-    
-    # Insert conflicting signal
+    signals = [s.model_copy() for s in get_demo_signals_rev_a()]
     conflict_signal = SignalModel(
         id="SIG-CONFLICT-IS-01",
         tag="PT-FLARE-IS",
@@ -520,11 +568,10 @@ def get_scenario_b_signals() -> List[SignalModel]:
         revision="REV_A",
         status="CONFLICT"
     )
-    # Put conflict signal at the front so it is immediately prominent
     signals.insert(0, conflict_signal)
     return signals
 
-def get_scenario_b_tqs() -> List[TechnicalQuery]:
+def get_scenario_c_conflict_tqs() -> List[TechnicalQuery]:
     tqs = get_demo_tqs()
     conflict_tq = TechnicalQuery(
         id="TQ-003",
@@ -546,11 +593,22 @@ def get_scenario_b_tqs() -> List[TechnicalQuery]:
     tqs.insert(0, conflict_tq)
     return tqs
 
+def get_scenario_d_signals() -> List[SignalModel]:
+    """Scenario D: Revision Churn & Minimal Repair (49 loops, Rev B ECO)."""
+    return get_demo_signals_rev_b()
+
+def get_scenario_d_tqs() -> List[TechnicalQuery]:
+    return get_demo_tqs()
+
+# Legacy aliases for backward compatibility with existing tests
+get_scenario_b_signals = get_scenario_c_conflict_signals
+get_scenario_b_tqs = get_scenario_c_conflict_tqs
+
 SCENARIOS_CATALOG = {
     "SCENARIO_A": {
         "id": "SCENARIO_A",
         "name": "Scenario A — Clean Allocation",
-        "badge": "SUCCESS PATH",
+        "badge": "OPTIMAL BASELINE",
         "badge_color": "valid",
         "description": "Baseline instrumentation register (45 loops: AI, AO, IS, RTD, TC, DI, DO). Demonstrates end-to-end OR-Tools CP-SAT solving, 100% capacity and compatibility satisfaction, and 0 hard violations.",
         "expected_status": "OPTIMAL",
@@ -559,20 +617,30 @@ SCENARIOS_CATALOG = {
     },
     "SCENARIO_B": {
         "id": "SCENARIO_B",
-        "name": "Scenario B — Constraint Conflict",
-        "badge": "FAILURE AUDIT",
+        "name": "Scenario B — Advisory Warnings (0 Violations)",
+        "badge": "ADVISORY WARNING",
+        "badge_color": "warning",
+        "description": "Deterministic advisory scenario: all mandatory constraints satisfied (100% valid, 0 hard violations), but triggers genuine warnings (RULE-SOFT-02 multicore cable pair split across baseplates and RULE-HARD-05 loop in reserved 20% plant expansion spare slot).",
+        "expected_status": "OPTIMAL (WARNINGS)",
+        "signals_count": 45,
+        "revision": "REV_A"
+    },
+    "SCENARIO_C": {
+        "id": "SCENARIO_C",
+        "name": "Scenario C — Engineering Constraint Conflict",
+        "badge": "CRITICAL CONFLICT",
         "badge_color": "error",
         "description": "Controlled safety violation: Hazardous Zone 0 loop PT-FLARE-IS locked to standard non-IS slot BP-01-CH-01. Demonstrates CP-SAT infeasibility detection, candidate elimination diagnostics, and automatic TQ issue generation.",
         "expected_status": "INFEASIBLE",
         "signals_count": 46,
         "revision": "REV_A"
     },
-    "SCENARIO_C": {
-        "id": "SCENARIO_C",
-        "name": "Scenario C — Revision Churn Minimizer",
-        "badge": "WHAT-IF SIMULATOR",
+    "SCENARIO_D": {
+        "id": "SCENARIO_D",
+        "name": "Scenario D — Revision & Minimal Repair",
+        "badge": "REVISION & REPAIR",
         "badge_color": "brand",
-        "description": "Rev A baseline (45 loops) vs Rev B engineering change order (49 loops: +5 additions, -1 deletion, PT-102 upgraded to Ex-ia). Demonstrates warm-start L1 pin retention, preserving 97.7% of field terminations and saving 64.5 man-hours.",
+        "description": "Rev A baseline (45 loops) vs Rev B engineering change order (49 loops: +5 additions, -1 deletion, PT-102 upgraded to Ex-ia). Demonstrates minimal-repair optimization, generating 3 safe candidates while minimizing rewire churn.",
         "expected_status": "OPTIMAL (MINIMAL CHURN)",
         "signals_count": 49,
         "revision": "REV_B"

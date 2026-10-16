@@ -43,6 +43,7 @@ class DataStore:
         self.tqs: List[TechnicalQuery] = get_demo_tqs()
         self.last_solve_response: Optional[SolveResponse] = None
         self.last_diff: Optional[RevisionDiff] = None
+        self.active_proposal: Optional[Dict[str, Any]] = None
 
         # Synchronize initial hardware slot assignments with Rev A
         self._sync_hardware_slots("REV_A")
@@ -138,14 +139,20 @@ class DataStore:
             self.tqs = get_demo_tqs()
             self.last_solve_response = None
             self.last_diff = None
+            self.active_proposal = None
             self._sync_hardware_slots("REV_A")
 
     def load_scenario(self, scenario_id: str) -> Dict[str, Any]:
         with self.lock:
             from app.engine.demo_data import (
                 SCENARIOS_CATALOG,
-                get_scenario_b_signals,
-                get_scenario_b_tqs
+                get_scenario_a_signals,
+                get_scenario_b_warning_signals,
+                get_scenario_b_warning_tqs,
+                get_scenario_c_conflict_signals,
+                get_scenario_c_conflict_tqs,
+                get_scenario_d_signals,
+                get_scenario_d_tqs
             )
             sc_info = SCENARIOS_CATALOG.get(scenario_id)
             if not sc_info:
@@ -155,27 +162,35 @@ class DataStore:
             self.rules = get_default_rules()
             self.last_solve_response = None
             self.last_diff = None
+            self.active_proposal = None
+            self.project.active_scenario = scenario_id
 
             if scenario_id == "SCENARIO_A":
                 self.project.active_revision = "REV_A"
-                self.revisions["REV_A"] = get_demo_signals_rev_a()
+                self.revisions["REV_A"] = get_scenario_a_signals()
                 self.tqs = get_demo_tqs()
                 self._sync_hardware_slots("REV_A")
             elif scenario_id == "SCENARIO_B":
                 self.project.active_revision = "REV_A"
-                self.revisions["REV_A"] = get_scenario_b_signals()
-                self.tqs = get_scenario_b_tqs()
+                self.revisions["REV_A"] = get_scenario_b_warning_signals()
+                self.tqs = get_scenario_b_warning_tqs()
                 self._sync_hardware_slots("REV_A")
             elif scenario_id == "SCENARIO_C":
+                self.project.active_revision = "REV_A"
+                self.revisions["REV_A"] = get_scenario_c_conflict_signals()
+                self.tqs = get_scenario_c_conflict_tqs()
+                self._sync_hardware_slots("REV_A")
+            elif scenario_id == "SCENARIO_D":
                 self.project.active_revision = "REV_B"
-                self.revisions["REV_A"] = get_demo_signals_rev_a()
-                self.revisions["REV_B"] = get_demo_signals_rev_b()
-                self.tqs = get_demo_tqs()
+                self.revisions["REV_A"] = get_scenario_a_signals()
+                self.revisions["REV_B"] = get_scenario_d_signals()
+                self.tqs = get_scenario_d_tqs()
                 self._sync_hardware_slots("REV_B")
 
             return {
                 "scenario": sc_info,
                 "active_revision": self.project.active_revision,
+                "active_scenario": scenario_id,
                 "signals_count": len(self.revisions[self.project.active_revision]),
                 "tqs_count": len(self.tqs)
             }
@@ -183,6 +198,51 @@ class DataStore:
     def get_scenarios_list(self) -> List[Dict[str, Any]]:
         from app.engine.demo_data import SCENARIOS_CATALOG
         return list(SCENARIOS_CATALOG.values())
+
+    def get_active_proposal(self) -> Optional[Dict[str, Any]]:
+        with self.lock:
+            if not self.active_proposal:
+                return None
+            return {
+                "preview": self.active_proposal["preview"].model_copy(),
+                "proposed_signals": [s.model_copy() for s in self.active_proposal["proposed_signals"]]
+            }
+
+    def set_active_proposal(self, preview: Any, proposed_signals: List[SignalModel]):
+        with self.lock:
+            self.active_proposal = {
+                "preview": preview.model_copy(),
+                "proposed_signals": [s.model_copy() for s in proposed_signals]
+            }
+
+    def commit_active_proposal(self, proposal_id: str) -> Dict[str, Any]:
+        with self.lock:
+            if not self.active_proposal:
+                raise ValueError("No active repair proposal found.")
+            if self.active_proposal["preview"].proposal_id != proposal_id:
+                raise ValueError(f"Proposal ID mismatch: Expected {self.active_proposal['preview'].proposal_id}, got {proposal_id}.")
+            if not self.active_proposal["preview"].can_accept:
+                raise ValueError("Cannot accept an invalid repair proposal that failed independent validation.")
+
+            # Commit proposed signals to active revision
+            rev = self.project.active_revision
+            self.revisions[rev] = [s.model_copy() for s in self.active_proposal["proposed_signals"]]
+            self._sync_hardware_slots(rev)
+
+            saved_proposal = self.active_proposal["preview"].model_copy()
+            self.active_proposal = None
+
+            return {
+                "status": "SUCCESS",
+                "message": f"Repair proposal {proposal_id} accepted and committed to revision {rev}.",
+                "applied_changes_count": saved_proposal.existing_assignments_changed,
+                "revision": rev
+            }
+
+    def clear_active_proposal(self):
+        with self.lock:
+            self.active_proposal = None
+
 
 # Global singleton datastore instance
 db = DataStore()

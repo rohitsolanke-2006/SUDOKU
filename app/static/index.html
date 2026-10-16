@@ -110,9 +110,10 @@
         <span class="text-[10px] text-brand-light font-mono uppercase font-bold flex items-center gap-1">
           <span class="material-symbols-outlined text-[13px]">science</span> DEMO LAB:
         </span>
-        <button data-load-scenario="SCENARIO_A" class="scenario-btn active px-2 py-0.5 rounded text-[10px] font-mono font-semibold transition-colors bg-brand text-white" title="Scenario A: Clean Allocation (Rev A)">A: Clean</button>
-        <button data-load-scenario="SCENARIO_B" class="scenario-btn px-2 py-0.5 rounded text-[10px] font-mono font-semibold transition-colors bg-neutral-800 text-neutral-300 hover:bg-neutral-700" title="Scenario B: Constraint Conflict Audit">B: Conflict</button>
-        <button data-load-scenario="SCENARIO_C" class="scenario-btn px-2 py-0.5 rounded text-[10px] font-mono font-semibold transition-colors bg-neutral-800 text-neutral-300 hover:bg-neutral-700" title="Scenario C: Revision Churn Minimizer (Rev B ECO)">C: Revision</button>
+        <button data-load-scenario="SCENARIO_A" class="scenario-btn active px-2 py-0.5 rounded text-[10px] font-mono font-semibold transition-colors bg-brand text-white" title="Scenario A: Clean Allocation Baseline (0 Violations)">A: Clean</button>
+        <button data-load-scenario="SCENARIO_B" class="scenario-btn px-2 py-0.5 rounded text-[10px] font-mono font-semibold transition-colors bg-neutral-800 text-neutral-300 hover:bg-neutral-700" title="Scenario B: Advisory Warnings (0 Hard Violations)">B: Warnings</button>
+        <button data-load-scenario="SCENARIO_C" class="scenario-btn px-2 py-0.5 rounded text-[10px] font-mono font-semibold transition-colors bg-neutral-800 text-neutral-300 hover:bg-neutral-700" title="Scenario C: Safety Constraint Conflict">C: Conflict</button>
+        <button data-load-scenario="SCENARIO_D" class="scenario-btn px-2 py-0.5 rounded text-[10px] font-mono font-semibold transition-colors bg-neutral-800 text-neutral-300 hover:bg-neutral-700" title="Scenario D: Revision & Minimal Repair">D: Revision</button>
       </div>
 
       <div class="h-4 w-[1px] bg-neutral-700 hidden md:block"></div>
@@ -177,6 +178,9 @@
       <button data-view-nav="revisions" class="px-2.5 py-1 text-xs font-semibold rounded transition-colors text-graphite-muted hover:bg-surface flex items-center gap-1">
         <span class="material-symbols-outlined text-[15px]">compare_arrows</span> Churn Minimizer
       </button>
+      <button data-view-nav="intelligence" class="px-2.5 py-1 text-xs font-semibold rounded transition-colors text-cyan-800 bg-cyan-50 hover:bg-cyan-100 border border-cyan-300/60 flex items-center gap-1 font-mono">
+        <span class="material-symbols-outlined text-[15px] text-cyan-600">psychology</span> Change Intelligence
+      </button>
       <button data-view-nav="diagnostics" class="px-2.5 py-1 text-xs font-semibold rounded transition-colors text-graphite-muted hover:bg-surface flex items-center gap-1">
         <span class="material-symbols-outlined text-[15px]">fact_check</span> Diagnostics & TQs
       </button>
@@ -213,6 +217,9 @@
       <a href="/api/export/excel" class="px-2 py-0.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-600 rounded flex items-center gap-1" title="Download audited allocation output schedule">
         <span class="material-symbols-outlined text-[13px] text-green-400">table_chart</span> Audited Output (.xlsx)
       </a>
+      <button onclick="switchView('intelligence')" class="px-2.5 py-0.5 bg-cyan-900/80 hover:bg-cyan-800 text-cyan-200 border border-cyan-500/60 rounded flex items-center gap-1 font-bold shadow" title="Engineering Change Intelligence Engine: Don't just find a conflict. Find the smallest safe fix.">
+        <span class="material-symbols-outlined text-[13px] text-cyan-300">psychology</span> Change Intelligence
+      </button>
       <button class="btn-trigger-solve px-2.5 py-0.5 bg-brand hover:bg-brand-dark text-white rounded font-bold flex items-center gap-1 shadow">
         <span class="material-symbols-outlined text-[13px]">play_circle</span> Run Optimization
       </button>
@@ -244,15 +251,87 @@
             Solves multi-dimensional marshaling cabinet allocations in milliseconds. Enforces strict electrical segregation, intrinsic safety (Ex-ia), and thermal constraints using Google OR-Tools CP-SAT while minimizing rewiring churn across engineering revisions.
           </p>
           <div class="flex flex-wrap items-center gap-3">
-            <button onclick="switchView('workbench')" class="h-9 px-4 bg-brand hover:bg-brand-dark text-white rounded font-mono font-semibold flex items-center gap-2 shadow">
-              <span class="material-symbols-outlined text-[16px]">launch</span> Open Allocation Workbench
+            <button onclick="switchView('dashboard')" class="h-9 px-4 bg-brand hover:bg-brand-dark text-white rounded font-mono font-semibold flex items-center gap-2 shadow">
+              <span class="material-symbols-outlined text-[16px]">dashboard</span> Project Dashboard
+            </button>
+            <button onclick="switchView('workbench')" class="h-9 px-4 bg-white border border-border hover:bg-frame text-graphite rounded font-mono font-semibold flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">table_chart</span> Signal Matrix
             </button>
             <button onclick="switchView('twin3d')" class="h-9 px-4 bg-white border border-border hover:bg-frame text-graphite rounded font-mono font-semibold flex items-center gap-2">
-              <span class="material-symbols-outlined text-[16px]">view_in_ar</span> Launch 3D Digital Twin
+              <span class="material-symbols-outlined text-[16px]">view_in_ar</span> 3D Digital Twin
             </button>
-            <button onclick="loadScenario('SCENARIO_A')" class="h-9 px-4 bg-white border border-border hover:bg-frame text-brand font-mono font-semibold flex items-center gap-2">
-              <span class="material-symbols-outlined text-[16px]">play_circle</span> Load Clean Scenario A
+            <button onclick="switchView('intelligence')" class="h-9 px-4 bg-cyan-900 hover:bg-cyan-800 text-cyan-200 border border-cyan-500/60 rounded font-mono font-semibold flex items-center gap-2 shadow">
+              <span class="material-symbols-outlined text-[16px]">psychology</span> Change Intelligence
             </button>
+          </div>
+        </div>
+
+        <!-- 4 Reproducible Demo Scenarios Showcase -->
+        <div class="bg-white border border-border p-6 rounded shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-border pb-3">
+            <div class="flex items-center gap-2 font-bold text-sm text-graphite">
+              <span class="material-symbols-outlined text-brand">science</span>
+              Deterministic Engineering Scenarios & Evaluation Lab
+            </div>
+            <span class="text-xs text-graphite-muted font-mono">1-Click Reproducible Benchmarks</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Scenario A -->
+            <div class="p-4 bg-frame/70 rounded border border-border flex flex-col justify-between gap-3 hover:border-valid transition-colors">
+              <div>
+                <span class="text-[9px] font-mono px-2 py-0.5 rounded bg-valid-light text-valid font-bold uppercase">Scenario A</span>
+                <div class="font-bold text-xs text-graphite mt-1.5">Clean Baseline Allocation</div>
+                <p class="text-[11px] text-graphite-muted mt-1 leading-relaxed">
+                  45 loops (AI, AO, DI, DO, IS, RTD, TC). Solves with 100% feasibility, zero hard errors, and 0 warnings.
+                </p>
+              </div>
+              <button onclick="loadScenario('SCENARIO_A')" class="w-full py-1.5 bg-brand hover:bg-brand-dark text-white rounded font-mono text-[11px] font-semibold flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-[13px]">play_arrow</span> Load Baseline
+              </button>
+            </div>
+
+            <!-- Scenario B -->
+            <div class="p-4 bg-frame/70 rounded border border-border flex flex-col justify-between gap-3 hover:border-warn transition-colors">
+              <div>
+                <span class="text-[9px] font-mono px-2 py-0.5 rounded bg-amber-50 text-warn font-bold uppercase">Scenario B</span>
+                <div class="font-bold text-xs text-graphite mt-1.5">Advisory Warnings (0 Violations)</div>
+                <p class="text-[11px] text-graphite-muted mt-1 leading-relaxed">
+                  All mandatory rules pass (100% valid), but triggers genuine warnings (multicore cable pair split & expansion spare slot).
+                </p>
+              </div>
+              <button onclick="loadScenario('SCENARIO_B')" class="w-full py-1.5 bg-warn hover:bg-amber-600 text-white rounded font-mono text-[11px] font-semibold flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-[13px]">warning</span> Load Warnings
+              </button>
+            </div>
+
+            <!-- Scenario C -->
+            <div class="p-4 bg-frame/70 rounded border border-border flex flex-col justify-between gap-3 hover:border-error transition-colors">
+              <div>
+                <span class="text-[9px] font-mono px-2 py-0.5 rounded bg-error-light text-error font-bold uppercase">Scenario C</span>
+                <div class="font-bold text-xs text-graphite mt-1.5">Engineering Constraint Conflict</div>
+                <p class="text-[11px] text-graphite-muted mt-1 leading-relaxed">
+                  Zone 0 Ex-ia transmitter locked to non-IS slot BP-01-CH-01. Provable IEC 60079-11 physical barrier violation.
+                </p>
+              </div>
+              <button onclick="loadScenario('SCENARIO_C')" class="w-full py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded font-mono text-[11px] font-semibold flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-[13px]">gavel</span> Load Conflict
+              </button>
+            </div>
+
+            <!-- Scenario D -->
+            <div class="p-4 bg-frame/70 rounded border border-border flex flex-col justify-between gap-3 hover:border-blue-500 transition-colors">
+              <div>
+                <span class="text-[9px] font-mono px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold uppercase">Scenario D</span>
+                <div class="font-bold text-xs text-graphite mt-1.5">Revision & Minimal-Repair</div>
+                <p class="text-[11px] text-graphite-muted mt-1 leading-relaxed">
+                  Rev A vs Rev B ECO (+5 additions, 1 IS upgrade). CP-SAT minimal-repair generates 3 alternatives minimizing rewire churn.
+                </p>
+              </div>
+              <button onclick="loadScenario('SCENARIO_D')" class="w-full py-1.5 bg-blue-700 hover:bg-blue-800 text-white rounded font-mono text-[11px] font-semibold flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-[13px]">psychology</span> Load Revision
+              </button>
+            </div>
           </div>
         </div>
 
@@ -289,47 +368,6 @@
           </div>
         </div>
 
-        <!-- Demo Lab Scenarios Guide Card -->
-        <div class="bg-white border border-border p-6 rounded space-y-3">
-          <div class="flex items-center gap-2 text-graphite font-bold text-sm">
-            <span class="material-symbols-outlined text-brand">science</span>
-            Hackathon & Project Guide Demonstration Scenarios
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
-            <div class="p-3 bg-frame rounded border border-border flex flex-col justify-between gap-2">
-              <div>
-                <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-valid-light text-valid font-bold">SCENARIO A</span>
-                <div class="font-bold text-xs text-graphite mt-1">Clean Allocation Baseline</div>
-                <div class="text-[11px] text-graphite-muted">45 loops. Solves with 100% feasibility. Shows 3D CHARMs in green and blue.</div>
-              </div>
-              <button onclick="loadScenario('SCENARIO_A')" class="py-1 px-2 bg-brand text-white text-[11px] font-mono rounded font-semibold text-center hover:bg-brand-dark">
-                Load & Run
-              </button>
-            </div>
-
-            <div class="p-3 bg-frame rounded border border-border flex flex-col justify-between gap-2">
-              <div>
-                <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-error-light text-error font-bold">SCENARIO B</span>
-                <div class="font-bold text-xs text-graphite mt-1">Constraint Conflict Audit</div>
-                <div class="text-[11px] text-graphite-muted">Hazardous Zone 0 loop locked to non-IS slot. Demonstrates CP-SAT infeasibility & TQ issue creation.</div>
-              </div>
-              <button onclick="loadScenario('SCENARIO_B')" class="py-1 px-2 bg-neutral-800 text-white text-[11px] font-mono rounded font-semibold text-center hover:bg-neutral-700">
-                Load & Audit
-              </button>
-            </div>
-
-            <div class="p-3 bg-frame rounded border border-border flex flex-col justify-between gap-2">
-              <div>
-                <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-blue-50 text-brand font-bold">SCENARIO C</span>
-                <div class="font-bold text-xs text-graphite mt-1">Revision Churn Minimizer</div>
-                <div class="text-[11px] text-graphite-muted">Rev A vs Rev B ECO (+5 additions, 1 IS upgrade). Retains 97.7% pins and saves rewiring hours.</div>
-              </div>
-              <button onclick="loadScenario('SCENARIO_C')" class="py-1 px-2 bg-brand text-white text-[11px] font-mono rounded font-semibold text-center hover:bg-brand-dark">
-                Load & Simulate
-              </button>
-            </div>
-          </div>
-        </div>
 
       </div>
     </section>
@@ -351,32 +389,72 @@
           </button>
         </div>
 
-        <!-- KPI Grid -->
-        <div class="grid grid-cols-2 md:grid-cols-6 gap-3" id="dashboard-metrics-grid">
+        <!-- Active Scenario Banner in Dashboard -->
+        <div id="dash-scenario-banner" class="p-3 bg-white border border-border rounded flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-brand text-[18px]">info</span>
+            <div>
+              <span class="text-xs font-bold text-graphite" id="dash-scenario-title">Active Scenario: Scenario A — Clean Allocation</span>
+              <span class="text-[11px] text-graphite-muted block" id="dash-scenario-subtitle">45 loops across 4 baseplates • Baseline Revision REV_A</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 font-mono text-xs">
+            <span class="px-2 py-0.5 rounded font-bold text-[10px]" id="dash-solver-status-badge">OPTIMAL</span>
+            <button onclick="switchView('intelligence')" class="px-2 py-1 bg-cyan-900 hover:bg-cyan-800 text-cyan-200 border border-cyan-500/60 rounded text-[11px] font-semibold flex items-center gap-1">
+              <span class="material-symbols-outlined text-[13px]">psychology</span> Change Intelligence
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI Grid with Separated Hard Violations & Advisory Warnings -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5" id="dashboard-metrics-grid">
           <div class="bg-white border border-border p-3 rounded">
-            <div class="text-[10px] text-graphite-muted font-mono uppercase">Total Signals</div>
-            <div class="text-xl font-bold font-mono text-graphite mt-1" id="dash-stat-signals">45</div>
+            <div class="text-[9px] text-graphite-muted font-mono uppercase">Total Signals</div>
+            <div class="text-lg font-bold font-mono text-graphite mt-0.5" id="dash-stat-signals">45</div>
           </div>
           <div class="bg-white border border-border p-3 rounded">
-            <div class="text-[10px] text-graphite-muted font-mono uppercase">Allocated Loops</div>
-            <div class="text-xl font-bold font-mono text-valid mt-1" id="dash-stat-allocated">45</div>
+            <div class="text-[9px] text-graphite-muted font-mono uppercase">Allocated Loops</div>
+            <div class="text-lg font-bold font-mono text-valid mt-0.5" id="dash-stat-allocated">45</div>
           </div>
           <div class="bg-white border border-border p-3 rounded">
-            <div class="text-[10px] text-graphite-muted font-mono uppercase">Unallocated</div>
-            <div class="text-xl font-bold font-mono text-error mt-1" id="dash-stat-unallocated">0</div>
+            <div class="text-[9px] text-graphite-muted font-mono uppercase">Unallocated</div>
+            <div class="text-lg font-bold font-mono text-error mt-0.5" id="dash-stat-unallocated">0</div>
           </div>
           <div class="bg-white border border-border p-3 rounded">
-            <div class="text-[10px] text-graphite-muted font-mono uppercase">Available Slots</div>
-            <div class="text-xl font-bold font-mono text-brand mt-1" id="dash-stat-available-hw">11</div>
+            <div class="text-[9px] text-error font-mono uppercase font-bold flex items-center gap-1">
+              <span class="material-symbols-outlined text-[12px] text-error">gavel</span> Hard Errors
+            </div>
+            <div class="text-lg font-bold font-mono text-error mt-0.5" id="dash-stat-hard-violations">0</div>
           </div>
           <div class="bg-white border border-border p-3 rounded">
-            <div class="text-[10px] text-graphite-muted font-mono uppercase">Spare Reserves</div>
-            <div class="text-xl font-bold font-mono text-graphite-muted mt-1" id="dash-stat-reserved-hw">8</div>
+            <div class="text-[9px] text-warn font-mono uppercase font-bold flex items-center gap-1">
+              <span class="material-symbols-outlined text-[12px] text-warn">warning</span> Warnings
+            </div>
+            <div class="text-lg font-bold font-mono text-warn mt-0.5" id="dash-stat-soft-warnings">0</div>
           </div>
           <div class="bg-white border border-border p-3 rounded">
-            <div class="text-[10px] text-graphite-muted font-mono uppercase">Active TQs</div>
-            <div class="text-xl font-bold font-mono text-warn mt-1" id="dash-stat-tqs">2</div>
+            <div class="text-[9px] text-graphite-muted font-mono uppercase">Available Slots</div>
+            <div class="text-lg font-bold font-mono text-brand mt-0.5" id="dash-stat-available-hw">11</div>
           </div>
+          <div class="bg-white border border-border p-3 rounded">
+            <div class="text-[9px] text-graphite-muted font-mono uppercase">Expansion Spares</div>
+            <div class="text-lg font-bold font-mono text-graphite-muted mt-0.5" id="dash-stat-reserved-hw">8</div>
+          </div>
+          <div class="bg-white border border-border p-3 rounded">
+            <div class="text-[9px] text-graphite-muted font-mono uppercase">Active TQs</div>
+            <div class="text-lg font-bold font-mono text-warn mt-0.5" id="dash-stat-tqs">2</div>
+          </div>
+        </div>
+
+        <!-- Interactive Conflict / Warning Notice Banner -->
+        <div id="dash-action-banner" class="hidden p-3 rounded border text-xs flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[20px]" id="dash-action-icon">warning</span>
+            <div id="dash-action-text">No active conflicts detected.</div>
+          </div>
+          <button id="dash-action-btn" class="px-3 py-1 rounded font-mono font-semibold text-xs flex items-center gap-1">
+            Resolve Conflict
+          </button>
         </div>
 
         <!-- Activity Feed / Independent Parity Findings -->
@@ -766,6 +844,95 @@
     </section>
 
     <!-- --------------------------------------------------------------------- -->
+    <!-- VIEW: ENGINEERING CHANGE INTELLIGENCE ENGINE (USP)                    -->
+    <!-- Tagline: "Don't just find a conflict. Find the smallest safe fix."     -->
+    <!-- --------------------------------------------------------------------- -->
+    <section id="view-intelligence" class="view-section hidden h-full overflow-y-auto p-6 space-y-6">
+      <div class="max-w-6xl mx-auto space-y-6">
+
+        <!-- Intelligence Hero Card -->
+        <div class="bg-gradient-to-r from-neutral-900 via-neutral-800 to-neutral-900 text-white p-5 rounded-lg border border-neutral-700 shadow-xl flex flex-wrap items-center justify-between gap-4">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 tracking-wider uppercase">USP CAPABILITY</span>
+              <h2 class="text-lg font-bold font-mono tracking-tight text-white flex items-center gap-2">
+                <span class="material-symbols-outlined text-cyan-400">psychology</span> Engineering Change Intelligence Engine
+              </h2>
+            </div>
+            <p class="text-sm text-cyan-200 font-semibold tracking-wide">"Don't just find a conflict. Find the smallest safe fix."</p>
+            <p class="text-xs text-neutral-400 font-mono">Automated root-cause DNA analysis, multi-candidate minimal-churn repair generation, and non-mutating what-if impact simulation.</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button id="btn-refresh-conflict-dna" class="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-600 rounded text-xs font-mono flex items-center gap-1.5 transition-colors">
+              <span class="material-symbols-outlined text-[14px] text-cyan-400">fact_check</span> Analyze Conflict DNA
+            </button>
+            <button id="btn-generate-repair-plan" class="px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded text-xs font-mono font-bold flex items-center gap-1.5 shadow-lg shadow-cyan-900/30 transition-colors">
+              <span class="material-symbols-outlined text-[15px]">build_circle</span> Generate Minimal Repair
+            </button>
+          </div>
+        </div>
+
+        <!-- 3-Pillar Workspace Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          <!-- PILLAR 1: CONFLICT DNA (EXPLAIN) -->
+          <div class="bg-white border border-border rounded-lg shadow-sm flex flex-col overflow-hidden">
+            <div class="p-3 bg-frame border-b border-border flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                <span class="font-mono font-bold text-xs uppercase text-graphite">1. Conflict DNA (Explain)</span>
+              </div>
+              <span id="dna-conflicts-badge" class="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-red-100 text-red-700 border border-red-200">0 Violations</span>
+            </div>
+
+            <div class="p-4 flex-1 flex flex-col gap-3 overflow-y-auto max-h-[620px]" id="dna-report-container">
+              <div class="p-4 text-center text-graphite-muted text-xs font-mono">
+                Click "Analyze Conflict DNA" to inspect active root causes.
+              </div>
+            </div>
+          </div>
+
+          <!-- PILLAR 2: MINIMAL-REPAIR PLANNER (RECOMMEND) -->
+          <div class="bg-white border border-border rounded-lg shadow-sm flex flex-col overflow-hidden">
+            <div class="p-3 bg-frame border-b border-border flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-brand"></span>
+                <span class="font-mono font-bold text-xs uppercase text-graphite">2. Minimal-Repair (Recommend)</span>
+              </div>
+              <span id="repair-candidates-badge" class="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-brand/10 text-brand border border-brand/30">0 Alternatives</span>
+            </div>
+
+            <div class="p-4 flex-1 flex flex-col gap-3 overflow-y-auto max-h-[620px]" id="repair-candidates-container">
+              <div class="p-4 text-center text-graphite-muted text-xs font-mono">
+                Click "Generate Minimal Repair" to solve ranked safe repair alternatives.
+              </div>
+            </div>
+          </div>
+
+          <!-- PILLAR 3: WHAT-IF IMPACT SIMULATOR (SIMULATE) -->
+          <div class="bg-white border border-border rounded-lg shadow-sm flex flex-col overflow-hidden">
+            <div class="p-3 bg-frame border-b border-border flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
+                <span class="font-mono font-bold text-xs uppercase text-graphite">3. What-If Simulator (Simulate)</span>
+              </div>
+              <span id="simulator-status-badge" class="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-neutral-100 text-neutral-600 border border-neutral-200">No Proposal</span>
+            </div>
+
+            <div class="p-4 flex-1 flex flex-col gap-3 overflow-y-auto max-h-[620px]" id="simulator-preview-container">
+              <div class="p-4 text-center text-graphite-muted text-xs font-mono">
+                Select a repair candidate to preview live before-and-after schedule and validation gate.
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------------------- -->
     <!-- VIEW F: DIAGNOSTICS & TECHNICAL QUERIES                               -->
     <!-- --------------------------------------------------------------------- -->
     <section id="view-diagnostics" class="view-section hidden h-full overflow-y-auto p-6 space-y-6">
@@ -775,8 +942,48 @@
           <p class="text-xs text-graphite-muted font-mono">Formal engineering issue tracker for I/O conflicts, SIL verifications, and hazardous area approvals</p>
         </div>
 
-        <div id="tqs-list-container" class="space-y-4">
-          <!-- Rendered dynamically -->
+        <!-- Findings by Severity: Hard Violations vs Advisory Warnings -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Hard Violations Card -->
+          <div class="bg-white border border-border p-4 rounded space-y-3">
+            <div class="flex items-center justify-between border-b border-border pb-2">
+              <div class="flex items-center gap-1.5 text-xs font-mono font-bold text-error uppercase">
+                <span class="material-symbols-outlined text-[16px] text-error">gavel</span>
+                Hard Rule Violations (Mandatory)
+              </div>
+              <span id="diag-hard-count" class="px-1.5 py-0.5 rounded font-mono text-[10px] font-bold bg-error-light text-error">0 Errors</span>
+            </div>
+            <div id="diag-hard-list" class="space-y-2 text-xs">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Advisory Warnings Card -->
+          <div class="bg-white border border-border p-4 rounded space-y-3">
+            <div class="flex items-center justify-between border-b border-border pb-2">
+              <div class="flex items-center gap-1.5 text-xs font-mono font-bold text-warn uppercase">
+                <span class="material-symbols-outlined text-[16px] text-warn">warning</span>
+                Advisory Engineering Warnings (Soft)
+              </div>
+              <span id="diag-warn-count" class="px-1.5 py-0.5 rounded font-mono text-[10px] font-bold bg-amber-50 text-warn">0 Warnings</span>
+            </div>
+            <div id="diag-warn-list" class="space-y-2 text-xs">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-border pt-4">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-mono font-bold text-xs uppercase text-graphite flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-brand text-[16px]">assignment</span>
+              Active Engineering Technical Queries (TQs)
+            </h3>
+            <span class="text-xs text-graphite-muted font-mono" id="diag-tq-count">2 Total Queries</span>
+          </div>
+          <div id="tqs-list-container" class="space-y-3">
+            <!-- Rendered dynamically -->
+          </div>
         </div>
       </div>
     </section>
@@ -823,36 +1030,62 @@
           <!-- Rendered dynamically -->
         </div>
 
-        <!-- Download Sample Input Files Card -->
+        <!-- Download Sample Input Files Card (5 Deterministic Workbooks) -->
         <div class="bg-white border border-border p-5 rounded space-y-3">
-          <h3 class="font-bold text-xs text-graphite uppercase tracking-wider">Download Standard Sample Input Files (.XLSX)</h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <a href="/api/scenarios/download-input/SCENARIO_A" class="p-3 border border-border hover:border-brand rounded flex flex-col justify-between gap-2 bg-frame/50 transition-colors">
+          <div class="flex items-center justify-between border-b border-border pb-2">
+            <h3 class="font-bold text-xs text-graphite uppercase tracking-wider flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-brand text-[16px]">file_download</span>
+              Deterministic Sample Input Workbooks (.XLSX)
+            </h3>
+            <span class="text-[11px] font-mono text-graphite-muted">Schema-Tested & Reproducible</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <a href="/api/scenarios/download-sample/Scenario_A_Clean_Input.xlsx" class="p-3 border border-border hover:border-brand rounded flex flex-col justify-between gap-2 bg-frame/50 transition-colors">
               <div>
-                <div class="font-mono font-bold text-xs text-graphite">Scenario A Input</div>
-                <div class="text-[11px] text-graphite-muted">Clean baseline schedule (45 loops, 100% allocatable)</div>
+                <div class="font-mono font-bold text-xs text-graphite">Scenario_A_Clean_Input.xlsx</div>
+                <div class="text-[11px] text-graphite-muted">Clean baseline schedule (45 loops, 100% allocatable, 0 violations).</div>
               </div>
               <span class="text-brand font-mono font-semibold text-[11px] flex items-center gap-1">
                 <span class="material-symbols-outlined text-[13px]">download</span> Download .xlsx
               </span>
             </a>
 
-            <a href="/api/scenarios/download-input/SCENARIO_B" class="p-3 border border-border hover:border-brand rounded flex flex-col justify-between gap-2 bg-frame/50 transition-colors">
+            <a href="/api/scenarios/download-sample/Scenario_B_Warnings_Input.xlsx" class="p-3 border border-border hover:border-warn rounded flex flex-col justify-between gap-2 bg-frame/50 transition-colors">
               <div>
-                <div class="font-mono font-bold text-xs text-graphite">Scenario B Input</div>
-                <div class="text-[11px] text-graphite-muted">Conflict schedule (Zone 0 loop on non-IS slot)</div>
+                <div class="font-mono font-bold text-xs text-graphite">Scenario_B_Warnings_Input.xlsx</div>
+                <div class="text-[11px] text-graphite-muted">Advisory schedule (45 loops, 0 hard errors, 2 genuine soft warnings).</div>
+              </div>
+              <span class="text-warn font-mono font-semibold text-[11px] flex items-center gap-1">
+                <span class="material-symbols-outlined text-[13px]">download</span> Download .xlsx
+              </span>
+            </a>
+
+            <a href="/api/scenarios/download-sample/Scenario_C_Conflict_Input.xlsx" class="p-3 border border-border hover:border-error rounded flex flex-col justify-between gap-2 bg-frame/50 transition-colors">
+              <div>
+                <div class="font-mono font-bold text-xs text-graphite">Scenario_C_Conflict_Input.xlsx</div>
+                <div class="text-[11px] text-graphite-muted">Conflict schedule (Zone 0 loop on non-IS slot, IEC 60079-11 clash).</div>
               </div>
               <span class="text-error font-mono font-semibold text-[11px] flex items-center gap-1">
                 <span class="material-symbols-outlined text-[13px]">download</span> Download .xlsx
               </span>
             </a>
 
-            <a href="/api/scenarios/download-input/SCENARIO_C" class="p-3 border border-border hover:border-brand rounded flex flex-col justify-between gap-2 bg-frame/50 transition-colors">
+            <a href="/api/scenarios/download-sample/Scenario_D_Revision_Baseline.xlsx" class="p-3 border border-border hover:border-brand rounded flex flex-col justify-between gap-2 bg-frame/50 transition-colors">
               <div>
-                <div class="font-mono font-bold text-xs text-graphite">Scenario C Input</div>
-                <div class="text-[11px] text-graphite-muted">Rev B ECO schedule (49 loops, Ex-ia upgrade)</div>
+                <div class="font-mono font-bold text-xs text-graphite">Scenario_D_Revision_Baseline.xlsx</div>
+                <div class="text-[11px] text-graphite-muted">Revision baseline schedule (Rev A approved 45-signal register).</div>
               </div>
               <span class="text-brand font-mono font-semibold text-[11px] flex items-center gap-1">
+                <span class="material-symbols-outlined text-[13px]">download</span> Download .xlsx
+              </span>
+            </a>
+
+            <a href="/api/scenarios/download-sample/Scenario_D_Revision_Change.xlsx" class="p-3 border border-border hover:border-blue-700 rounded flex flex-col justify-between gap-2 bg-frame/50 transition-colors">
+              <div>
+                <div class="font-mono font-bold text-xs text-graphite">Scenario_D_Revision_Change.xlsx</div>
+                <div class="text-[11px] text-graphite-muted">Revision change order schedule (Rev B ECO: +5 additions, PT-102 IS upgrade).</div>
+              </div>
+              <span class="text-blue-700 font-mono font-semibold text-[11px] flex items-center gap-1">
                 <span class="material-symbols-outlined text-[13px]">download</span> Download .xlsx
               </span>
             </a>
@@ -893,30 +1126,46 @@
 
         <!-- Sample Input Registers Download Card -->
         <div class="bg-white border border-border p-5 rounded space-y-3">
-          <h3 class="font-mono font-bold text-xs uppercase text-graphite flex items-center gap-1.5">
-            <span class="material-symbols-outlined text-brand text-[16px]">file_download</span>
-            Downloadable Scenario Input Registers (Excel .XLSX)
-          </h3>
-          <p class="text-xs text-graphite-muted">Use these pre-formatted sample input workbooks to test custom imports or demo the solver with known cases.</p>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <a href="/api/scenarios/download-input/SCENARIO_A" class="p-3 bg-frame rounded border border-border hover:border-brand block">
-              <div class="font-mono font-bold text-xs text-graphite">Scenario A Register</div>
-              <div class="text-[10px] text-graphite-muted mt-1">45 Valid Loops • Ready to Allocate</div>
+          <div class="flex items-center justify-between border-b border-border pb-2">
+            <h3 class="font-mono font-bold text-xs uppercase text-graphite flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-brand text-[16px]">file_download</span>
+              Deterministic Scenario Input Registers (Excel .XLSX)
+            </h3>
+            <span class="text-[11px] font-mono text-graphite-muted">5 Benchmark Datasets</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <a href="/api/scenarios/download-sample/Scenario_A_Clean_Input.xlsx" class="p-3 bg-frame rounded border border-border hover:border-brand block">
+              <div class="font-mono font-bold text-xs text-graphite">Scenario_A_Clean_Input.xlsx</div>
+              <div class="text-[10px] text-graphite-muted mt-1">45 Valid Loops • Ready to Allocate (100% Feasible)</div>
               <div class="text-[11px] text-brand font-mono font-semibold mt-2 flex items-center gap-1">
                 <span class="material-symbols-outlined text-[13px]">download</span> Download .xlsx
               </div>
             </a>
-            <a href="/api/scenarios/download-input/SCENARIO_B" class="p-3 bg-frame rounded border border-border hover:border-brand block">
-              <div class="font-mono font-bold text-xs text-graphite">Scenario B Register</div>
-              <div class="text-[10px] text-graphite-muted mt-1">46 Loops • Contains Zone 0 Clash</div>
+            <a href="/api/scenarios/download-sample/Scenario_B_Warnings_Input.xlsx" class="p-3 bg-frame rounded border border-border hover:border-warn block">
+              <div class="font-mono font-bold text-xs text-graphite">Scenario_B_Warnings_Input.xlsx</div>
+              <div class="text-[10px] text-graphite-muted mt-1">45 Loops • 0 Hard Violations, 2 Advisory Warnings</div>
+              <div class="text-[11px] text-warn font-mono font-semibold mt-2 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[13px]">download</span> Download .xlsx
+              </div>
+            </a>
+            <a href="/api/scenarios/download-sample/Scenario_C_Conflict_Input.xlsx" class="p-3 bg-frame rounded border border-border hover:border-error block">
+              <div class="font-mono font-bold text-xs text-graphite">Scenario_C_Conflict_Input.xlsx</div>
+              <div class="text-[10px] text-graphite-muted mt-1">46 Loops • Contains Zone 0 IEC 60079-11 Barrier Clash</div>
               <div class="text-[11px] text-error font-mono font-semibold mt-2 flex items-center gap-1">
                 <span class="material-symbols-outlined text-[13px]">download</span> Download .xlsx
               </div>
             </a>
-            <a href="/api/scenarios/download-input/SCENARIO_C" class="p-3 bg-frame rounded border border-border hover:border-brand block">
-              <div class="font-mono font-bold text-xs text-graphite">Scenario C Register</div>
-              <div class="text-[10px] text-graphite-muted mt-1">49 Loops • Revision B ECO Register</div>
+            <a href="/api/scenarios/download-sample/Scenario_D_Revision_Baseline.xlsx" class="p-3 bg-frame rounded border border-border hover:border-brand block">
+              <div class="font-mono font-bold text-xs text-graphite">Scenario_D_Revision_Baseline.xlsx</div>
+              <div class="text-[10px] text-graphite-muted mt-1">Approved Baseline Register for Cabinet CAB-01 (Rev A)</div>
               <div class="text-[11px] text-brand font-mono font-semibold mt-2 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[13px]">download</span> Download .xlsx
+              </div>
+            </a>
+            <a href="/api/scenarios/download-sample/Scenario_D_Revision_Change.xlsx" class="p-3 bg-frame rounded border border-border hover:border-blue-700 block">
+              <div class="font-mono font-bold text-xs text-graphite">Scenario_D_Revision_Change.xlsx</div>
+              <div class="text-[10px] text-graphite-muted mt-1">49 Loops • Revision B ECO Register (Ex-ia Upgrade)</div>
+              <div class="text-[11px] text-blue-700 font-mono font-semibold mt-2 flex items-center gap-1">
                 <span class="material-symbols-outlined text-[13px]">download</span> Download .xlsx
               </div>
             </a>

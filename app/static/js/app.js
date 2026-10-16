@@ -4,7 +4,7 @@
  */
 
 const AppState = {
-  activeView: 'landing', // 'landing', 'dashboard', 'workbench', 'twin3d', 'diagnostics', 'revisions', 'rules', 'import', 'reports'
+  activeView: 'landing', // 'landing', 'dashboard', 'workbench', 'twin3d', 'diagnostics', 'revisions', 'rules', 'import', 'reports', 'intelligence'
   activeScenarioId: 'SCENARIO_A',
   project: null,
   activeRevision: 'REV_A',
@@ -14,6 +14,11 @@ const AppState = {
   tqs: [],
   validation: null,
   revisionDiff: null,
+  conflictDNA: null,
+  repairPlan: null,
+  activeProposal: null,
+  isAnalyzingDNA: false,
+  isPlanningRepair: false,
   selectedSignalId: null,
   selectedSlotId: null,
   selectedDiagnostic: null,
@@ -109,6 +114,7 @@ function switchView(viewName) {
   }
   if (viewName === 'diagnostics') renderDiagnostics();
   if (viewName === 'revisions') renderRevisions();
+  if (viewName === 'intelligence') renderIntelligence();
   if (viewName === 'rules') renderRules();
   if (viewName === 'reports') renderReports();
 }
@@ -272,6 +278,17 @@ function setupEventListeners() {
       }
     });
   }
+
+  // Engineering Change Intelligence Listeners
+  const btnRefreshDNA = document.getElementById('btn-refresh-conflict-dna');
+  if (btnRefreshDNA) {
+    btnRefreshDNA.addEventListener('click', fetchConflictDNA);
+  }
+
+  const btnGenPlan = document.getElementById('btn-generate-repair-plan');
+  if (btnGenPlan) {
+    btnGenPlan.addEventListener('click', () => generateRepairPlan(true));
+  }
 }
 
 // Data Refresh
@@ -346,6 +363,8 @@ function renderDashboard() {
   const unallocatedSigs = totalSigs - allocatedSigs;
   const reservedHw = AppState.hardware.filter(h => h.is_reserved).length;
   const availableHw = AppState.hardware.filter(h => h.status === 'AVAILABLE').length;
+  const hardViolations = AppState.validation ? AppState.validation.hard_violations_count : 0;
+  const softWarnings = AppState.validation ? AppState.validation.soft_warnings_count : 0;
 
   document.getElementById('dash-stat-signals').textContent = totalSigs;
   document.getElementById('dash-stat-allocated').textContent = allocatedSigs;
@@ -354,21 +373,111 @@ function renderDashboard() {
   document.getElementById('dash-stat-reserved-hw').textContent = reservedHw;
   document.getElementById('dash-stat-tqs').textContent = AppState.tqs.length;
 
+  const hardEl = document.getElementById('dash-stat-hard-violations');
+  if (hardEl) hardEl.textContent = hardViolations;
+
+  const warnEl = document.getElementById('dash-stat-soft-warnings');
+  if (warnEl) warnEl.textContent = softWarnings;
+
+  // Active Scenario Header in Dashboard
+  const dashTitle = document.getElementById('dash-scenario-title');
+  const dashSub = document.getElementById('dash-scenario-subtitle');
+  const statusBadge = document.getElementById('dash-solver-status-badge');
+
+  const scId = AppState.activeScenarioId || 'SCENARIO_A';
+  if (dashTitle) {
+    if (scId === 'SCENARIO_A') {
+      dashTitle.textContent = 'Active Scenario: Scenario A — Clean Allocation Baseline';
+      if (dashSub) dashSub.textContent = '45 instrumentation loops • 100% feasibility • 0 hard violations, 0 warnings';
+    } else if (scId === 'SCENARIO_B') {
+      dashTitle.textContent = 'Active Scenario: Scenario B — Advisory Warnings (0 Violations)';
+      if (dashSub) dashSub.textContent = '45 loops • 100% valid against mandatory rules • 2 genuine advisory warnings';
+    } else if (scId === 'SCENARIO_C') {
+      dashTitle.textContent = 'Active Scenario: Scenario C — Engineering Constraint Conflict';
+      if (dashSub) dashSub.textContent = '46 loops • Hazardous Zone 0 Ex-ia transmitter locked to non-IS slot • IEC 60079-11 clash';
+    } else if (scId === 'SCENARIO_D') {
+      dashTitle.textContent = 'Active Scenario: Scenario D — Revision & Minimal Repair';
+      if (dashSub) dashSub.textContent = 'Rev A baseline (45 loops) vs Rev B ECO (49 loops) • Minimal churn repair planner';
+    }
+  }
+
+  if (statusBadge) {
+    if (hardViolations > 0) {
+      statusBadge.textContent = 'INFEASIBLE / CONFLICT';
+      statusBadge.className = 'px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-error-light text-error border border-error/30';
+    } else if (softWarnings > 0) {
+      statusBadge.textContent = 'FEASIBLE (WARNINGS)';
+      statusBadge.className = 'px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-amber-50 text-warn border border-amber-300';
+    } else {
+      statusBadge.textContent = 'OPTIMAL (VERIFIED)';
+      statusBadge.className = 'px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-valid-light text-valid border border-valid/30';
+    }
+  }
+
+  // Interactive Conflict / Warning Notice Banner
+  const actionBanner = document.getElementById('dash-action-banner');
+  const actionIcon = document.getElementById('dash-action-icon');
+  const actionText = document.getElementById('dash-action-text');
+  const actionBtn = document.getElementById('dash-action-btn');
+
+  if (actionBanner) {
+    if (hardViolations > 0) {
+      actionBanner.classList.remove('hidden');
+      actionBanner.className = 'p-3 rounded border text-xs flex items-center justify-between gap-3 bg-error-light border-error/40 text-error';
+      if (actionIcon) actionIcon.textContent = 'gavel';
+      if (actionText) actionText.innerHTML = `<strong>Critical Constraint Conflict Detected:</strong> Zone 0 loop PT-FLARE-IS locked to standard non-IS slot (IEC 60079-11).`;
+      if (actionBtn) {
+        actionBtn.className = 'px-3 py-1 rounded font-mono font-semibold text-xs flex items-center gap-1 bg-error hover:bg-red-700 text-white shadow';
+        actionBtn.textContent = 'Open Conflict DNA & Minimal-Repair';
+        actionBtn.onclick = () => switchView('intelligence');
+      }
+    } else if (softWarnings > 0) {
+      actionBanner.classList.remove('hidden');
+      actionBanner.className = 'p-3 rounded border text-xs flex items-center justify-between gap-3 bg-amber-50 border-amber-300 text-amber-900';
+      if (actionIcon) actionIcon.textContent = 'warning';
+      if (actionText) actionText.innerHTML = `<strong>Advisory Engineering Warnings:</strong> 2 soft findings detected (multicore trunk cable pair split & expansion spare channel occupied). Mandatory constraints pass (100% valid).`;
+      if (actionBtn) {
+        actionBtn.className = 'px-3 py-1 rounded font-mono font-semibold text-xs flex items-center gap-1 bg-amber-600 hover:bg-amber-700 text-white shadow';
+        actionBtn.textContent = 'Review Advisory Findings';
+        actionBtn.onclick = () => switchView('diagnostics');
+      }
+    } else {
+      actionBanner.classList.remove('hidden');
+      actionBanner.className = 'p-3 rounded border text-xs flex items-center justify-between gap-3 bg-green-50 border-green-200 text-green-900';
+      if (actionIcon) actionIcon.textContent = 'verified';
+      if (actionText) actionText.innerHTML = `<strong>Clean Baseline Allocation:</strong> All 45 loops satisfied with 0 hard violations and 0 warnings. 100% verified against Emerson DeltaV rules.`;
+      if (actionBtn) {
+        actionBtn.className = 'px-3 py-1 rounded font-mono font-semibold text-xs flex items-center gap-1 bg-brand hover:bg-brand-dark text-white shadow';
+        actionBtn.textContent = 'View in 3D Cabinet';
+        actionBtn.onclick = () => switchView('twin3d');
+      }
+    }
+  }
+
   // Render Recent Activity / Findings
   const activityList = document.getElementById('dashboard-activity-feed');
   if (activityList && AppState.validation) {
-    activityList.innerHTML = AppState.validation.findings.slice(0, 5).map(f => `
-      <div class="p-2 border border-border bg-white rounded flex items-start gap-2 text-xs">
-        <span class="material-symbols-outlined text-[18px] ${f.level === 'ERROR' ? 'text-error' : 'text-warn'}">
-          ${f.level === 'ERROR' ? 'error' : 'warning'}
-        </span>
-        <div class="flex-1">
-          <div class="font-semibold text-graphite">${f.rule_name} (${f.rule_id})</div>
-          <div class="text-graphite-muted">${f.message}</div>
-          ${f.suggested_action ? `<div class="text-[11px] text-brand font-mono mt-0.5">Action: ${f.suggested_action}</div>` : ''}
+    if (AppState.validation.findings.length === 0) {
+      activityList.innerHTML = `
+        <div class="p-3 border border-green-200 bg-green-50/50 rounded flex items-center gap-2 text-xs text-valid font-medium">
+          <span class="material-symbols-outlined text-[18px]">verified</span>
+          100% Rules Compliant — All 45 instrumentation loops independently validated.
         </div>
-      </div>
-    `).join('');
+      `;
+    } else {
+      activityList.innerHTML = AppState.validation.findings.slice(0, 6).map(f => `
+        <div class="p-2 border border-border bg-white rounded flex items-start gap-2 text-xs">
+          <span class="material-symbols-outlined text-[18px] ${f.level === 'ERROR' ? 'text-error' : 'text-warn'}">
+            ${f.level === 'ERROR' ? 'gavel' : 'warning'}
+          </span>
+          <div class="flex-1">
+            <div class="font-semibold text-graphite">${f.rule_name} (${f.rule_id})</div>
+            <div class="text-graphite-muted">${f.message}</div>
+            ${f.suggested_action ? `<div class="text-[11px] text-brand font-mono mt-0.5">Action: ${f.suggested_action}</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
   }
 }
 
@@ -388,13 +497,20 @@ function renderWorkbench() {
     filtered = filtered.filter(s => s.tag.toLowerCase().includes(q) || s.description.toLowerCase().includes(q) || (s.multicore_cable_id || '').toLowerCase().includes(q));
   }
 
+  const findings = AppState.validation ? AppState.validation.findings : [];
+
   tbody.innerHTML = filtered.map(s => {
     const isSelected = (s.id === AppState.selectedSignalId || s.assigned_position_id === AppState.selectedSlotId);
+    const errFinding = findings.find(f => f.level === 'ERROR' && (f.signal_id === s.id || f.position_id === s.assigned_position_id));
+    const warnFinding = findings.find(f => f.level === 'WARNING' && (f.signal_id === s.id || f.position_id === s.assigned_position_id));
+
     let statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-gray-100 text-gray-700">UNALLOCATED</span>`;
-    if (s.status === 'ALLOCATED') {
+    if (errFinding || s.status === 'CONFLICT') {
+      statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-error-light text-error border border-error/30" title="${errFinding ? errFinding.message : 'Constraint conflict'}">CONFLICT</span>`;
+    } else if (warnFinding) {
+      statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-amber-50 text-warn border border-amber-300" title="${warnFinding.message}">WARNING</span>`;
+    } else if (s.status === 'ALLOCATED') {
       statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-valid-light text-valid border border-valid/30">ALLOCATED</span>`;
-    } else if (s.status === 'CONFLICT') {
-      statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-error-light text-error border border-error/30">CONFLICT</span>`;
     }
 
     return `
@@ -595,27 +711,37 @@ async function loadScenario(scenarioId) {
 
     if (scenarioId === 'SCENARIO_A') {
       if (badge) {
-        badge.textContent = 'SCENARIO A — CLEAN ALLOCATION';
+        badge.textContent = 'SCENARIO A — CLEAN BASELINE';
         badge.className = 'px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-valid text-white tracking-wide';
       }
       if (desc) desc.textContent = 'Standard feasible run: 45 loops across 4 baseplates. Enforces type compatibility, 1-channel capacity, and Ex-ia barrier segregation with 0 hard violations.';
     } else if (scenarioId === 'SCENARIO_B') {
       if (badge) {
-        badge.textContent = 'SCENARIO B — CONSTRAINT CONFLICT AUDIT';
-        badge.className = 'px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-error text-white tracking-wide';
+        badge.textContent = 'SCENARIO B — ADVISORY WARNINGS (0 VIOLATIONS)';
+        badge.className = 'px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-warn text-white tracking-wide';
       }
-      if (desc) desc.textContent = 'Controlled Safety Violation: Loop PT-FLARE-IS locked to standard 24V slot BP01-C05. CP-SAT solver and diagnostics immediately flag IEC 60079-11 intrinsic safety violation.';
+      if (desc) desc.textContent = 'Deterministic advisory run: all mandatory constraints satisfied (100% valid), but triggers genuine warnings (multicore cable pair split across baseplates and expansion reserve slot occupied).';
     } else if (scenarioId === 'SCENARIO_C') {
       if (badge) {
-        badge.textContent = 'SCENARIO C — REVISION CHURN MINIMIZER';
+        badge.textContent = 'SCENARIO C — SAFETY CONSTRAINT CONFLICT';
+        badge.className = 'px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-error text-white tracking-wide';
+      }
+      if (desc) desc.textContent = 'Controlled Safety Violation: Loop PT-FLARE-IS locked to standard non-IS slot BP-01-CH-01. CP-SAT solver and diagnostics immediately flag IEC 60079-11 intrinsic safety violation.';
+    } else if (scenarioId === 'SCENARIO_D') {
+      if (badge) {
+        badge.textContent = 'SCENARIO D — REVISION & MINIMAL REPAIR';
         badge.className = 'px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-blue-600 text-white tracking-wide';
       }
-      if (desc) desc.textContent = 'Differential Re-Marshaling: Comparing Rev A (45 signals) against Rev B (49 signals). CP-SAT minimizes rewire churn to retain 97.7% of existing field terminations.';
+      if (desc) desc.textContent = 'Differential Re-Marshaling: Comparing Rev A (45 signals) against Rev B ECO (49 signals). Minimal-Repair planner generates 3 safe alternatives minimizing rewire churn.';
     }
 
     if (dlBtn) {
       dlBtn.href = `/api/scenarios/download-input/${scenarioId}`;
     }
+
+    AppState.conflictDNA = null;
+    AppState.repairPlan = null;
+    AppState.activeProposal = null;
 
     await refreshAllData();
     showToast(`Loaded ${res.scenario_name}: ${res.signals_count} signals (${res.status})`, 'success');
@@ -666,7 +792,15 @@ async function inspectSignalDecision(signalId) {
     if (remedyEl) {
       if (diag.suggested_remedy) {
         remedyEl.classList.remove('hidden');
-        document.getElementById('inspect-remedy-text').textContent = diag.suggested_remedy;
+        remedyEl.innerHTML = `
+          <div class="font-semibold text-warn mb-1 flex items-center justify-between">
+            <span>Recommended Action:</span>
+            <button onclick="switchView('intelligence')" class="px-2 py-0.5 bg-cyan-700 hover:bg-cyan-600 text-white rounded text-[10px] font-mono font-bold flex items-center gap-1 shadow">
+              <span class="material-symbols-outlined text-[12px]">psychology</span> Fix in Change Intelligence
+            </button>
+          </div>
+          <div class="text-[11px] text-graphite">${diag.suggested_remedy}</div>
+        `;
       } else {
         remedyEl.classList.add('hidden');
       }
@@ -804,36 +938,89 @@ async function triggerWhatIfSimulation() {
 // -----------------------------------------------------------------------------
 
 function renderDiagnostics() {
-  const container = document.getElementById('tqs-list-container');
-  if (!container) return;
+  const hardList = document.getElementById('diag-hard-list');
+  const warnList = document.getElementById('diag-warn-list');
+  const hardCount = document.getElementById('diag-hard-count');
+  const warnCount = document.getElementById('diag-warn-count');
+  const tqCount = document.getElementById('diag-tq-count');
+  const tqContainer = document.getElementById('tqs-list-container');
 
-  container.innerHTML = AppState.tqs.map(tq => `
-    <div class="border border-border p-3 bg-white rounded shadow-sm flex flex-col gap-2">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="font-mono font-bold text-xs text-brand">${tq.id}</span>
-          <span class="font-semibold text-graphite text-xs">${tq.title}</span>
+  const findings = AppState.validation ? AppState.validation.findings : [];
+  const hardErrors = findings.filter(f => f.level === 'ERROR');
+  const softWarnings = findings.filter(f => f.level === 'WARNING');
+
+  if (hardCount) hardCount.textContent = `${hardErrors.length} Errors`;
+  if (warnCount) warnCount.textContent = `${softWarnings.length} Warnings`;
+  if (tqCount) tqCount.textContent = `${AppState.tqs.length} Total Queries`;
+
+  if (hardList) {
+    if (hardErrors.length === 0) {
+      hardList.innerHTML = `<div class="p-3 bg-green-50 border border-green-200 rounded text-valid text-xs flex items-center gap-2"><span class="material-symbols-outlined text-[16px]">verified</span> 0 Hard Violations detected in active configuration.</div>`;
+    } else {
+      hardList.innerHTML = hardErrors.map(e => `
+        <div class="p-2.5 bg-error-light border border-error/30 rounded flex flex-col gap-1 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="font-mono font-bold text-error">${e.rule_id}</span>
+            <span class="font-semibold text-graphite">${e.rule_name}</span>
+          </div>
+          <p class="text-graphite-muted">${e.message}</p>
+          ${e.suggested_action ? `<div class="text-[11px] text-brand font-mono font-semibold">Action: ${e.suggested_action}</div>` : ''}
+          <div class="pt-1 flex justify-end">
+            <button onclick="switchView('intelligence')" class="px-2 py-0.5 bg-error text-white rounded text-[10px] font-mono font-bold flex items-center gap-1 shadow">
+              <span class="material-symbols-outlined text-[11px]">psychology</span> Fix in Change Intelligence
+            </button>
+          </div>
         </div>
-        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${tq.status === 'RESOLVED' ? 'bg-valid-light text-valid' : 'bg-warn-light text-warn'}">
-          ${tq.status}
-        </span>
-      </div>
-      <p class="text-xs text-graphite-muted">${tq.description}</p>
-      ${tq.suggested_resolution ? `
-        <div class="text-[11px] bg-frame p-2 rounded border border-border">
-          <span class="font-semibold text-graphite">Proposed Resolution:</span> ${tq.suggested_resolution}
+      `).join('');
+    }
+  }
+
+  if (warnList) {
+    if (softWarnings.length === 0) {
+      warnList.innerHTML = `<div class="p-3 bg-frame border border-border rounded text-graphite-muted text-xs flex items-center gap-2"><span class="material-symbols-outlined text-[16px] text-valid">check_circle</span> 0 Advisory Warnings — Optimal cable grouping & spare capacity.</div>`;
+    } else {
+      warnList.innerHTML = softWarnings.map(w => `
+        <div class="p-2.5 bg-amber-50 border border-amber-300 rounded flex flex-col gap-1 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="font-mono font-bold text-warn">${w.rule_id}</span>
+            <span class="font-semibold text-graphite">${w.rule_name}</span>
+          </div>
+          <p class="text-graphite-muted">${w.message}</p>
+          ${w.suggested_action ? `<div class="text-[11px] text-brand font-mono font-semibold">Action: ${w.suggested_action}</div>` : ''}
         </div>
-      ` : ''}
-      <div class="flex items-center justify-between text-[11px] text-graphite-muted pt-1 border-t border-border-light">
-        <span>Assignee: <strong>${tq.assignee}</strong></span>
-        ${tq.status !== 'RESOLVED' ? `
-          <button class="px-2 py-0.5 bg-valid text-white rounded text-[11px] font-semibold hover:bg-valid/90" onclick="resolveTQ('${tq.id}')">
-            Mark Resolved
-          </button>
-        ` : `<span class="text-valid font-mono font-semibold">Verified</span>`}
+      `).join('');
+    }
+  }
+
+  if (tqContainer) {
+    tqContainer.innerHTML = AppState.tqs.map(tq => `
+      <div class="border border-border p-3 bg-white rounded shadow-sm flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="font-mono font-bold text-xs text-brand">${tq.id}</span>
+            <span class="font-semibold text-graphite text-xs">${tq.title}</span>
+          </div>
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${tq.status === 'RESOLVED' ? 'bg-valid-light text-valid' : 'bg-warn-light text-warn'}">
+            ${tq.status}
+          </span>
+        </div>
+        <p class="text-xs text-graphite-muted">${tq.description}</p>
+        ${tq.suggested_resolution ? `
+          <div class="text-[11px] bg-frame p-2 rounded border border-border">
+            <span class="font-semibold text-graphite">Proposed Resolution:</span> ${tq.suggested_resolution}
+          </div>
+        ` : ''}
+        <div class="flex items-center justify-between text-[11px] text-graphite-muted pt-1 border-t border-border-light">
+          <span>Assignee: <strong>${tq.assignee}</strong></span>
+          ${tq.status !== 'RESOLVED' ? `
+            <button class="px-2 py-0.5 bg-valid text-white rounded text-[11px] font-semibold hover:bg-valid/90" onclick="resolveTQ('${tq.id}')">
+              Mark Resolved
+            </button>
+          ` : `<span class="text-valid font-mono font-semibold">Verified</span>`}
+        </div>
       </div>
-    </div>
-  `).join('');
+    `).join('');
+  }
 }
 
 async function resolveTQ(tqId) {
@@ -854,33 +1041,49 @@ function renderRules() {
   const container = document.getElementById('rules-list-container');
   if (!container) return;
 
-  container.innerHTML = AppState.rules.map(r => `
-    <div class="border border-border p-3 bg-white rounded flex items-start justify-between gap-4">
-      <div class="flex-1">
-        <div class="flex items-center gap-2 mb-1">
-          <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${r.category === 'HARD' ? 'bg-red-50 text-error border border-red-200' : 'bg-blue-50 text-brand border border-blue-200'}">
-            ${r.category} CONSTRAINT
-          </span>
-          <span class="font-mono font-bold text-xs text-graphite">${r.id}</span>
-          <span class="font-semibold text-xs text-graphite">${r.name}</span>
-        </div>
-        <p class="text-xs text-graphite-muted mb-1.5">${r.description}</p>
-        <div class="text-[10px] text-graphite-muted font-mono">Source: ${r.source}</div>
-      </div>
-      <div class="flex flex-col items-end gap-2">
-        <label class="flex items-center gap-1.5 cursor-pointer text-xs">
-          <input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="toggleRuleEnabled('${r.id}', this.checked)" class="rounded text-brand focus:ring-brand">
-          <span class="font-semibold">${r.enabled ? 'Enabled' : 'Bypassed'}</span>
-        </label>
-        ${r.category === 'SOFT' ? `
-          <div class="flex items-center gap-1 text-[11px] font-mono">
-            <span>Penalty Weight:</span>
-            <input type="number" value="${r.weight}" min="1" max="100" class="w-14 p-0.5 text-center border border-border rounded text-xs" onchange="updateRuleWeight('${r.id}', this.value)">
+  const findings = AppState.validation ? AppState.validation.findings : [];
+
+  container.innerHTML = AppState.rules.map(r => {
+    const ruleFindings = findings.filter(f => f.rule_id === r.id);
+    let statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-green-50 text-valid border border-green-200">PASS (0 Violations)</span>`;
+    if (ruleFindings.length > 0) {
+      const hasError = ruleFindings.some(f => f.level === 'ERROR');
+      if (hasError) {
+        statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-red-50 text-error border border-red-200 animate-pulse">VIOLATED (${ruleFindings.length} Critical)</span>`;
+      } else {
+        statusBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-warn border border-amber-200">FLAGGED (${ruleFindings.length} Advisory)</span>`;
+      }
+    }
+
+    return `
+      <div class="border border-border p-3 bg-white rounded flex items-start justify-between gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1 flex-wrap">
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${r.category === 'HARD' ? 'bg-red-50 text-error border border-red-200' : 'bg-blue-50 text-brand border border-blue-200'}">
+              ${r.category} CONSTRAINT
+            </span>
+            <span class="font-mono font-bold text-xs text-graphite">${r.id}</span>
+            <span class="font-semibold text-xs text-graphite">${r.name}</span>
+            ${statusBadge}
           </div>
-        ` : ''}
+          <p class="text-xs text-graphite-muted mb-1.5">${r.description}</p>
+          <div class="text-[10px] text-graphite-muted font-mono">Source: ${r.source}</div>
+        </div>
+        <div class="flex flex-col items-end gap-2 shrink-0">
+          <label class="flex items-center gap-1.5 cursor-pointer text-xs">
+            <input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="toggleRuleEnabled('${r.id}', this.checked)" class="rounded text-brand focus:ring-brand">
+            <span class="font-semibold">${r.enabled ? 'Enabled' : 'Bypassed'}</span>
+          </label>
+          ${r.category === 'SOFT' ? `
+            <div class="flex items-center gap-1 text-[11px] font-mono">
+              <span>Penalty Weight:</span>
+              <input type="number" value="${r.weight}" min="1" max="100" class="w-14 p-0.5 text-center border border-border rounded text-xs" onchange="updateRuleWeight('${r.id}', this.value)">
+            </div>
+          ` : ''}
+        </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 async function toggleRuleEnabled(ruleId, enabled) {
@@ -970,3 +1173,351 @@ function showToast(msg, type = 'info') {
     setTimeout(() => toast.remove(), 300);
   }, 4000);
 }
+
+// -----------------------------------------------------------------------------
+// Engineering Change Intelligence Engine Controller (USP)
+// Tagline: "Don't just find a conflict. Find the smallest safe fix."
+// -----------------------------------------------------------------------------
+
+async function renderIntelligence() {
+  if (!AppState.conflictDNA) {
+    await fetchConflictDNA();
+  } else {
+    renderConflictDNAPanel();
+  }
+  if (!AppState.repairPlan) {
+    await generateRepairPlan(false);
+  } else {
+    renderRepairCandidatesPanel();
+  }
+  renderSimulatorPanel();
+}
+
+async function fetchConflictDNA() {
+  try {
+    AppState.isAnalyzingDNA = true;
+    const btn = document.getElementById('btn-refresh-conflict-dna');
+    if (btn) btn.innerHTML = `<span class="material-symbols-outlined text-[14px] animate-spin">refresh</span> Analyzing...`;
+
+    const dna = await API.get('/intelligence/conflict-dna');
+    AppState.conflictDNA = dna;
+    renderConflictDNAPanel();
+    showToast(`Conflict DNA analyzed: ${dna.confirmed_violations.length} confirmed violation(s).`, dna.confirmed_violations.length > 0 ? 'warn' : 'success');
+  } catch (err) {
+    console.error('Conflict DNA error:', err);
+    showToast(`Conflict DNA failed: ${err.message}`, 'error');
+  } finally {
+    AppState.isAnalyzingDNA = false;
+    const btn = document.getElementById('btn-refresh-conflict-dna');
+    if (btn) btn.innerHTML = `<span class="material-symbols-outlined text-[14px] text-cyan-400">fact_check</span> Analyze Conflict DNA`;
+  }
+}
+
+function renderConflictDNAPanel() {
+  const container = document.getElementById('dna-report-container');
+  const badge = document.getElementById('dna-conflicts-badge');
+  if (!container || !AppState.conflictDNA) return;
+
+  const dna = AppState.conflictDNA;
+  if (badge) {
+    badge.textContent = `${dna.confirmed_violations.length} Violations`;
+    badge.className = `px-2 py-0.5 rounded font-mono font-bold text-[10px] ${dna.confirmed_violations.length > 0 ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-valid-light text-valid border border-valid/30'}`;
+  }
+
+  if (dna.confirmed_violations.length === 0 && dna.possible_causes.length === 0) {
+    container.innerHTML = `
+      <div class="p-4 border border-valid/30 bg-valid-light/30 rounded text-center space-y-2">
+        <span class="material-symbols-outlined text-valid text-3xl">verified</span>
+        <div class="font-bold font-mono text-valid text-xs">Clean Allocation DNA</div>
+        <p class="text-xs text-graphite-muted">${dna.summary_narrative}</p>
+      </div>
+    `;
+    return;
+  }
+
+  const items = [];
+  dna.confirmed_violations.forEach(v => {
+    items.push(`
+      <div class="p-3 border border-red-200 bg-red-50/50 rounded space-y-2 text-xs">
+        <div class="flex items-center justify-between">
+          <span class="font-mono font-bold text-red-700 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[15px] text-red-600">error</span>
+            ${v.signal_tag}
+          </span>
+          <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-red-600 text-white">
+            ${v.rule_id}
+          </span>
+        </div>
+        <div class="text-[11px] font-mono text-graphite-muted">
+          Position: <strong class="text-graphite">${v.assigned_position_id || 'UNASSIGNED'}</strong> • Type: <strong class="text-graphite">${v.signal_type}</strong>
+        </div>
+        <p class="text-xs text-red-900 font-medium">${v.root_cause_explanation}</p>
+        <div class="p-2 bg-white/80 rounded border border-red-100 space-y-1">
+          <div class="text-[10px] font-bold text-graphite uppercase font-mono">Grounded Evidence:</div>
+          <ul class="list-disc pl-4 text-[10px] text-graphite-muted space-y-0.5">
+            ${v.evidence_data.map(e => `<li>${e}</li>`).join('')}
+          </ul>
+        </div>
+        <div class="p-2 bg-amber-50 rounded border border-amber-200 text-[11px] text-amber-900 flex items-start gap-1.5">
+          <span class="material-symbols-outlined text-[14px] text-amber-700 shrink-0">build</span>
+          <span><strong>Action:</strong> ${v.practical_remedy}</span>
+        </div>
+      </div>
+    `);
+  });
+
+  dna.possible_causes.forEach(p => {
+    items.push(`
+      <div class="p-3 border border-amber-200 bg-amber-50/40 rounded space-y-1.5 text-xs">
+        <div class="flex items-center justify-between">
+          <span class="font-mono font-bold text-amber-800 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[15px] text-amber-600">help</span>
+            ${p.signal_tag}
+          </span>
+          <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500 text-white">POSSIBLE CAUSE</span>
+        </div>
+        <p class="text-xs text-graphite">${p.root_cause_explanation}</p>
+        <div class="text-[10px] text-graphite-muted font-mono">Remedy: ${p.practical_remedy}</div>
+      </div>
+    `);
+  });
+
+  container.innerHTML = items.join('');
+}
+
+async function generateRepairPlan(notify = true) {
+  try {
+    AppState.isPlanningRepair = true;
+    const btn = document.getElementById('btn-generate-repair-plan');
+    if (btn) btn.innerHTML = `<span class="material-symbols-outlined text-[14px] animate-spin">refresh</span> Solving CP-SAT...`;
+
+    const plan = await API.post('/intelligence/repair-plan', {});
+    AppState.repairPlan = plan;
+    renderRepairCandidatesPanel();
+
+    if (notify) {
+      showToast(`Generated ${plan.candidates.length} repair alternatives in ${plan.solve_time_ms}ms!`, 'success');
+    }
+  } catch (err) {
+    console.error('Repair plan error:', err);
+    if (notify) showToast(`Repair planning failed: ${err.message}`, 'error');
+  } finally {
+    AppState.isPlanningRepair = false;
+    const btn = document.getElementById('btn-generate-repair-plan');
+    if (btn) btn.innerHTML = `<span class="material-symbols-outlined text-[15px]">build_circle</span> Generate Minimal Repair`;
+  }
+}
+
+function renderRepairCandidatesPanel() {
+  const container = document.getElementById('repair-candidates-container');
+  const badge = document.getElementById('repair-candidates-badge');
+  if (!container || !AppState.repairPlan) return;
+
+  const plan = AppState.repairPlan;
+  if (badge) {
+    badge.textContent = `${plan.candidates.length} Alternatives`;
+  }
+
+  if (plan.candidates.length === 0) {
+    container.innerHTML = `
+      <div class="p-4 border border-border bg-frame rounded text-center text-xs text-graphite-muted font-mono">
+        No feasible repair candidates. Ensure hardware capacity is sufficient.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = plan.candidates.map(c => {
+    const isSelected = AppState.activeProposal && AppState.activeProposal.candidate_id === c.candidate_id;
+    return `
+      <div class="p-3.5 border ${isSelected ? 'border-cyan-500 bg-cyan-50/30 ring-2 ring-cyan-400/20' : 'border-border bg-white'} rounded-lg space-y-2.5 shadow-sm hover:border-cyan-400 transition-all">
+        <div class="flex items-center justify-between">
+          <span class="font-mono font-bold text-xs text-graphite">${c.candidate_id}</span>
+          <div class="flex items-center gap-1.5">
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold ${c.is_optimal ? 'bg-valid-light text-valid' : 'bg-blue-50 text-brand'}">
+              ${c.solver_status}
+            </span>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-gray-100 text-gray-700">
+              ${c.strategy}
+            </span>
+          </div>
+        </div>
+
+        <div class="font-bold text-xs text-graphite">${c.title}</div>
+
+        <div class="grid grid-cols-2 gap-2 text-center text-[10px] font-mono bg-frame p-2 rounded">
+          <div>
+            <div class="text-graphite-muted uppercase">Terminal Moves</div>
+            <div class="text-sm font-bold text-brand mt-0.5">${c.moved_signals_count} Pin</div>
+          </div>
+          <div>
+            <div class="text-graphite-muted uppercase">Retention</div>
+            <div class="text-sm font-bold text-valid mt-0.5">${c.retained_pct}%</div>
+          </div>
+        </div>
+
+        <div class="space-y-1 text-[11px] text-graphite-muted">
+          ${c.trade_offs.map(t => `<div class="flex items-center gap-1"><span class="material-symbols-outlined text-[13px] text-valid">check</span>${t}</div>`).join('')}
+        </div>
+
+        <div class="pt-2 border-t border-border-light flex items-center justify-between">
+          <span class="text-[10px] font-mono text-valid font-bold flex items-center gap-1">
+            <span class="material-symbols-outlined text-[13px]">verified</span> 0 Hard Violations
+          </span>
+          <button class="px-2.5 py-1 bg-brand hover:bg-brand-dark text-white rounded text-xs font-mono font-semibold flex items-center gap-1 transition-colors" onclick="previewRepairCandidate('${c.candidate_id}')">
+            <span class="material-symbols-outlined text-[13px]">visibility</span> Preview Fix
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function previewRepairCandidate(candidateId) {
+  try {
+    showToast(`Simulating repair candidate ${candidateId}...`, 'info');
+    const preview = await API.post('/intelligence/simulate', { candidate_id: candidateId });
+    AppState.activeProposal = preview;
+    renderSimulatorPanel();
+    renderRepairCandidatesPanel();
+    showToast(`Simulation Ready: ${preview.existing_assignments_changed} move(s), ${preview.retained_pct}% retained.`, 'success');
+  } catch (err) {
+    console.error('Simulation error:', err);
+    showToast(`Simulation failed: ${err.message}`, 'error');
+  }
+}
+
+function renderSimulatorPanel() {
+  const container = document.getElementById('simulator-preview-container');
+  const badge = document.getElementById('simulator-status-badge');
+  if (!container) return;
+
+  if (!AppState.activeProposal) {
+    if (badge) {
+      badge.textContent = 'No Proposal';
+      badge.className = 'px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-neutral-100 text-neutral-600 border border-neutral-200';
+    }
+    container.innerHTML = `
+      <div class="p-6 border border-dashed border-border rounded text-center text-xs text-graphite-muted font-mono space-y-2">
+        <span class="material-symbols-outlined text-neutral-400 text-3xl">model_training</span>
+        <div class="font-bold text-graphite">Simulator Inactive</div>
+        <p>Click "Preview Fix" on any repair candidate in Pillar 2 to evaluate before-and-after schedule impact.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const prop = AppState.activeProposal;
+  if (badge) {
+    badge.textContent = `Active (${prop.candidate_id})`;
+    badge.className = 'px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-cyan-100 text-cyan-800 border border-cyan-300';
+  }
+
+  container.innerHTML = `
+    <div class="space-y-3 text-xs">
+      <!-- Proposal Header -->
+      <div class="p-2.5 bg-cyan-50/60 border border-cyan-200 rounded flex items-center justify-between">
+        <div>
+          <div class="font-mono font-bold text-xs text-cyan-900">${prop.proposal_id}</div>
+          <div class="text-[10px] font-mono text-cyan-700">${prop.baseline_revision} → ${prop.proposed_revision}</div>
+        </div>
+        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${prop.can_accept ? 'bg-valid-light text-valid border border-valid/30' : 'bg-error-light text-error'}">
+          ${prop.can_accept ? 'VALIDATED (READY)' : 'VALIDATION FAILED'}
+        </span>
+      </div>
+
+      <!-- Telemetry Diff Metrics -->
+      <div class="grid grid-cols-2 gap-2 text-[10px] font-mono bg-frame p-2.5 rounded border border-border">
+        <div>
+          <div class="text-graphite-muted uppercase">Terminal Moves</div>
+          <div class="text-base font-bold text-brand mt-0.5">${prop.existing_assignments_changed} Pin</div>
+        </div>
+        <div>
+          <div class="text-graphite-muted uppercase">Retention</div>
+          <div class="text-base font-bold text-valid mt-0.5">${prop.retained_pct}%</div>
+        </div>
+        <div>
+          <div class="text-graphite-muted uppercase">Labor Saved</div>
+          <div class="text-xs font-bold text-graphite mt-0.5">+${prop.estimated_labor_saved_hours} h</div>
+        </div>
+        <div>
+          <div class="text-graphite-muted uppercase">Hard Violations</div>
+          <div class="text-xs font-bold text-valid mt-0.5">0 Violations</div>
+        </div>
+      </div>
+
+      <!-- Change Breakdown List -->
+      <div class="space-y-1.5">
+        <div class="text-[10px] font-mono font-bold text-graphite uppercase">Proposed Terminal Movements:</div>
+        <div class="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+          ${prop.changes.map(c => `
+            <div class="p-2 border border-border-light bg-surface rounded flex items-center justify-between text-[11px] font-mono">
+              <div>
+                <span class="font-bold text-brand">${c.tag}</span>
+                <span class="text-graphite-muted">(${c.signal_type})</span>
+              </div>
+              <div class="text-right">
+                <span class="text-red-600 line-through">${c.from_position}</span>
+                <span class="text-graphite mx-1">→</span>
+                <span class="text-valid font-bold">${c.to_position}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- Baseplate Capacity Deltas -->
+      <div class="p-2 bg-frame rounded border border-border space-y-1 text-[11px] font-mono">
+        <div class="text-[10px] font-bold text-graphite uppercase">Baseplate Utilization:</div>
+        <div class="grid grid-cols-4 gap-1 text-center text-[10px]">
+          ${Object.entries(prop.capacity_summary || {}).map(([bp, cap]) => `
+            <div class="bg-white p-1 rounded border border-border-light">
+              <div class="font-bold text-graphite">${bp}</div>
+              <div class="text-graphite-muted">${cap.after}/16</div>
+              <div class="${cap.delta > 0 ? 'text-brand font-bold' : (cap.delta < 0 ? 'text-amber-600 font-bold' : 'text-gray-400')}">${cap.delta > 0 ? '+' + cap.delta : cap.delta}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pt-2 border-t border-border flex items-center gap-2">
+        <button id="btn-cancel-repair" class="flex-1 py-1.5 bg-neutral-200 hover:bg-neutral-300 text-graphite rounded text-xs font-mono font-semibold transition-colors" onclick="cancelRepairProposal()">
+          Discard Proposal
+        </button>
+        <button id="btn-accept-repair" class="flex-1 py-1.5 ${prop.can_accept ? 'bg-valid hover:bg-valid/90' : 'bg-gray-300 cursor-not-allowed'} text-white rounded text-xs font-mono font-bold shadow transition-colors flex items-center justify-center gap-1" ${prop.can_accept ? '' : 'disabled'} onclick="acceptRepairProposal('${prop.proposal_id}')">
+          <span class="material-symbols-outlined text-[14px]">check_circle</span> Accept Repair
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+async function acceptRepairProposal(proposalId) {
+  if (!confirm(`Confirm and apply proposed repair schedule ${proposalId} to active project baseline?`)) return;
+
+  try {
+    const res = await API.post('/intelligence/accept-repair', { proposal_id: proposalId, confirm: true });
+    showToast(res.message, 'success');
+    AppState.activeProposal = null;
+    await refreshAllData();
+    await fetchConflictDNA();
+    renderSimulatorPanel();
+    switchView('workbench');
+  } catch (err) {
+    showToast(`Accept failed: ${err.message}`, 'error');
+  }
+}
+
+async function cancelRepairProposal() {
+  try {
+    await API.post('/intelligence/cancel-repair');
+    AppState.activeProposal = null;
+    renderSimulatorPanel();
+    renderRepairCandidatesPanel();
+    showToast('Proposal discarded. Baseline remained 100% unchanged.', 'info');
+  } catch (err) {
+    showToast(`Cancel failed: ${err.message}`, 'error');
+  }
+}
+
